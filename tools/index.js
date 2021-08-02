@@ -13,6 +13,10 @@ function extractData (dataArray, index = 'CLOSE') {
   return data
 }
 
+function getLasts (data, amount) {
+  return data.slice(Math.max(data.length - amount, 1))
+}
+
 function addInArray (arr, newItens) {
   const lastCandle = arr[arr.length - 1]
   if (lastCandle[0] === newItens[0][0]) {
@@ -27,9 +31,11 @@ function addInArray (arr, newItens) {
     return arr
   }
 }
+
 // NEED TO FIND A WAY TO FORMAT NUMBERS BY COIN FORMAT
 
 module.exports = {
   extractData,
-  addInArray
+  addInArray,
+  getLasts
 }

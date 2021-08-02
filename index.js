@@ -6,8 +6,48 @@ const stoch = require('./indicators/stoch.js')
 const ws = require('./lib/ws.js')
 const symbol = process.env.SYMBOL
 
+async function getListenKey () {
+  const data = await api.listenKey()
+  setWsListen(data.listenKey)
+}
+
+// listenKeyExpired
+// ACCOUNT_UPDATE
+//     - DEPOSIT, WITHDRAW, ORDER, FUNDING_FEE, WITHDRAW_REJECT, ADJUSTMENT,
+//     - INSURANCE_CLEAR, ADMIN_DEPOSIT, ADMIN_WITHDRAW, MARGIN_TRANSFER,
+//     - MARGIN_TYPE_CHANGE, ASSET_TRANSFER, OPTIONS_PREMIUM_FEE, OPTIONS_SETTLE_PROFIT,
+//     - AUTO_EXCHANGE
+// ORDER_TRADE_UPDATE
+//     data.o.X
+//     - NEW
+//     - PARTIALLY_FILLED
+//     - FILLED
+//     - CANCELED
+//     - EXPIRED
+//     - NEW_INSURANCE - Liquidation with Insurance Fund
+//     - NEW_ADL - Counterparty Liquidation`
+const event = {
+  listenKeyExpired: data => getListenKey,
+  ACCOUNT_UPDATE: data => console.log(data),
+  ORDER_TRADE_UPDATE: data => console.log(data.o)
+
+}
+
+async function setWsListen (listenKey) {
+  ws.listenKey(listenKey, async (data) => {
+    return event[data.e](data) || null
+  })
+}
+
 async function execute () {
   const candles = await api.candles(symbol, 200)
+  getListenKey()
+  const balance = await api.getBalance()
+  if (balance) console.log(balance.filter((coin) => (coin.asset === 'USDT'))[0].availableBalance)
+  const leverage = await api.changeLeverage(18)
+  if (leverage) console.log(leverage)
+  // const order = await api.newOrder(symbol, 1, 'BUY', 'MARKET', false)
+  // if (order) console.log(order)
 
   ws.onKline(symbol, '1m', (data) => {
     if (data.k.x) {

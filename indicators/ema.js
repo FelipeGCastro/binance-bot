@@ -5,7 +5,7 @@ function checkingTranding (data) {
   const ema200 = new EMA(200)
   const ema50 = new EMA(50)
   const dataClose = tools.extractData(data)
-  const data50 = dataClose.slice(Math.max(data.length - 51, 1))
+  const data50 = tools.getLasts(dataClose, 51)
   dataClose.forEach(price => {
     ema200.update(price)
   })

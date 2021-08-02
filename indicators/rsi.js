@@ -3,7 +3,7 @@ const RSI = require('trading-signals').RSI
 
 function checkingRsi (data) {
   const rsi = new RSI(14)
-  const dataClose = tools.extractData(data.slice(Math.max(data.length - 15, 1)))
+  const dataClose = tools.extractData(tools.getLasts(data, 15))
   dataClose.forEach(closePrice => {
     rsi.update(closePrice)
   })
