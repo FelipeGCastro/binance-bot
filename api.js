@@ -33,12 +33,28 @@ async function newOrder (symbol = symbolDefault, quantity, side = 'BUY', type = 
     symbol,
     side,
     type,
-    quantity,
     closePosition
   }
-  const finalData = stopPrice ? { ...data, stopPrice } : data
+  if (quantity) data.quantity = quantity
+  if (stopPrice) data.stopPrice = stopPrice
 
-  return privateCall('/fapi/v1/order', finalData, 'POST')
+  return privateCall('/fapi/v1/order', data, 'POST')
+}
+
+async function cancelAllOrders (symbol = symbolDefault) {
+  const timestamp = Date.now()
+  return privateCall('/fapi/v1/allOpenOrders', { symbol, timestamp }, 'DELETE')
+}
+async function cancelOrder (symbol = symbolDefault, orderId, origClientOrderId) {
+  const timestamp = Date.now()
+  const data = { symbol, timestamp }
+  if (orderId) data.orderId = orderId
+  if (origClientOrderId) data.origClientOrderId = origClientOrderId
+  if (data.orderId || data.origClientOrderId) {
+    return privateCall('/fapi/v1/order', { symbol, timestamp }, 'DELETE')
+  } else {
+    console.log('orderId or origClientOrderId is Require!')
+  }
 }
 
 async function publicCall (path, data, method = 'GET') {
@@ -88,6 +104,12 @@ async function exchangeInfo () {
   return privateCall('/fapi/v1/exchangeInfo')
 }
 
+async function getAllOpenOrders (symbol = symbolDefault) {
+  const timestamp = Date.now()
+  const data = { symbol, timestamp }
+  return privateCall('/fapi/v1/openOrders', data)
+}
+
 module.exports = {
   time,
   depth,
@@ -97,5 +119,8 @@ module.exports = {
   listenKey,
   getBalance,
   changeLeverage,
-  newOrder
+  newOrder,
+  cancelAllOrders,
+  cancelOrder,
+  getAllOpenOrders
 }
