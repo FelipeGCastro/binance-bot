@@ -3,26 +3,16 @@ const highest = require('technicalindicators').Highest
 const lowest = require('technicalindicators').Lowest
 const tools = require('../tools/index')
 const defaultSymbol = process.env.SYMBOL
-const ORDER_TYPE = {
-  MARKET: handleMarketOrder,
-  STOP_MARKET: handleStopMarketOrder,
-  TAKE_PROFIT_MARKET: handleTakeProfitMarketOrder
-}
+
 let position
 async function handleUserDataUpdate (data, candles) {
   if (data.e === 'ACCOUNT_UPDATE') {
     console.log('ACCOUNT_UPDATE')
-    const positionFiltered = data.a.P.filter(pos => (pos.s === defaultSymbol))
-    if (positionFiltered[0]) position = positionFiltered[0]
+    setPosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
     if (data.o.s === defaultSymbol) {
       if (data.o.X === 'FILLED') {
-        if (position.pa !== '0') {
-          const result = ORDER_TYPE[data.o.o](candles, data.o) || null
-          if (!result) { console.log('Other type of order') }
-        } else {
-          hasStopOrProfitOrder()
-        }
+        handleFilledOrder(candles, data.o)
       } else if (data.o.X === 'CANCELED') {
         console.log('CANCELED')
         hasStopOrProfitOrder()
@@ -35,8 +25,27 @@ async function handleUserDataUpdate (data, candles) {
   }
 }
 
-async function handleMarketOrder (candles, orderInfo) {
-  createTpandSLOrder(orderInfo, candles)
+async function setPosition (data) {
+  const positionFiltered = data.a.P.filter(pos => (pos.s === defaultSymbol))
+  position = positionFiltered[0] || { pa: '0' }
+}
+
+async function handleFilledOrder (candles, order) {
+  if (position.pa !== '0') {
+    if (order.o === 'MARKET') {
+      handleMarketOrder(candles, order)
+    } else if (order.o === 'STOP_MARKET') {
+      handleStopMarketOrder()
+    } else if (order.o === 'TAKE_PROFIT_MARKET') {
+      handleTakeProfitMarketOrder()
+    } else { console.log('Other type of order') }
+  } else {
+    hasStopOrProfitOrder()
+  }
+}
+
+async function handleMarketOrder (candles, order) {
+  createTpandSLOrder(order, candles)
 }
 
 async function createTpandSLOrder (orderInfo, candles) {
@@ -65,11 +74,11 @@ async function hasStopOrProfitOrder () {
   return !!hasStopOrProfit[0]
 }
 
-async function handleStopMarketOrder (candles, orderInfo) {
+async function handleStopMarketOrder () {
   const cancelOrder = await api.cancelAllOrders(defaultSymbol)
   return cancelOrder
 }
-async function handleTakeProfitMarketOrder (candles, orderInfo) {
+async function handleTakeProfitMarketOrder () {
   const cancelOrder = await api.cancelAllOrders(defaultSymbol)
   return cancelOrder
 }
