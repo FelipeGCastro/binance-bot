@@ -18,19 +18,25 @@ async function execute () {
 
   ws.onKline(symbol, '1m', (data) => {
     if (data.k.x) {
-      const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
-      if (data.k.t === candles[candles.length - 1][0]) {
-        candles.pop()
-        candles.push(newCandle)
-      } else {
-        candles.shift()
-        candles.push(newCandle)
-      }
+      handleAddCandle(data)
       console.log(ema.checkingTranding(candles), 'EMA')
       console.log(rsi.checkingRsi(candles), 'RSI')
       console.log(stoch.checkingStoch(candles)[2], 'STOCH')
+      console.log('------------------------------------------------------------------------------------')
     }
   })
+
+  async function handleAddCandle (data) {
+    const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
+    if (data.k.t === candles[candles.length - 1][0]) {
+      candles.pop()
+      candles.push(newCandle)
+    } else {
+      candles.shift()
+      candles.push(newCandle)
+    }
+  }
+
   async function getListenKey () {
     const data = await api.listenKey()
     setWsListen(data.listenKey)

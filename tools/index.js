@@ -52,16 +52,14 @@ function getTargetPrice (price, stopPrice) {
   } else {
     targetPrice = parseFloat(price) + (price * (perc / 100))
   }
-  console.log(targetPrice, 'price:', price, 'stopPrice', stopPrice, 'perc:', perc, 'getTargetPrice')
   return priceMirrorFormat(targetPrice, price)
 }
 
 function priceMirrorFormat (number, format) {
   const isString = typeof format === 'string'
-  console.log(typeof number, number, typeof format, format)
-  const decimals = (isString ? format : toString(format)).split('.')[1].length || 2
+  const formatArray = (isString ? format : toString(format)).split('.')
+  const decimals = formatArray[1].length ? formatArray[1].length : 2
   const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false })
-  console.log(number, format, formatter.format(parseFloat(number)), 'priceMirrorFormat')
 
   return Number(formatter.format(parseFloat(number)))
 }
