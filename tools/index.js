@@ -13,23 +13,53 @@ function extractData (dataArray, index = 'CLOSE') {
   return data
 }
 
+function getTpAndSlByPer (price, side, stopPerc = 0.5, takeProfPerc = 1) {
+  const isSell = side === 'SELL'
+  const stopPrice = isSell ? parseFloat(price) + (price * (stopPerc / 100)) : price - (price * (stopPerc / 100))
+  const takeProfitPrice = isSell ? price - (price * (takeProfPerc / 100)) : parseFloat(price) + (price * (stopPerc / 100))
+  return { stopPrice: priceMirrorFormat(stopPrice, price), takeProfitPrice: priceMirrorFormat(takeProfitPrice, price) }
+}
+
+function handleStopPercentage (price, stopPrice, side, minPercentage = 0.2) {
+  const perc = getPercentage(price, stopPrice)
+  let newStopPrice
+  if (side === 'SELL') {
+    if (perc < minPercentage || price > stopPrice) {
+      newStopPrice = parseFloat(price) + (price * (minPercentage / 100))
+    } else {
+      newStopPrice = stopPrice
+    }
+  } else {
+    if (perc < minPercentage || price < stopPrice) {
+      newStopPrice = price - (price * (minPercentage / 100))
+    } else {
+      newStopPrice = stopPrice
+    }
+  }
+
+  return priceMirrorFormat(newStopPrice, price)
+}
+function getPercentage (from, to) {
+  const decreaseValue = from - to
+  return Math.abs((decreaseValue / from) * 100)
+}
 function getTargetPrice (price, stopPrice) {
   let targetPrice
-  const oldPrice = price
-  const side = price < stopPrice
-  const decreaseValue = price - stopPrice
-  const perc = (Math.abs((decreaseValue / price) * 100) * 2)
-  if (side) {
+  const isSell = price < stopPrice
+  const perc = getPercentage(price, stopPrice) * 2
+  if (isSell) {
     targetPrice = price - (price * (perc / 100))
   } else {
-    targetPrice = price + (price * (perc / 100))
+    targetPrice = parseFloat(price) + (price * (perc / 100))
   }
-  console.log(targetPrice, 'price:', price, 'stopPrice', stopPrice, 'getTargetPrice')
-  return priceMirrorFormat(targetPrice, oldPrice)
+  console.log(targetPrice, 'price:', price, 'stopPrice', stopPrice, 'perc:', perc, 'getTargetPrice')
+  return priceMirrorFormat(targetPrice, price)
 }
 
 function priceMirrorFormat (number, format) {
-  const decimals = format.split('.')[1].length
+  const isString = typeof format === 'string'
+  console.log(typeof number, number, typeof format, format)
+  const decimals = (isString ? format : toString(format)).split('.')[1].length || 2
   const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false })
   console.log(number, format, formatter.format(parseFloat(number)), 'priceMirrorFormat')
 
@@ -62,5 +92,7 @@ module.exports = {
   addInArray,
   getLasts,
   getTargetPrice,
-  priceMirrorFormat
+  priceMirrorFormat,
+  getTpAndSlByPer,
+  handleStopPercentage
 }
