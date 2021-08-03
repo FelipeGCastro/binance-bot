@@ -13,6 +13,29 @@ function extractData (dataArray, index = 'CLOSE') {
   return data
 }
 
+function getTargetPrice (price, stopPrice) {
+  let targetPrice
+  const oldPrice = price
+  const side = price < stopPrice
+  const decreaseValue = price - stopPrice
+  const perc = (Math.abs((decreaseValue / price) * 100) * 2)
+  if (side) {
+    targetPrice = price - (price * (perc / 100))
+  } else {
+    targetPrice = price + (price * (perc / 100))
+  }
+  console.log(targetPrice, 'price:', price, 'stopPrice', stopPrice, 'getTargetPrice')
+  return priceMirrorFormat(targetPrice, oldPrice)
+}
+
+function priceMirrorFormat (number, format) {
+  const decimals = format.split('.')[1].length
+  const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false })
+  console.log(number, format, formatter.format(parseFloat(number)), 'priceMirrorFormat')
+
+  return Number(formatter.format(parseFloat(number)))
+}
+
 function getLasts (data, amount) {
   return data.slice(Math.max(data.length - amount, 1))
 }
@@ -37,5 +60,7 @@ function addInArray (arr, newItens) {
 module.exports = {
   extractData,
   addInArray,
-  getLasts
+  getLasts,
+  getTargetPrice,
+  priceMirrorFormat
 }

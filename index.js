@@ -2,50 +2,18 @@ const api = require('./api.js')
 const ema = require('./indicators/ema.js')
 const rsi = require('./indicators/rsi.js')
 const stoch = require('./indicators/stoch.js')
-// import tools from './tools/index.js'
+const operations = require('./operations/tpsl')
 const ws = require('./lib/ws.js')
+const tools = require('./tools/index.js')
 const symbol = process.env.SYMBOL
-
-async function getListenKey () {
-  const data = await api.listenKey()
-  setWsListen(data.listenKey)
-}
-
-// listenKeyExpired
-// ACCOUNT_UPDATE
-//     - DEPOSIT, WITHDRAW, ORDER, FUNDING_FEE, WITHDRAW_REJECT, ADJUSTMENT,
-//     - INSURANCE_CLEAR, ADMIN_DEPOSIT, ADMIN_WITHDRAW, MARGIN_TRANSFER,
-//     - MARGIN_TYPE_CHANGE, ASSET_TRANSFER, OPTIONS_PREMIUM_FEE, OPTIONS_SETTLE_PROFIT,
-//     - AUTO_EXCHANGE
-// ORDER_TRADE_UPDATE
-//     data.o.X
-//     - NEW
-//     - PARTIALLY_FILLED
-//     - FILLED
-//     - CANCELED
-//     - EXPIRED
-//     - NEW_INSURANCE - Liquidation with Insurance Fund
-//     - NEW_ADL - Counterparty Liquidation`
-const event = {
-  listenKeyExpired: data => getListenKey,
-  ACCOUNT_UPDATE: data => console.log(data),
-  ORDER_TRADE_UPDATE: data => console.log(data.o)
-
-}
-
-async function setWsListen (listenKey) {
-  ws.listenKey(listenKey, async (data) => {
-    return event[data.e](data) || null
-  })
-}
 
 async function execute () {
   const candles = await api.candles(symbol, 200)
   getListenKey()
   const balance = await api.getBalance()
   if (balance) console.log(balance.filter((coin) => (coin.asset === 'USDT'))[0].availableBalance)
-  const leverage = await api.changeLeverage(18)
-  if (leverage) console.log(leverage)
+  // const leverage = await api.changeLeverage(18)
+  // if (leverage) console.log(leverage)
   // const order = await api.newOrder(symbol, 1, 'BUY', 'MARKET', false)
   // if (order) console.log(order)
 
@@ -61,12 +29,45 @@ async function execute () {
       }
       console.log(ema.checkingTranding(candles), 'EMA')
       console.log(rsi.checkingRsi(candles), 'RSI')
-      console.log(stoch.checkingStoch(candles), 'STOCH')
+      console.log(stoch.checkingStoch(candles)[2], 'STOCH')
     }
   })
+  async function getListenKey () {
+    const data = await api.listenKey()
+    setWsListen(data.listenKey)
+  }
+
+  async function setWsListen (listenKey) {
+    ws.listenKey(listenKey, async (data) => {
+      if (data.e === 'listenKeyExpired') {
+        getListenKey()
+        console.log('listenKeyExpired')
+      } else if (data.e === 'ACCOUNT_UPDATE') {
+        console.log('ACCOUNT_UPDATE')
+      } else if (data.e === 'ORDER_TRADE_UPDATE') {
+        console.log('ORDER_TRADE_UPDATE')
+        operations.handleOrderUpdate(data, tools.getLasts(candles, 3))
+      }
+    })
+  }
 }
 
 execute()
+// listenKeyExpired
+// ACCOUNT_UPDATE
+//     - DEPOSIT, WITHDRAW, ORDER, FUNDING_FEE, WITHDRAW_REJECT, ADJUSTMENT,
+//     - INSURANCE_CLEAR, ADMIN_DEPOSIT, ADMIN_WITHDRAW, MARGIN_TRANSFER,
+//     - MARGIN_TYPE_CHANGE, ASSET_TRANSFER, OPTIONS_PREMIUM_FEE, OPTIONS_SETTLE_PROFIT,
+//     - AUTO_EXCHANGE
+// ORDER_TRADE_UPDATE
+//     data.o.X
+//     - NEW
+//     - PARTIALLY_FILLED
+//     - FILLED
+//     - CANCELED
+//     - EXPIRED
+//     - NEW_INSURANCE - Liquidation with Insurance Fund
+//     - NEW_ADL - Counterparty Liquidation`
 
 // The signal of entry is when detected a hidden bearish for SHORT or a
 //   Hidden Bullish  for LONG.
