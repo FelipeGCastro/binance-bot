@@ -4,7 +4,6 @@ const rsi = require('./indicators/rsi.js')
 const stoch = require('./indicators/stoch.js')
 const operations = require('./operations/tpsl')
 const ws = require('./lib/ws.js')
-const tools = require('./tools/index.js')
 const symbol = process.env.SYMBOL
 
 async function execute () {
@@ -42,11 +41,8 @@ async function execute () {
       if (data.e === 'listenKeyExpired') {
         getListenKey()
         console.log('listenKeyExpired')
-      } else if (data.e === 'ACCOUNT_UPDATE') {
-        console.log('ACCOUNT_UPDATE')
-      } else if (data.e === 'ORDER_TRADE_UPDATE') {
-        console.log('ORDER_TRADE_UPDATE')
-        operations.handleOrderUpdate(data, tools.getLasts(candles, 3))
+      } else {
+        operations.handleUserDataUpdate(data, candles)
       }
     })
   }
