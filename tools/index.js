@@ -4,10 +4,9 @@ function extractData (dataArray, index = 'CLOSE') {
     HIGH: 2,
     LOW: 3
   }
-
   const data = []
-  dataArray.forEach(kandle => {
-    const close = Number(kandle[type[index]])
+  dataArray.forEach(candle => {
+    const close = Number(candle[type[index]])
     data.push(close)
   })
   return data

@@ -74,9 +74,9 @@ async function time () {
   return publicCall('/fapi/v1/time')
 }
 
-async function candles (pair = symbolDefault.toLowerCase(), limit = 200) {
+async function candles (pair = symbolDefault.toLowerCase(), interval = '1m', limit = 200) {
   return publicCall('/fapi/v1/continuousKlines',
-    { pair, contractType: 'PERPETUAL', interval: '1m', limit })
+    { pair, contractType: 'PERPETUAL', interval, limit })
 }
 
 async function depth (symbol = symbolDefault, limit = 5) {
