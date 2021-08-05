@@ -2,10 +2,12 @@ const axios = require('axios')
 const querystring = require('querystring')
 const crypto = require('crypto')
 const symbolDefault = process.env.SYMBOL
+// const apikey = process.env.API_TEST_KEY
+// const apiSecret = process.env.SECRET_TEST_KEY
 const apikey = process.env.API_KEY
 const apiSecret = process.env.SECRET_KEY
-// const apiUrl = process.env.API_URL
-const apiTestUrl = process.env.API_TEST_URL
+const apiUrl = process.env.API_URL
+// const apiTestUrl = process.env.API_TEST_URL
 
 async function privateCall (path, data = {}, method = 'GET') {
   const timestamp = Date.now()
@@ -17,7 +19,7 @@ async function privateCall (path, data = {}, method = 'GET') {
   try {
     const result = await axios({
       method,
-      url: `${apiTestUrl}${path}${qs}`,
+      url: `${apiUrl}${path}${qs}`,
       headers: { 'X-MBX-APIKEY': apikey }
     })
     return result.data
@@ -42,16 +44,14 @@ async function newOrder (symbol = symbolDefault, quantity, side = 'BUY', type = 
 }
 
 async function cancelAllOrders (symbol = symbolDefault) {
-  const timestamp = Date.now()
-  return privateCall('/fapi/v1/allOpenOrders', { symbol, timestamp }, 'DELETE')
+  return privateCall('/fapi/v1/allOpenOrders', { symbol }, 'DELETE')
 }
 async function cancelOrder (symbol = symbolDefault, orderId, origClientOrderId) {
-  const timestamp = Date.now()
-  const data = { symbol, timestamp }
+  const data = { symbol }
   if (orderId) data.orderId = orderId
   if (origClientOrderId) data.origClientOrderId = origClientOrderId
   if (data.orderId || data.origClientOrderId) {
-    return privateCall('/fapi/v1/order', { symbol, timestamp }, 'DELETE')
+    return privateCall('/fapi/v1/order', { symbol }, 'DELETE')
   } else {
     console.log('orderId or origClientOrderId is Require!')
   }
@@ -62,7 +62,7 @@ async function publicCall (path, data, method = 'GET') {
     const qs = data ? `?${querystring.stringify(data)}` : ''
     const result = await axios({
       method,
-      url: `${apiTestUrl}${path}${qs}`
+      url: `${apiUrl}${path}${qs}`
     })
     return result.data
   } catch (error) {
@@ -92,8 +92,7 @@ async function listenKey () {
 }
 
 async function changeLeverage (leverage, symbol = symbolDefault) {
-  const timestamp = Date.now()
-  return privateCall('/fapi/v1/leverage', { symbol, leverage, timestamp }, 'POST')
+  return privateCall('/fapi/v1/leverage', { symbol, leverage }, 'POST')
 }
 
 async function getBalance () {
@@ -105,8 +104,7 @@ async function exchangeInfo () {
 }
 
 async function getAllOpenOrders (symbol = symbolDefault) {
-  const timestamp = Date.now()
-  const data = { symbol, timestamp }
+  const data = { symbol }
   return privateCall('/fapi/v1/openOrders', data)
 }
 

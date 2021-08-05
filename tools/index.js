@@ -64,33 +64,24 @@ function priceMirrorFormat (number, format) {
   return Number(formatter.format(parseFloat(number)))
 }
 
-function getLasts (data, amount) {
-  return data.slice(Math.max(data.length - amount, 1))
+function ParseFloat (str, val) {
+  str = str.toString()
+  str = str.slice(0, (str.indexOf('.')) + val + 1)
+  return Number(str)
 }
 
-function addInArray (arr, newItens) {
-  const lastCandle = arr[arr.length - 1]
-  if (lastCandle[0] === newItens[0][0]) {
-    console.log('penultimo')
-    arr.pop()
-    arr.concat(newItens)
-    return arr
-  } else if (lastCandle[0] === newItens[1][0]) {
-    console.log('É o ultimo')
-    arr.pop()
-    arr.concat(newItens.pop())
-    return arr
-  }
+function getLasts (data, amount) {
+  return data.slice(Math.max(data.length - amount, 1))
 }
 
 // NEED TO FIND A WAY TO FORMAT NUMBERS BY COIN FORMAT
 
 module.exports = {
   extractData,
-  addInArray,
   getLasts,
   getTargetPrice,
   priceMirrorFormat,
   getTpAndSlByPer,
+  ParseFloat,
   handleStopPercentage
 }

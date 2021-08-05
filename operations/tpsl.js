@@ -5,14 +5,14 @@ const tools = require('../tools/index')
 const defaultSymbol = process.env.SYMBOL
 
 let position
-async function handleUserDataUpdate (data, candles) {
+async function handleUserDataUpdate (data, candles, sendMessage) {
   if (data.e === 'ACCOUNT_UPDATE') {
     console.log('ACCOUNT_UPDATE')
     setPosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
     if (data.o.s === defaultSymbol) {
       if (data.o.X === 'FILLED') {
-        handleFilledOrder(candles, data.o)
+        handleFilledOrder(candles, data.o, sendMessage)
       } else if (data.o.X === 'CANCELED') {
         console.log('CANCELED')
         hasStopOrProfitOrder()
@@ -25,12 +25,12 @@ async function handleUserDataUpdate (data, candles) {
   }
 }
 
-async function setPosition (data) {
+function setPosition (data) {
   const positionFiltered = data.a.P.filter(pos => (pos.s === defaultSymbol))
   position = positionFiltered[0] || { pa: '0' }
 }
 
-async function handleFilledOrder (candles, order) {
+async function handleFilledOrder (candles, order, sendMessage) {
   if (position.pa !== '0') {
     if (order.o === 'MARKET') {
       handleMarketOrder(candles, order)
@@ -42,6 +42,9 @@ async function handleFilledOrder (candles, order) {
   } else {
     hasStopOrProfitOrder()
   }
+  sendMessage(`Order Type: ${order.o},
+  Side: ${order.S},
+  Last Price: ${order.L}`)
 }
 
 async function handleMarketOrder (candles, order) {
@@ -58,8 +61,8 @@ async function createTpandSLOrder (orderInfo, candles) {
   // const { stopPrice: stopMarketPrice, takeProfitPrice } = tools.getTpAndSlByPer(orderInfo.L, orderInfo.S)
   const side = sideOption ? 'BUY' : 'SELL'
   console.log('TP:', takeProfitPrice, 'PRICE:', orderInfo.L, 'SL:', stopMarketPrice, side, 'AP', orderInfo.ap, 'createTpandSLOrder')
-  await api.newOrder(defaultSymbol, null, side, 'STOP_MARKET', true, stopMarketPrice)
-  await api.newOrder(defaultSymbol, null, side, 'TAKE_PROFIT_MARKET', true, takeProfitPrice)
+  // await api.newOrder(defaultSymbol, null, side, 'STOP_MARKET', true, stopMarketPrice)
+  // await api.newOrder(defaultSymbol, null, side, 'TAKE_PROFIT_MARKET', true, takeProfitPrice)
 }
 
 async function hasStopOrProfitOrder () {
