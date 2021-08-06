@@ -31,6 +31,7 @@ function validateRsi (candles) {
   const lastTwoRsi = tools.getLasts(rsiArray, 2)
   const over80 = lastTwoRsi[0] > 80 || lastTwoRsi[1] > 80
   const under20 = lastTwoRsi[0] < 20 || lastTwoRsi[1] < 20
+  console.log(lastTwoRsi[1], 'validateRsi')
   if (over80) return 'SHORT'
   if (under20) return 'LONG'
   return false
@@ -47,6 +48,7 @@ function validateStoch (candles) {
   const dOver80 = beforeD > 80 && lastD > 80
   const kUnder20 = beforeK > 20 && lastK > 20
   const dUnder20 = beforeD > 20 && lastD > 20
+  console.log(lastTwoStoch[1].k, lastTwoStoch[1].d, 'validateStoch')
   if (kOver80 && dOver80) {
     const crossDown = lastK < lastD && beforeK > beforeD ? 'SHORT' : false
     return crossDown

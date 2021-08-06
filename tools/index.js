@@ -12,6 +12,15 @@ function extractData (dataArray, index = 'CLOSE') {
   return data
 }
 
+// 1 - 4
+function isRedCandle (candle) {
+  return candle[1] > candle[4]
+}
+// 1 - 4
+function isBlueCandle (candle) {
+  return candle[1] < candle[4]
+}
+
 function getTpAndSlByPer (price, side, stopPerc = 0.5, takeProfPerc = 1) {
   const isSell = side === 'SELL'
   const stopPrice = isSell ? parseFloat(price) + (price * (stopPerc / 100)) : price - (price * (stopPerc / 100))
@@ -72,12 +81,18 @@ function ParseFloat (str, val) {
 function getLasts (data, amount) {
   return data.slice(Math.max(data.length - amount, 1))
 }
+function getFirsts (data, amount) {
+  return data.slice(0, amount + 1)
+}
 
 // NEED TO FIND A WAY TO FORMAT NUMBERS BY COIN FORMAT
 
 module.exports = {
   extractData,
   getLasts,
+  getFirsts,
+  isRedCandle,
+  isBlueCandle,
   getTargetPrice,
   priceMirrorFormat,
   getTpAndSlByPer,
