@@ -78,6 +78,31 @@ async function candles (pair = symbolDefault.toLowerCase(), interval = '1m', lim
   return publicCall('/fapi/v1/continuousKlines',
     { pair, contractType: 'PERPETUAL', interval, limit })
 }
+async function candlesTemp (pair = symbolDefault.toLowerCase(), interval = '1m') {
+  return publicCall('/fapi/v1/continuousKlines',
+    {
+      pair,
+      contractType: 'PERPETUAL',
+      interval,
+      // sexta-feira, 6 de agosto de 2021 às 13:39:00 GMT+01:00 DST
+      // sexta-feira, 6 de agosto de 2021 às 16:58:00 GMT+01:00 DST
+      // startTime: 1628253540000, //NOT USING EMA
+      // endTime: 1628265480000 // LONG TEST
+      // ---------- TEST 2 NOT USING EMA
+      // startTime: 1628253540000,
+      // endTime: 1628264340000 // LONG TEST
+      // ---------- TEST 3 NOT USING EMA
+      // startTime: 1628253540000,
+      // endTime: 1628265060000 // LONG TEST
+      // ---------- TEST 4 NOT USING EMA
+      // startTime: 1628261880000, // sexta-feira, 6 de agosto de 2021 às 15:58:00 GMT+01:00 DST
+      // endTime: 1628273280000 // SHORT TEST sexta-feira, 6 de agosto de 2021 às 15:58:00 GMT+01:00
+      // ---------- TEST 5 NOT USING EMA
+      startTime: 1628283720000, // sexta-feira, 6 de agosto de 2021 às 22:02:00 GMT+01:00
+      endTime: 1628295720000 // sábado, 7 de agosto de 2021 às 01:22:00 GMT+01:00
+
+    })
+}
 
 async function depth (symbol = symbolDefault, limit = 5) {
   return publicCall('/fapi/v1/depth', { symbol, limit })
@@ -114,6 +139,7 @@ module.exports = {
   exchangeInfo,
   accountInfo,
   candles,
+  candlesTemp,
   listenKey,
   getBalance,
   changeLeverage,

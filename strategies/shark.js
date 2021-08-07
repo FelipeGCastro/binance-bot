@@ -48,7 +48,6 @@ function validateStoch (candles) {
   const dOver80 = beforeD > 80 && lastD > 80
   const kUnder20 = beforeK > 20 && lastK > 20
   const dUnder20 = beforeD > 20 && lastD > 20
-  console.log(lastTwoStoch[1].k, lastTwoStoch[1].d, 'validateStoch')
   if (kOver80 && dOver80) {
     const crossDown = lastK < lastD && beforeK > beforeD ? 'SHORT' : false
     return crossDown
