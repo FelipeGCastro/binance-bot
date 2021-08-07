@@ -43,7 +43,7 @@ async function execute () {
   // ----------------------------
   // const tempCandles = await api.candlesTemp(symbol, interval)
   // const valid = validateEntry(tempCandles)
-  // console.log(valid, tempCandles[tempCandles.length - 1], 'Results test')
+  // console.log(valid, 'Results test')
 
   // ---------------------------- END
   // ----------------------------
@@ -52,23 +52,27 @@ async function execute () {
   getListenKey()
 
   // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
-  ws.onKlineContinuos(symbol, interval, (data) => {
+  ws.onKlineContinuos(symbol, interval, async (data) => {
     if (data.k.x) {
-      let thinkingArry = []
-      setTimeout(() => { thinkingArry = [] }, 2000)
-      thinkingArry.push(data.k.x)
-      const addedCandle = handleAddCandle(data)
-      if (!thinkingArry[1] && addedCandle && !tradingOn) {
-        const timeMin = new Date()
-        console.log('fechou!', timeMin.getMinutes())
-        const result = validateEntry(candles)
-        if (result) {
-          console.log(result)
-          sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
-        }
-      }
+      await handleCloseCandle(data)
     }
   })
+
+  function handleCloseCandle (data) {
+    let thinkingArry = []
+    setTimeout(() => { thinkingArry = [] }, 2000)
+    thinkingArry.push(data.k.x)
+    const addedCandle = handleAddCandle(data)
+    if (!thinkingArry[1] && addedCandle && !tradingOn) {
+      const timeMin = new Date()
+      console.log('fechou!', timeMin.getMinutes())
+      const result = validateEntry(candles)
+      if (result) {
+        console.log(result)
+        sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
+      }
+    }
+  }
 
   function handleAddCandle (data) {
     const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
