@@ -43,7 +43,7 @@ async function execute () {
   // ----------------------------
   // const tempCandles = await api.candlesTemp(symbol, interval)
   // const valid = validateEntry(tempCandles)
-  // console.log(valid, 'Results test')
+  // console.log(valid, tempCandles[tempCandles.length - 1], 'Results test')
 
   // ---------------------------- END
   // ----------------------------
@@ -54,26 +54,31 @@ async function execute () {
   // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
   ws.onKlineContinuos(symbol, interval, (data) => {
     if (data.k.x) {
-      const addNew = handleAddCandle(data)
-      if (addNew) {
-        console.log('fechou!')
+      let thinkingArry = []
+      setTimeout(() => { thinkingArry = [] }, 2000)
+      thinkingArry.push(data.k.x)
+      const addedCandle = handleAddCandle(data)
+      if (!thinkingArry[1] && addedCandle && !tradingOn) {
+        const timeMin = new Date()
+        console.log('fechou!', timeMin.getMinutes())
         const result = validateEntry(candles)
         if (result) {
-          sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}`)
+          console.log(result)
+          sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
         }
       }
     }
   })
 
-  async function handleAddCandle (data) {
+  function handleAddCandle (data) {
     const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
     if (data.k.t === candles[candles.length - 1][0]) {
       candles.pop()
       candles.push(newCandle)
       return false
     } else {
-      candles.shift()
       candles.push(newCandle)
+      candles.shift()
       return true
     }
   }

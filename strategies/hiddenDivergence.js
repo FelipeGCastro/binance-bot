@@ -11,6 +11,7 @@ const lookBackPeriod = 26
 const lastPivotRange = 6
 
 function validateEntry (candles) {
+  const lastCandleTime = new Date(candles[candles.length - 1][0])
   const trendingEma = validateEma(candles)
   console.log(trendingEma)
   const hasCrossStoch = validateStoch(candles)
@@ -22,6 +23,7 @@ function validateEntry (candles) {
     const validatedRsi = validateDivergence(candles, hasCrossStoch)
     if (validatedRsi) {
       return {
+        timeLastCandle: `Hora: ${lastCandleTime.getHours()} e ${lastCandleTime.getMinutes()} minutos`,
         side: hasCrossStoch,
         stopPrice: validatedRsi.lastPivotPrice,
         stopPercentage: 0.5,
@@ -136,8 +138,10 @@ function validateDivergence (candles, side) {
     const firstsCandlesReversed = firstsCandles.slice().reverse()
     const isDivergence = firstsCandlesReversed.find((candle, i) => {
       const normalIndex = ((firstsCandlesLength - 1) - i) + 1 === firstsCandlesLength ? ((firstsCandlesLength - 1) - i) : ((firstsCandlesLength - 1) - i) + 1
+      const last = !firstsCandles[normalIndex + 1]
       if (candle[CANDLE.HIGH] > lastPrice &&
         tools.isBlueCandle(candle) &&
+        !last &&
         tools.isRedCandle(firstsCandles[normalIndex + 1])) {
         firstPriceIndex = normalIndex
         firstPivotRsi = firstsRsi[firstPriceIndex]
@@ -231,12 +235,15 @@ function validateDivergence (candles, side) {
     const firstsCandlesReversed = firstsCandles.slice().reverse()
     const isDivergence = firstsCandlesReversed.find((candle, i) => {
       const normalIndex = ((firstsCandlesLength - 1) - i) + 1 === firstsCandlesLength ? ((firstsCandlesLength - 1) - i) : ((firstsCandlesLength - 1) - i) + 1
+      console.log(firstsCandles.length, normalIndex, firstsCandlesLength, i, 'isDivergence, linha 234')
+      const last = !firstsCandles[normalIndex + 1]
       if (candle[CANDLE.LOW] < lastPrice &&
         tools.isRedCandle(candle) &&
+        !last &&
         tools.isBlueCandle(firstsCandles[normalIndex + 1])) {
         firstPriceIndex = normalIndex
         firstPivotRsi = firstsRsi[firstPriceIndex]
-        console.log(firstsCandles.length, firstsCandlesLength, firstPriceIndex, 'isDivergence, linha 237')
+        console.log(firstsCandles.length, firstsCandlesLength, firstPriceIndex, 'isDivergence, linha 240')
         firstPivotPrice = firstsCandles[firstPriceIndex][CANDLE.LOW]
 
         const candleDivergence = firstPivotPrice < lastPivotPrice
