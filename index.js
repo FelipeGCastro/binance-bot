@@ -3,7 +3,6 @@ const operations = require('./operations/tpsl')
 const ws = require('./lib/ws.js')
 const { Telegraf } = require('telegraf')
 const { STRATEGIES } = require('./tools/constants')
-const ema = require('./indicators/ema')
 
 const sharkStrategy = require('./strategies/shark')
 const hiddenDivergence = require('./strategies/hiddenDivergence')
@@ -39,17 +38,28 @@ bot.hears('Saldo', async ctx => {
 // END TELEGRAM BOT
 // START MAIN FUNCTION
 async function execute () {
+  // TESTING PART CODE, REMOVE AFTER TESTING
+  // ----------------------------
+  // ----------------------------
+  // const tempCandles = await api.candlesTemp(symbol, interval)
+  // const valid = validateEntry(tempCandles)
+  // console.log(valid, 'Results test')
+
+  // ---------------------------- END
+  // ----------------------------
+
   const candles = await api.candles(symbol, interval, amountCandles)
   getListenKey()
 
+  // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
   ws.onKlineContinuos(symbol, interval, (data) => {
     if (data.k.x) {
-      if (handleAddCandle(data)) {
+      const addNew = handleAddCandle(data)
+      if (addNew) {
         console.log('fechou!')
-        console.log(ema.checkingEma(candles))
         const result = validateEntry(candles)
         if (result) {
-          sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPercentage} e StopGain: ${result.gainPercentage}`)
+          sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}`)
         }
       }
     }

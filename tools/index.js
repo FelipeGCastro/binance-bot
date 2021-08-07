@@ -82,7 +82,7 @@ function getLasts (data, amount) {
   return data.slice(Math.max(data.length - amount, 1))
 }
 function getFirsts (data, amount) {
-  return data.slice(0, amount + 1)
+  return data.slice(0, amount)
 }
 
 // NEED TO FIND A WAY TO FORMAT NUMBERS BY COIN FORMAT
