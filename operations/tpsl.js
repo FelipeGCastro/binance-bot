@@ -1,18 +1,19 @@
 const api = require('../api')
+const telegram = require('../services/telegram')
 const highest = require('technicalindicators').Highest
 const lowest = require('technicalindicators').Lowest
 const tools = require('../tools/index')
 const defaultSymbol = process.env.SYMBOL
 
 let position
-async function handleUserDataUpdate (data, candles, sendMessage) {
+async function handleUserDataUpdate (data, candles) {
   if (data.e === 'ACCOUNT_UPDATE') {
     console.log('ACCOUNT_UPDATE')
     setPosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
     if (data.o.s === defaultSymbol) {
       if (data.o.X === 'FILLED') {
-        handleFilledOrder(candles, data.o, sendMessage)
+        handleFilledOrder(candles, data.o)
       } else if (data.o.X === 'CANCELED') {
         console.log('CANCELED')
         hasStopOrProfitOrder()
@@ -25,12 +26,16 @@ async function handleUserDataUpdate (data, candles, sendMessage) {
   }
 }
 
+// function createNewOrder (data) {
+
+// }
+
 function setPosition (data) {
   const positionFiltered = data.a.P.filter(pos => (pos.s === defaultSymbol))
   position = positionFiltered[0] || { pa: '0' }
 }
 
-async function handleFilledOrder (candles, order, sendMessage) {
+async function handleFilledOrder (candles, order) {
   if (position.pa !== '0') {
     if (order.o === 'MARKET') {
       handleMarketOrder(candles, order)
@@ -42,7 +47,7 @@ async function handleFilledOrder (candles, order, sendMessage) {
   } else {
     hasStopOrProfitOrder()
   }
-  sendMessage(`Order Type: ${order.o},
+  telegram.sendMessage(`Order Type: ${order.o},
   Side: ${order.S},
   Last Price: ${order.L}`)
 }
