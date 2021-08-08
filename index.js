@@ -14,12 +14,12 @@ const amountCandles = 500
 let tradingOn = false
 let listenKeyIsOn = false
 
-const setPeriodInterval = (int) => { interval = int }
-const setTradingOn = (data) => { tradingOn = data }
-const getTradingOn = () => tradingOn
-const setValidate = (func) => { validateEntry = func }
-const setSymbol = (symb) => { symbol = symb }
-const getSymbol = () => symbol
+function setPeriodInterval (int) { interval = int }
+function setTradingOn (data) { tradingOn = data }
+function getTradingOn () { return tradingOn }
+function setValidate (func) { validateEntry = func }
+function setSymbol (symb) { symbol = symb }
+function getSymbol () { return symbol }
 
 // START MAIN FUNCTION
 async function execute () {
