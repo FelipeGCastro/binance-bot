@@ -15,7 +15,6 @@ const lastPivotRange = 6
 function validateEntry (candles) {
   const lastCandleTime = new Date(candles[candles.length - 1][0])
   const trendingEma = validateEma(candles)
-  console.log(trendingEma)
   const hasCrossStoch = validateStoch(candles)
   if (!hasCrossStoch) {
     console.log('SAIDA 1')
@@ -86,7 +85,7 @@ function validateDivergence (candles, side) {
   const firstsCandlesLength = lookBackPeriod - lastPivotRange
   const firstsCandles = tools.getFirsts(lastsCandles, firstsCandlesLength)
   const firstsRsi = tools.getFirsts(lastsRsi, firstsCandlesLength)
-  console.log(firstsCandles.length, firstsRsi.length, firstsCandlesLength, 'linha 84')
+
   let lastPivotRsi, firstPivotRsi
   let lastPivotPrice, firstPivotPrice
 
@@ -102,8 +101,10 @@ function validateDivergence (candles, side) {
         lastSixCandles[i - 1][CANDLE.OPEN] <= candle[CANDLE.CLOSE]
         : false
       // CONDITIONS FOR PIVOT HIGH
+      const last = !lastSixCandles[i + 1]
       if (candle[CANDLE.HIGH] > lastPrice &&
         candleBeforeCondition &&
+        !last &&
         tools.isBlueCandle(candle) &&
         tools.isRedCandle(lastSixCandles[i + 1])) {
         lastPriceIndex = i
@@ -123,6 +124,10 @@ function validateDivergence (candles, side) {
     if (lastPriceIndex < 2 || lastPriceIndex === 5) {
       console.log('SAIDA 5')
       return false
+    }
+
+    if (!lastPriceIndex) {
+      console.log('SAIDA 6')
     }
     lastPivotRsi = lastSixRsi[lastPriceIndex]
     lastPivotPrice = lastSixCandles[lastPriceIndex][CANDLE.HIGH]
@@ -169,8 +174,10 @@ function validateDivergence (candles, side) {
         : false
       // CHECKING LAST PRICE
       lastPrice = lastPrice || candle[CANDLE.LOW]
+      const last = !lastSixCandles[i + 1]
       if (candle[CANDLE.LOW] <= lastPrice &&
         candleBeforeCondition &&
+        !last &&
         tools.isRedCandle(candle) &&
         tools.isBlueCandle(lastSixCandles[i + 1])) {
         lastPriceIndex = i
@@ -183,11 +190,19 @@ function validateDivergence (candles, side) {
           ],
           period: 3
         })[0]
+      } else {
+        console.log('SAIDA 10')
+        return false
       }
     })
 
     if (lastPriceIndex < 2 || lastPriceIndex === 5) {
       console.log('SAIDA 11')
+      return false
+    }
+
+    if (!lastPriceIndex) {
+      console.log('SAIDA 12')
       return false
     }
     lastPivotRsi = lastSixRsi[lastPriceIndex]
