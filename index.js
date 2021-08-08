@@ -1,7 +1,7 @@
 const api = require('./api.js')
 const operations = require('./operations/tpsl')
 const ws = require('./lib/ws.js')
-const telegram = require('./services/telegram')
+// const telegram = require('./services/telegram')
 const hiddenDivergence = require('./strategies/hiddenDivergence')
 
 // TELEGRAM BOT FUNCTIONS
@@ -22,9 +22,9 @@ async function execute () {
   // TESTING PART CODE, REMOVE AFTER TESTING
   // ----------------------------
   // ----------------------------
-  // const tempCandles = await api.candlesTemp(symbol, interval)
-  // const valid = validateEntry(tempCandles)
-  // console.log(valid, 'Results test')
+  const tempCandles = await api.candlesTemp(symbol, interval)
+  const valid = validateEntry(tempCandles)
+  console.log(valid, 'Results test')
 
   // ---------------------------- END
   // ----------------------------
@@ -48,11 +48,11 @@ async function execute () {
       const timeMin = new Date()
       console.log(candles[candles.length - 1][0], candles[candles.length - 2][0])
       console.log('fechou!', timeMin.getMinutes())
-      const result = validateEntry(candles)
-      if (result) {
-        console.log(result)
-        telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
-      }
+      // const result = validateEntry(candles)
+      // if (result) {
+      //   console.log(result)
+      //   telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
+      // }
     }
   }
 
