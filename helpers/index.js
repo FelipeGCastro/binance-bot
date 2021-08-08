@@ -1,33 +1,29 @@
 const api = require('../api')
 let exchangeInfo
-async function getSymbolRules (symbol) {
+async function getQtyRules (symbol) {
   if (!exchangeInfo) {
-    const result = await api.exchangeInfo()
-    if (result) {
-      const symbolData = result.symbols.filter(data => data.symbol === symbol)
-      // "filterType": "LOT_SIZE"
-      const filter = symbolData.filters.find(filter => filter.filterType === 'LOT_SIZE')
-
-      return {
-        symbolFormat: filter.stepSize,
-        minQty: filter.minQty
-      }
-    }
+    exchangeInfo = await api.exchangeInfo()
+    if (!exchangeInfo) return console.log('Error getting exchange info.')
+  }
+  const symbolData = exchangeInfo.symbols.filter(data => data.symbol === symbol)
+  const filter = symbolData.filters.find(filter => filter.filterType === 'LOT_SIZE')
+  return {
+    qtyFormat: filter.stepSize,
+    minQty: filter.minQty
   }
 }
 
 async function getAllSymbols () {
   if (!exchangeInfo) {
-    const result = await api.exchangeInfo()
-    if (result) {
-      const allSymbols = result.symbols.map(data => data.symbol)
-
-      return allSymbols
-    }
+    exchangeInfo = await api.exchangeInfo()
+    if (!exchangeInfo) return console.log('Error getting exchange info.')
   }
+  const allSymbols = exchangeInfo.symbols.map(data => data.symbol)
+
+  return allSymbols
 }
 
 module.exports = {
-  getSymbolRules,
+  getQtyRules,
   getAllSymbols
 }

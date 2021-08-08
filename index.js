@@ -1,36 +1,59 @@
 const api = require('./api.js')
 const operations = require('./operations/tpsl')
 const ws = require('./lib/ws.js')
-// const telegram = require('./services/telegram')
+const telegram = require('./services/telegram')
 const hiddenDivergence = require('./strategies/hiddenDivergence')
+const newOrder = require('./operations/newOrder')
 
 // TELEGRAM BOT FUNCTIONS
 
-const symbol = process.env.SYMBOL
+let symbol = process.env.SYMBOL
 let interval = '1m'
 let validateEntry = hiddenDivergence.validateEntry
 const amountCandles = 500
 let tradingOn = false
+let listenKeyIsOn = false
 
 const setPeriodInterval = (int) => { interval = int }
 const setTradingOn = (data) => { tradingOn = data }
 const getTradingOn = () => tradingOn
 const setValidate = (func) => { validateEntry = func }
+const setSymbol = (symb) => { symbol = symb }
+const getSymbol = () => symbol
 
 // START MAIN FUNCTION
 async function execute () {
   // TESTING PART CODE, REMOVE AFTER TESTING
   // ----------------------------
   // ----------------------------
-  const tempCandles = await api.candlesTemp(symbol, interval)
-  const valid = validateEntry(tempCandles)
-  console.log(valid, 'Results test')
+  // const tempCandles = await api.candlesTemp(symbol, interval)
+  // const valid = validateEntry(tempCandles)
+  // console.log(valid, 'Results test')
 
   // ---------------------------- END
   // ----------------------------
 
   const candles = await api.candles(symbol, interval, amountCandles)
   getListenKey()
+  async function getListenKey () {
+    const data = await api.listenKey()
+    if (data) {
+      setWsListen(data.listenKey)
+      listenKeyIsOn = true
+    }
+  }
+
+  async function setWsListen (listenKey) {
+    ws.listenKey(listenKey, async (data) => {
+      if (data.e === 'listenKeyExpired' && listenKeyIsOn) {
+        listenKeyIsOn = false
+        await getListenKey()
+        console.log('listenKeyExpired')
+      } else {
+        operations.handleUserDataUpdate(data, candles)
+      }
+    })
+  }
 
   // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
   ws.onKlineContinuos(symbol, interval, async (data) => {
@@ -44,15 +67,15 @@ async function execute () {
     setTimeout(() => { thinkingArry = [] }, 2000)
     thinkingArry.push(data.k.x)
     await handleAddCandle(data)
-    if (!thinkingArry[1] && !tradingOn) {
+    if (!thinkingArry[1] && !tradingOn && listenKeyIsOn) {
       const timeMin = new Date()
-      console.log(candles[candles.length - 1][0], candles[candles.length - 2][0])
       console.log('fechou!', timeMin.getMinutes())
-      // const result = validateEntry(candles)
-      // if (result) {
-      //   console.log(result)
-      //   telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
-      // }
+      const result = validateEntry(candles)
+      if (result) {
+        console.log(result)
+        newOrder.handleNewOrder(result)
+        telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
+      }
     }
   }
 
@@ -65,22 +88,6 @@ async function execute () {
     }
     candles.push(newCandle)
   }
-
-  async function getListenKey () {
-    const data = await api.listenKey()
-    setWsListen(data.listenKey)
-  }
-
-  async function setWsListen (listenKey) {
-    ws.listenKey(listenKey, async (data) => {
-      if (data.e === 'listenKeyExpired') {
-        await getListenKey()
-        console.log('listenKeyExpired')
-      } else {
-        operations.handleUserDataUpdate(data, candles)
-      }
-    })
-  }
 }
 
 execute()
@@ -90,5 +97,7 @@ module.exports = {
   setTradingOn,
   getTradingOn,
   setValidate,
-  execute
+  execute,
+  setSymbol,
+  getSymbol
 }

@@ -2,12 +2,12 @@ const axios = require('axios')
 const querystring = require('querystring')
 const crypto = require('crypto')
 const symbolDefault = process.env.SYMBOL
-// const apikey = process.env.API_TEST_KEY
-// const apiSecret = process.env.SECRET_TEST_KEY
-const apikey = process.env.API_KEY
-const apiSecret = process.env.SECRET_KEY
-const apiUrl = process.env.API_URL
-// const apiTestUrl = process.env.API_TEST_URL
+const apikey = process.env.API_TEST_KEY
+const apiSecret = process.env.SECRET_TEST_KEY
+const apiUrl = process.env.API_TEST_URL
+// const apikey = process.env.API_KEY
+// const apiSecret = process.env.SECRET_KEY
+const apiUrlReal = process.env.API_URL
 
 async function privateCall (path, data = {}, method = 'GET') {
   const timestamp = Date.now()
@@ -27,10 +27,7 @@ async function privateCall (path, data = {}, method = 'GET') {
     console.log(error)
   }
 }
-// MARKET
-// STOP_MARKET
-// TAKE_PROFIT_MARKET
-// symbol, side, positionSide, type, quantity
+
 async function newOrder (symbol = symbolDefault, quantity, side = 'BUY', type = 'MARKET', closePosition = false, stopPrice = false) {
   const data = {
     symbol,
@@ -47,6 +44,7 @@ async function newOrder (symbol = symbolDefault, quantity, side = 'BUY', type = 
 async function cancelAllOrders (symbol = symbolDefault) {
   return privateCall('/fapi/v1/allOpenOrders', { symbol }, 'DELETE')
 }
+
 async function cancelOrder (symbol = symbolDefault, orderId, origClientOrderId) {
   const data = { symbol }
   if (orderId) data.orderId = orderId
@@ -63,7 +61,8 @@ async function publicCall (path, data, method = 'GET') {
     const qs = data ? `?${querystring.stringify(data)}` : ''
     const result = await axios({
       method,
-      url: `${apiUrl}${path}${qs}`
+      // url: `${apiUrl}${path}${qs}`
+      url: `${apiUrlReal}${path}${qs}`
     })
     return result.data
   } catch (error) {
@@ -93,8 +92,8 @@ async function candlesTemp (pair = symbolDefault.toLowerCase(), interval = '1m')
       // startTime: 1628253540000,
       // endTime: 1628264340000 // LONG TEST
       // ---------- TEST 3 NOT USING EMA
-      // startTime: 1628253540000, // TRUE 'Hora: 16 e 51 minutos'
-      // endTime: 1628265060000 // LONG TEST
+      startTime: 1628253540000, // TRUE 'Hora: 16 e 51 minutos'
+      endTime: 1628265060000 // LONG TEST
       // ---------- TEST 4 NOT USING EMA
       // startTime: 1628261880000, // sexta-feira, 6 de agosto de 2021 às 15:58:00 GMT+01:00 DST
       // endTime: 1628273280000 // SHORT TEST sexta-feira, 6 de agosto de 2021 às 15:58:00 GMT+01:00
@@ -120,8 +119,8 @@ async function candlesTemp (pair = symbolDefault.toLowerCase(), interval = '1m')
       // startTime: 1628355780000, // sábado, 7 de agosto de 2021 às 18:03:00 GMT+01:00
       // endTime: 1628371500000 //  sábado, 7 de agosto de 2021 às 22:25:00 GMT+01:00
       // // ---------- TEST 11 ERROR DELETE AFTER TEST
-      startTime: 1628373360000, //
-      endTime: 1628389020000 // domingo, 8 de agosto de 2021 às 03:18:00 GMT+01:00
+      // startTime: 1628373360000, //
+      // endTime: 1628389020000 // domingo, 8 de agosto de 2021 às 03:18:00 GMT+01:00
 
     })
 }
