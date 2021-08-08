@@ -93,8 +93,8 @@ async function candlesTemp (pair = symbolDefault.toLowerCase(), interval = '1m')
       // startTime: 1628253540000,
       // endTime: 1628264340000 // LONG TEST
       // ---------- TEST 3 NOT USING EMA
-      startTime: 1628253540000, // TRUE 'Hora: 16 e 51 minutos'
-      endTime: 1628265060000 // LONG TEST
+      // startTime: 1628253540000, // TRUE 'Hora: 16 e 51 minutos'
+      // endTime: 1628265060000 // LONG TEST
       // ---------- TEST 4 NOT USING EMA
       // startTime: 1628261880000, // sexta-feira, 6 de agosto de 2021 às 15:58:00 GMT+01:00 DST
       // endTime: 1628273280000 // SHORT TEST sexta-feira, 6 de agosto de 2021 às 15:58:00 GMT+01:00
@@ -120,8 +120,8 @@ async function candlesTemp (pair = symbolDefault.toLowerCase(), interval = '1m')
       // startTime: 1628355780000, // sábado, 7 de agosto de 2021 às 18:03:00 GMT+01:00
       // endTime: 1628371500000 //  sábado, 7 de agosto de 2021 às 22:25:00 GMT+01:00
       // // ---------- TEST 11 ERROR DELETE AFTER TEST
-      // startTime: 1628373360000, //
-      // endTime: 1628385360000 // domingo, 8 de agosto de 2021 às 02:16:00 GMT+01:00
+      startTime: 1628373360000, //
+      endTime: 1628389020000 // domingo, 8 de agosto de 2021 às 03:18:00 GMT+01:00
 
     })
 }

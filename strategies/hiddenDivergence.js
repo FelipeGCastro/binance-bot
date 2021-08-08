@@ -128,7 +128,9 @@ function validateDivergence (candles, side) {
 
     if (!lastPriceIndex) {
       console.log('SAIDA 6')
+      return false
     }
+    console.log(lastSixCandles.length, lastPriceIndex, 'linha132')
     lastPivotRsi = lastSixRsi[lastPriceIndex]
     lastPivotPrice = lastSixCandles[lastPriceIndex][CANDLE.HIGH]
 
