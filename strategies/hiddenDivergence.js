@@ -6,12 +6,15 @@ const CANDLE = require('../tools/constants').CANDLE
 const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
 const STRATEGIES = require('../tools/constants').STRATEGIES
+const tpsl = require('../operations/tpsl')
 
 const periodTime = '1m'
 const rsiPeriod = 14// 80 - 20
 const stochPeriod = 14 // 80 - 20
 const lookBackPeriod = 26
 const lastPivotRange = 6
+
+const getInterval = () => periodTime
 
 function validateEntry (candles) {
   const trendingEma = validateEma(candles)
@@ -23,12 +26,17 @@ function validateEntry (candles) {
     if (hasCrossStoch === trendingEma) {
       const divergence = validateDivergence(candles, hasCrossStoch)
       if (divergence) {
-        return {
-          strategy: STRATEGIES.HIDDEN_DIVERGENCE,
-          timeLastCandle: candles[candles.length - 1][0],
-          side: hasCrossStoch,
-          stopPrice: divergence.lastTopOrBottomPrice,
-          closePrice: divergence.lastClosePrice
+        if (handleTpslOrder(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)) {
+          return {
+            strategy: STRATEGIES.HIDDEN_DIVERGENCE,
+            timeLastCandle: candles[candles.length - 1][0],
+            side: hasCrossStoch,
+            stopPrice: divergence.lastTopOrBottomPrice,
+            closePrice: divergence.lastClosePrice
+          }
+        } else {
+          console.log('SAIDA 1.5 - Erro ao setar stop price and target price ')
+          return false
         }
       } else {
         console.log('SAIDA 2')
@@ -40,9 +48,19 @@ function validateEntry (candles) {
     }
   }
 }
+function handleTpslOrder (stopPrice, closePrice) {
+  let targetPrice = ((closePrice - stopPrice) * 2) + Number(closePrice)
 
-function getInterval () {
-  return periodTime
+  targetPrice = tools.ParseFloatByFormat(targetPrice, closePrice)
+  stopPrice = tools.ParseFloatByFormat(stopPrice, stopPrice)
+  if (targetPrice && stopPrice) {
+    tpsl.setStopMarketPrice(stopPrice)
+    tpsl.setTakeProfitPrice(targetPrice)
+    return true
+  } else {
+    console.log('Error handleTpslOrder')
+    return false
+  }
 }
 
 function validateEma (candles) {

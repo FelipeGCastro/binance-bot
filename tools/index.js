@@ -77,11 +77,13 @@ function ParseFloat (str, val) {
   str = str.slice(0, (str.indexOf('.')) + val + 1)
   return Number(str)
 }
-function ParseFloatByFormat (str, format) {
-  const decimals = format.toString().split('.')[1].length
+
+function ParseFloatByFormat (str, formatDecimals) {
+  const decimals = formatDecimals.toString().split('.')[1].length
   str = str.toString()
-  str = str.slice(0, (str.indexOf('.')) + decimals + 1)
-  return Number(str)
+  const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false })
+
+  return Number(formatter.format(Number(str)))
 }
 
 function getLasts (data, amount) {
