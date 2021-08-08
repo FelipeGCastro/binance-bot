@@ -4,10 +4,10 @@ const home = require('../index')
 
 let stopMarketPrice, takeProfitPrice
 let position
-const setStopMarketPrice = (price) => { stopMarketPrice = price }
-const getStopMarketPrice = () => stopMarketPrice
-const setTakeProfitPrice = (price) => { takeProfitPrice = price }
-const getTakeProfitPrice = () => takeProfitPrice
+function setStopMarketPrice (price) { stopMarketPrice = price }
+function getStopMarketPrice () { return stopMarketPrice }
+function setTakeProfitPrice (price) { takeProfitPrice = price }
+function getTakeProfitPrice () { return takeProfitPrice }
 
 async function handleUserDataUpdate (data) {
   const symbol = home.getSymbol()

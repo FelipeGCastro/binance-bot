@@ -103,7 +103,7 @@ function validateDivergence (candles, side) {
   const firstsCandlesLength = lookBackPeriod - lastPivotRange
   const firstsCandles = tools.getFirsts(lastsCandles, firstsCandlesLength)
   const firstsRsi = tools.getFirsts(lastsRsi, firstsCandlesLength)
-  const lastClosePrice = lastSixCandles[lastSixCandles - 1][CANDLE.CLOSE]
+  const lastClosePrice = lastSixCandles[lastSixCandles.length - 1][CANDLE.CLOSE]
   let lastPivotRsi, firstPivotRsi
   let lastPivotPrice, firstPivotPrice
 
