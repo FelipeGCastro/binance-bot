@@ -43,6 +43,26 @@ async function execute () {
     }
   }
 
+  Math.random = (function xoshiro128p () {
+    // Using the same value for each seed is screamingly wrong
+    // but this is 'good enough' for a toy function.
+    let a = Date.now()
+    let b = Date.now()
+    let c = Date.now()
+    let d = Date.now()
+    return function () {
+      const t = b << 9
+      const r = a + d
+      c = c ^ a
+      d = d ^ b
+      b = b ^ c
+      a = a ^ d
+      c = c ^ t
+      d = (d << 11) | (d >>> 21)
+      return (r >>> 0) / 4294967296
+    }
+  })()
+
   async function setWsListen (listenKey) {
     ws.listenKey(listenKey, async (data) => {
       if (data.e === 'listenKeyExpired' && listenKeyIsOn) {
@@ -54,20 +74,24 @@ async function execute () {
       }
     })
   }
-
+  let canWrite = true
+  let lastEventAt = 0
   // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
   ws.onKlineContinuos(symbol, interval, async (data) => {
-    if (data.k.x) {
-      await handleCloseCandle(data)
-    }
+    setTimeout(async () => {
+      if (data.k.x && canWrite && data.E > lastEventAt) {
+        console.log(data, 'DENTRO')
+        lastEventAt = data.E
+        canWrite = false
+        await handleCloseCandle(data)
+        canWrite = true
+      }
+    }, Math.random() * (100 - 30) + 30)
   })
 
   async function handleCloseCandle (data) {
-    let thinkingArry = []
-    setTimeout(() => { thinkingArry = [] }, 2000)
-    thinkingArry.push(data.k.x)
     await handleAddCandle(data)
-    if (!thinkingArry[1] && !tradingOn && listenKeyIsOn) {
+    if (!tradingOn && listenKeyIsOn) {
       const timeMin = new Date()
       console.log('fechou!', timeMin.getMinutes())
       const result = validateEntry(candles)
