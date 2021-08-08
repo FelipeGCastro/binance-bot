@@ -14,6 +14,10 @@ const getStake = () => stake
 function handleNewOrder (data) {
   if (data.strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
     handleDivergenceOrder(data)
+  } else if (data.strategy === STRATEGIES.SHARK) {
+    console.log('strategy ', STRATEGIES.SHARK)
+  } else {
+    console.log('no strategy')
   }
 }
 
@@ -22,7 +26,6 @@ function handleDivergenceOrder (data) {
   const quantity = getQty(closePrice)
   const side = data.side
   const type = ORDER_TYPE.MARKET
-
   const symbol = home.getSymbol()
   api.newOrder(symbol, quantity, side, type)
 }
