@@ -48,6 +48,7 @@ function validateEntry (candles) {
     }
   }
 }
+
 function handleTpslOrder (stopPrice, closePrice) {
   let targetPrice = ((closePrice - stopPrice) * 2) + Number(closePrice)
 
