@@ -1,19 +1,16 @@
 const api = require('../api')
 const telegram = require('../services/telegram')
-const highest = require('technicalindicators').Highest
-const lowest = require('technicalindicators').Lowest
-const tools = require('../tools/index')
-const defaultSymbol = process.env.SYMBOL
-
+const home = require('../index')
 let position
-async function handleUserDataUpdate (data, candles) {
+async function handleUserDataUpdate (data) {
+  const symbol = home.getSymbol()
   if (data.e === 'ACCOUNT_UPDATE') {
     console.log('ACCOUNT_UPDATE')
     setPosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
-    if (data.o.s === defaultSymbol) {
+    if (data.o.s === symbol) {
       if (data.o.X === 'FILLED') {
-        handleFilledOrder(candles, data.o)
+        handleFilledOrder(data.o)
       } else if (data.o.X === 'CANCELED') {
         console.log('CANCELED')
         hasStopOrProfitOrder()
@@ -31,14 +28,15 @@ async function handleUserDataUpdate (data, candles) {
 // }
 
 function setPosition (data) {
-  const positionFiltered = data.a.P.filter(pos => (pos.s === defaultSymbol))
+  const symbol = home.getSymbol()
+  const positionFiltered = data.a.P.filter(pos => (pos.s === symbol))
   position = positionFiltered[0] || { pa: '0' }
 }
 
-async function handleFilledOrder (candles, order) {
+async function handleFilledOrder (order) {
   if (position.pa !== '0') {
     if (order.o === 'MARKET') {
-      handleMarketOrder(candles, order)
+      createTpandSLOrder(order)
     } else if (order.o === 'STOP_MARKET') {
       handleStopMarketOrder()
     } else if (order.o === 'TAKE_PROFIT_MARKET') {
@@ -52,42 +50,37 @@ async function handleFilledOrder (candles, order) {
   Last Price: ${order.L}`)
 }
 
-async function handleMarketOrder (candles, order) {
-  createTpandSLOrder(order, candles)
-}
+async function createTpandSLOrder (order) {
+  const symbol = home.getSymbol()
+  const orderIsSell = order.S === 'SELL'
+  const side = orderIsSell ? 'BUY' : 'SELL'
+  console.log(symbol, side, 'createTpandSLOrder')
 
-async function createTpandSLOrder (orderInfo, candles) {
-  const sideOption = orderInfo.S === 'SELL'
-  const highOrLow = tools.extractData(candles, sideOption ? 'HIGH' : 'LOW')
-  const topOrBottomPrices = tools.getLasts(highOrLow, 6)
-  const stopPrice = (sideOption ? highest : lowest).calculate({ values: topOrBottomPrices, period: 6 })[0]
-  const stopMarketPrice = tools.handleStopPercentage(orderInfo.L, stopPrice, orderInfo.S)
-  const takeProfitPrice = tools.getTargetPrice(orderInfo.L, stopMarketPrice)
-  // const { stopPrice: stopMarketPrice, takeProfitPrice } = tools.getTpAndSlByPer(orderInfo.L, orderInfo.S)
-  const side = sideOption ? 'BUY' : 'SELL'
-  console.log('TP:', takeProfitPrice, 'PRICE:', orderInfo.L, 'SL:', stopMarketPrice, side, 'AP', orderInfo.ap, 'createTpandSLOrder')
-  // await api.newOrder(defaultSymbol, null, side, 'STOP_MARKET', true, stopMarketPrice)
-  // await api.newOrder(defaultSymbol, null, side, 'TAKE_PROFIT_MARKET', true, takeProfitPrice)
+  // await api.newOrder(symbol, null, side, 'STOP_MARKET', true, stopMarketPrice)
+  // await api.newOrder(symbol, null, side, 'TAKE_PROFIT_MARKET', true, takeProfitPrice)
 }
 
 async function hasStopOrProfitOrder () {
-  const openOrders = await api.getAllOpenOrders(defaultSymbol)
+  const symbol = home.getSymbol()
+  const openOrders = await api.getAllOpenOrders(symbol)
   const hasStopOrProfit = openOrders.filter(order => (order.type === 'STOP_MARKET' || order.type === 'TAKE_PROFIT_MARKET'))
 
   if (hasStopOrProfit[0]) {
     console.log('has profit ou stop order')
-    await api.cancelAllOrders(defaultSymbol)
+    await api.cancelAllOrders(symbol)
   }
 
   return !!hasStopOrProfit[0]
 }
 
 async function handleStopMarketOrder () {
-  const cancelOrder = await api.cancelAllOrders(defaultSymbol)
+  const symbol = home.getSymbol()
+  const cancelOrder = await api.cancelAllOrders(symbol)
   return cancelOrder
 }
 async function handleTakeProfitMarketOrder () {
-  const cancelOrder = await api.cancelAllOrders(defaultSymbol)
+  const symbol = home.getSymbol()
+  const cancelOrder = await api.cancelAllOrders(symbol)
   return cancelOrder
 }
 

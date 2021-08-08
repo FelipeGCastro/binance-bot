@@ -77,6 +77,12 @@ function ParseFloat (str, val) {
   str = str.slice(0, (str.indexOf('.')) + val + 1)
   return Number(str)
 }
+function ParseFloatByFormat (str, format) {
+  const decimals = format.toString().split('.')[1].length
+  str = str.toString()
+  str = str.slice(0, (str.indexOf('.')) + decimals + 1)
+  return Number(str)
+}
 
 function getLasts (data, amount) {
   return data.slice(Math.max(data.length - amount, 1))
@@ -97,5 +103,6 @@ module.exports = {
   priceMirrorFormat,
   getTpAndSlByPer,
   ParseFloat,
+  ParseFloatByFormat,
   handleStopPercentage
 }

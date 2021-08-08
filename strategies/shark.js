@@ -1,6 +1,7 @@
 const rsi = require('../indicators/rsi.js')
 const stoch = require('../indicators/stoch.js')
 const tools = require('../tools/index')
+const STRATEGIES = require('../tools/constants').STRATEGIES
 
 const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
@@ -16,6 +17,7 @@ function validateEntry (candles) {
     return false
   } else {
     return {
+      strategy: STRATEGIES.HIDDEN_DIVERGENCE,
       stopPercentage: 0.5,
       gainPercentage: 0.5
     }

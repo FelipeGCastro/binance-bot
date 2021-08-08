@@ -5,6 +5,7 @@ const tools = require('../tools/index')
 const CANDLE = require('../tools/constants').CANDLE
 const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
+const STRATEGIES = require('../tools/constants').STRATEGIES
 
 const periodTime = '1m'
 const rsiPeriod = 14// 80 - 20
@@ -13,7 +14,6 @@ const lookBackPeriod = 26
 const lastPivotRange = 6
 
 function validateEntry (candles) {
-  const lastCandleTime = new Date(candles[candles.length - 1][0])
   const trendingEma = validateEma(candles)
   const hasCrossStoch = validateStoch(candles)
   if (!hasCrossStoch) {
@@ -21,14 +21,14 @@ function validateEntry (candles) {
     return false
   } else {
     if (hasCrossStoch === trendingEma) {
-      const validatedRsi = validateDivergence(candles, hasCrossStoch)
-      if (validatedRsi) {
+      const divergence = validateDivergence(candles, hasCrossStoch)
+      if (divergence) {
         return {
-          timeLastCandle: `Hora: ${lastCandleTime.getHours()} e ${lastCandleTime.getMinutes()} minutos`,
+          strategy: STRATEGIES.HIDDEN_DIVERGENCE,
+          timeLastCandle: candles[candles.length - 1][0],
           side: hasCrossStoch,
-          stopPrice: validatedRsi.lastPivotPrice,
-          stopPercentage: 0.5,
-          gainPercentage: 0.5
+          stopPrice: divergence.lastTopOrBottomPrice,
+          closePrice: divergence.lastClosePrice
         }
       } else {
         console.log('SAIDA 2')
@@ -85,14 +85,13 @@ function validateDivergence (candles, side) {
   const firstsCandlesLength = lookBackPeriod - lastPivotRange
   const firstsCandles = tools.getFirsts(lastsCandles, firstsCandlesLength)
   const firstsRsi = tools.getFirsts(lastsRsi, firstsCandlesLength)
-
+  const lastClosePrice = lastSixCandles[lastSixCandles - 1][CANDLE.CLOSE]
   let lastPivotRsi, firstPivotRsi
   let lastPivotPrice, firstPivotPrice
 
   let lastPriceIndex, firstPriceIndex
   let lastPrice = 0
-  let lastMaxPrice
-  let lastMinPrice
+  let lastTopOrBottomPrice
   if (side === 'SHORT') {
     lastSixCandles.forEach((candle, i) => {
       // CHECKING IF CANDLE BEFORE EXIST AND IF MEET REQUIREMENTS
@@ -109,7 +108,7 @@ function validateDivergence (candles, side) {
         tools.isRedCandle(lastSixCandles[i + 1])) {
         lastPriceIndex = i
         lastPrice = candle[CANDLE.HIGH]
-        lastMaxPrice = Highest.calculate({
+        lastTopOrBottomPrice = Highest.calculate({
           values: [
             lastSixCandles[i - 1][CANDLE.HIGH],
             lastSixCandles[i][CANDLE.HIGH],
@@ -117,7 +116,6 @@ function validateDivergence (candles, side) {
           ],
           period: 3
         })[0]
-        console.log(lastMaxPrice, 'lastMaxPrice')
       }
     })
 
@@ -166,7 +164,7 @@ function validateDivergence (candles, side) {
       return false
     })
 
-    if (isDivergence) return { lastPivotPrice, lastMaxPrice }
+    if (isDivergence) return { lastPivotPrice, lastTopOrBottomPrice, lastClosePrice }
   } else {
     lastSixCandles.forEach((candle, i) => {
       // CHECKING IF CANDLE BEFORE EXIST AND IF MEET REQUIREMENTS
@@ -184,7 +182,7 @@ function validateDivergence (candles, side) {
         tools.isBlueCandle(lastSixCandles[i + 1])) {
         lastPriceIndex = i
         lastPrice = candle[CANDLE.LOW]
-        lastMinPrice = Lowest.calculate({
+        lastTopOrBottomPrice = Lowest.calculate({
           values: [
             lastSixCandles[i - 1][CANDLE.LOW],
             lastSixCandles[i][CANDLE.LOW],
@@ -248,7 +246,7 @@ function validateDivergence (candles, side) {
       return false
     })
 
-    if (isDivergence) return { lastPivotPrice, lastMinPrice }
+    if (isDivergence) return { lastPivotPrice, lastTopOrBottomPrice, lastClosePrice }
   }
 
   console.log('SAIDA 16')
