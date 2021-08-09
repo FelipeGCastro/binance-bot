@@ -13,7 +13,7 @@ const telegramUserId = Number(process.env.TELEGRAM_USER_ID)
 let symbol = process.env.SYMBOL
 let interval = '1m'
 let validateEntry = hiddenDivergence.validateEntry
-const amountCandles = 200
+const amountCandles = 300
 let tradingOn = false
 let botOn = true
 let listenKeyIsOn = false
@@ -24,14 +24,10 @@ const maxStake = stake + (0.3 * stake)
 
 function setPeriodInterval (int) { interval = int }
 function setTradingOn (bool) { tradingOn = bool }
-function getTradingOn () { return tradingOn }
+
 function setValidate (func) { validateEntry = func }
-function setBotOn (bool) {
-  console.log('set bot')
-  botOn = bool
-}
+function setBotOn (bool) { botOn = bool }
 function setSymbol (symb) { symbol = symb }
-function getSymbol () { return symbol }
 function setStopMarketPrice (price) { stopMarketPrice = price }
 function setTakeProfitPrice (price) { takeProfitPrice = price }
 function setLeverage (value) { leverage = value }
@@ -150,7 +146,7 @@ const SET_STRATEGY = {
 function handleChangeStrategy (stratName, ctx) {
   if (ctx.from.id === telegramUserId) {
     const strategy = SET_STRATEGY[stratName] || hiddenDivergence
-    if (getTradingOn()) {
+    if (tradingOn) {
       ctx.reply('Está no meio de um trading, tente novamente mais tarde.')
     } else {
       setPeriodInterval(strategy.getInterval())
@@ -166,11 +162,9 @@ function handleChangeStrategy (stratName, ctx) {
 module.exports = {
   setPeriodInterval,
   setTradingOn,
-  getTradingOn,
   setValidate,
   setLeverage,
   setBotOn,
   execute,
-  setSymbol,
-  getSymbol
+  setSymbol
 }

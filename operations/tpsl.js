@@ -81,9 +81,11 @@ async function hasStopOrProfitOrder (order) {
   if (openOrders[0]) {
     hasStopOrProfit = openOrders.filter(order => (order.type === 'STOP_MARKET' ||
     order.type === 'TAKE_PROFIT_MARKET'))
+  } else {
+    return false
   }
 
-  if (hasStopOrProfit[0]) {
+  if (hasStopOrProfit && hasStopOrProfit[0]) {
     console.log('has profit ou stop order')
     const cancelAll = await api.cancelAllOrders(symbol)
     if (cancelAll) {
