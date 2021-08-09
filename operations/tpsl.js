@@ -3,20 +3,20 @@ const telegram = require('../services/telegram')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 const SIDE = require('../tools/constants').SIDE
 
-let position
+let position = { pa: '0' }
 
 async function handleUserDataUpdate (data) {
-  const symbol = data.o.symbol
   if (data.e === 'ACCOUNT_UPDATE') {
     console.log('ACCOUNT_UPDATE')
     setPosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
+    const symbol = data.o.symbol
     if (data.o.s === symbol) {
       if (data.o.X === 'FILLED') {
         handleFilledOrder(data.o)
       } else if (data.o.X === 'CANCELED') {
         console.log('CANCELED')
-        hasStopOrProfitOrder()
+        hasStopOrProfitOrder(data.o)
       } else {
         console.log('type:', data.o.o, 'status:', data.o.X, 'type:', data.o.x)
       }
@@ -27,14 +27,12 @@ async function handleUserDataUpdate (data) {
 }
 
 function setPosition (data) {
-  const positionFiltered = data.a.P.filter(pos => (pos.s === data.o.symbol))
-  if (!positionFiltered[0]) {
-    data.o.setTradingOn(false)
-  }
+  const positionFiltered = data.a.P.filter(pos => (pos.s === data.symbol))
   position = positionFiltered[0] || { pa: '0' }
 }
 
 async function handleFilledOrder (order) {
+  console.log(position)
   if (position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
       return await createTpandSLOrder(order)
