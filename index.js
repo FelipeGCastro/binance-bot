@@ -13,6 +13,7 @@ let validateEntry = hiddenDivergence.validateEntry
 const amountCandles = 500
 let tradingOn = false
 let listenKeyIsOn = false
+let stopMarketPrice, takeProfitPrice
 
 function setPeriodInterval (int) { interval = int }
 function setTradingOn (data) { tradingOn = data }
@@ -20,6 +21,10 @@ function getTradingOn () { return tradingOn }
 function setValidate (func) { validateEntry = func }
 function setSymbol (symb) { symbol = symb }
 function getSymbol () { return symbol }
+function setStopMarketPrice (price) { stopMarketPrice = price }
+function getStopMarketPrice () { return stopMarketPrice }
+function setTakeProfitPrice (price) { takeProfitPrice = price }
+function getTakeProfitPrice () { return takeProfitPrice }
 
 // START MAIN FUNCTION
 async function execute () {
@@ -43,6 +48,18 @@ async function execute () {
     }
   }
 
+  async function setWsListen (listenKey) {
+    ws.listenKey(listenKey, async (data) => {
+      if (data.e === 'listenKeyExpired' && listenKeyIsOn) {
+        listenKeyIsOn = false
+        await getListenKey()
+        console.log('listenKeyExpired')
+      } else {
+        operations.handleUserDataUpdate(data, candles)
+      }
+    })
+  }
+
   Math.random = (function xoshiro128p () {
     // Using the same value for each seed is screamingly wrong
     // but this is 'good enough' for a toy function.
@@ -63,24 +80,12 @@ async function execute () {
     }
   })()
 
-  async function setWsListen (listenKey) {
-    ws.listenKey(listenKey, async (data) => {
-      if (data.e === 'listenKeyExpired' && listenKeyIsOn) {
-        listenKeyIsOn = false
-        await getListenKey()
-        console.log('listenKeyExpired')
-      } else {
-        operations.handleUserDataUpdate(data, candles)
-      }
-    })
-  }
   let canWrite = true
   let lastEventAt = 0
   // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
   ws.onKlineContinuos(symbol, interval, async (data) => {
     setTimeout(async () => {
       if (data.k.x && canWrite && data.E > lastEventAt) {
-        console.log(data, 'DENTRO')
         lastEventAt = data.E
         canWrite = false
         await handleCloseCandle(data)
@@ -123,5 +128,9 @@ module.exports = {
   setValidate,
   execute,
   setSymbol,
-  getSymbol
+  getSymbol,
+  setStopMarketPrice,
+  getStopMarketPrice,
+  setTakeProfitPrice,
+  getTakeProfitPrice
 }

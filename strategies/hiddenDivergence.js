@@ -6,7 +6,7 @@ const CANDLE = require('../tools/constants').CANDLE
 const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
 const STRATEGIES = require('../tools/constants').STRATEGIES
-const tpsl = require('../operations/tpsl')
+const home = require('../index')
 
 const periodTime = '1m'
 const rsiPeriod = 14// 80 - 20
@@ -55,8 +55,8 @@ function handleTpslOrder (stopPrice, closePrice) {
   targetPrice = tools.ParseFloatByFormat(targetPrice, closePrice)
   stopPrice = tools.ParseFloatByFormat(stopPrice, stopPrice)
   if (targetPrice && stopPrice) {
-    tpsl.setStopMarketPrice(stopPrice)
-    tpsl.setTakeProfitPrice(targetPrice)
+    home.setStopMarketPrice(stopPrice)
+    home.setTakeProfitPrice(targetPrice)
     return true
   } else {
     console.log('Error handleTpslOrder')
