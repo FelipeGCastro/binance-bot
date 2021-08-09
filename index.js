@@ -18,7 +18,9 @@ let tradingOn = false
 let botOn = true
 let listenKeyIsOn = false
 let stopMarketPrice, takeProfitPrice
-let leverage = 2
+let leverage = 3
+const stake = 80
+const maxStake = stake + (0.3 * stake)
 
 function setPeriodInterval (int) { interval = int }
 function setTradingOn (bool) { tradingOn = bool }
@@ -39,26 +41,26 @@ async function execute () {
   // TESTING PART CODE, REMOVE AFTER TESTING
   // ----------------------------
   // ----------------------------
-  const candles = await api.candlesTemp(symbol, interval)
+  // const candles = await api.candlesTemp(symbol, interval)
 
   // ---------------------------- END
   // ----------------------------
   changeLeverage(leverage)
 
-  // const candles = await api.candles(symbol, interval, amountCandles)
+  const candles = await api.candles(symbol, interval, amountCandles)
 
   let lastEventAt = 0
   // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
   ws.onKlineContinuos(symbol, interval, async (data) => {
     if (data.k.x && data.E > lastEventAt) {
       lastEventAt = data.E
-      // await handleCloseCandle(data)
-      await handleCloseCandle() // ONLY FOR TEST
+      await handleCloseCandle(data)
+      // await handleCloseCandle() // ONLY FOR TEST
     }
   })
 
   async function handleCloseCandle (data) {
-    // await handleAddCandle(data)
+    await handleAddCandle(data)
     if (!tradingOn && listenKeyIsOn && botOn) {
       const timeMin = new Date()
       console.log('fechou!', timeMin.getMinutes())
@@ -67,25 +69,25 @@ async function execute () {
         console.log(result)
         setStopMarketPrice(result.stopPrice)
         setTakeProfitPrice(result.targetPrice)
-        const ordered = await newOrder.handleNewOrder({ ...result, symbol })
+        const ordered = await newOrder.handleNewOrder({ ...result, stake, maxStake, symbol })
         if (ordered) {
           setTradingOn(true)
         }
         console.log(tradingOn, 'tradingOn')
-        // telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
+        telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
       }
     }
   }
 
-  // async function handleAddCandle (data) {
-  //   const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
-  //   if (newCandle[0] === candles[candles.length - 1][0]) {
-  //     candles.pop()
-  //   } else {
-  //     candles.shift()
-  //   }
-  //   candles.push(newCandle)
-  // }
+  async function handleAddCandle (data) {
+    const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
+    if (newCandle[0] === candles[candles.length - 1][0]) {
+      candles.pop()
+    } else {
+      candles.shift()
+    }
+    candles.push(newCandle)
+  }
 
   getListenKey()
   async function getListenKey () {
@@ -104,7 +106,6 @@ async function execute () {
         console.log('listenKeyExpired')
       } else {
         let newData
-        console.log(data)
         if (data.o) {
           const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, setTradingOn, symbol }
           newData = { ...data, o: dataOrder }
@@ -115,8 +116,7 @@ async function execute () {
   }
 }
 
-execute()
-
+telegram.listenTurnBotOn((ctx) => execute())
 telegram.listenSharkStrategy((ctx) => handleChangeStrategy(STRATEGIES.SHARK))
 telegram.listenDivergenceStrategy((ctx) => handleChangeStrategy(STRATEGIES.HIDDEN_DIVERGENCE))
 telegram.listenStopBot((ctx) => setBotOn(true))
