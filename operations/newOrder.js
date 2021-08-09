@@ -1,6 +1,5 @@
 const api = require('../api')
 const STRATEGIES = require('../tools/constants').STRATEGIES
-const home = require('../index')
 const help = require('../helpers')
 const tools = require('../tools')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
@@ -23,16 +22,15 @@ function handleNewOrder (data) {
 
 function handleDivergenceOrder (data) {
   const closePrice = data.closePrice
-  const quantity = getQty(closePrice)
+  const quantity = getQty(closePrice, data.symbol)
   const side = data.side
   const type = ORDER_TYPE.MARKET
-  const symbol = home.getSymbol()
+  const symbol = data.symbol
   api.newOrder(symbol, quantity, side, type)
 }
 
-function getQty (closePrice) {
+function getQty (closePrice, symbol) {
   let qty
-  const symbol = home.getSymbol()
   const { qtyFormat, minQty } = help.getQtyRules(symbol)
 
   const calQty = stake / closePrice
