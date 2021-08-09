@@ -6,6 +6,7 @@ const CANDLE = require('../tools/constants').CANDLE
 const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
 const STRATEGIES = require('../tools/constants').STRATEGIES
+const POSITION = require('../tools/constants').POSITION_SIDE
 
 const periodTime = '1m'
 const rsiPeriod = 14// 80 - 20
@@ -68,9 +69,9 @@ function validateEma (candles) {
   const ema50 = EMA.checkingEma(candles, 50)
   console.log('EMA 200:', ema200, 'EMA50:', ema50)
   if (ema200 < ema50) {
-    return 'LONG'
+    return POSITION.LONG
   } else {
-    return 'SHORT'
+    return POSITION.SHORT
   }
 }
 
@@ -81,8 +82,8 @@ function validateStoch (candles) {
   const beforeK = lastTwoStoch[0].k
   const lastD = lastTwoStoch[1].d
   const beforeD = lastTwoStoch[0].d
-  const crossDown = lastK <= lastD && beforeK > beforeD ? 'SHORT' : false
-  const crossUp = lastK >= lastD && beforeK < beforeD ? 'LONG' : false
+  const crossDown = lastK <= lastD && beforeK > beforeD ? POSITION.SHORT : false
+  const crossUp = lastK >= lastD && beforeK < beforeD ? POSITION.LONG : false
   console.log(lastTwoStoch[1].k, lastTwoStoch[1].d, 'validateStoch')
   if (crossDown) {
     return crossDown
@@ -110,7 +111,7 @@ function validateDivergence (candles, side) {
   let lastPriceIndex, firstPriceIndex
   let lastPrice = 0
   let lastTopOrBottomPrice
-  if (side === 'SHORT') {
+  if (side === POSITION.SHORT) {
     lastSixCandles.forEach((candle, i) => {
       // CHECKING IF CANDLE BEFORE EXIST AND IF MEET REQUIREMENTS
       const candleBeforeCondition = lastSixCandles[i - 1]
@@ -227,9 +228,6 @@ function validateDivergence (candles, side) {
     lastPivotPrice = lastSixCandles[lastPriceIndex][CANDLE.LOW]
 
     // firsts 20 candles
-    // ----------------------------
-    // ----------------------------
-    // ----------------------------
     // ----------------------------
     // ----------------------------
     // ----------------------------
