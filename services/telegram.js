@@ -1,22 +1,9 @@
 const { Telegraf } = require('telegraf')
 const api = require('../api')
-const { STRATEGIES } = require('../tools/constants')
 const telegramUserId = Number(process.env.TELEGRAM_USER_ID)
 const priceFormat = new Intl.NumberFormat('en-us', { style: 'currency', currency: 'USD' })
-const sharkStrategy = require('../strategies/shark')
-const hiddenDivergence = require('../strategies/hiddenDivergence')
-const home = require('../index')
-
-const SET_STRATEGY = {
-  [STRATEGIES.SHARK]: sharkStrategy,
-  [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
-}
 
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN)
-
-bot.hears('SHARKSTRATEGY', ctx => handleChangeStrategy(STRATEGIES.SHARK))
-
-bot.hears('HIDDENDIVERGENCE', ctx => handleChangeStrategy(STRATEGIES.HIDDEN_DIVERGENCE))
 
 bot.hears('Saldo', async ctx => {
   const balance = await api.getBalance()
@@ -24,24 +11,32 @@ bot.hears('Saldo', async ctx => {
   ctx.telegram.sendMessage(telegramUserId, `Saldo: ${priceFormat.format(newBalance)}`)
 })
 
-function sendMessage (message, id = telegramUserId) {
-  bot.telegram.sendMessage(id, message)
+function listenSharkStrategy (func) {
+  return bot.hears('SHARKSTRATEGY', ctx => func())
 }
 
-function handleChangeStrategy (stratName, ctx) {
-  if (ctx.from.id === telegramUserId) {
-    const strategy = SET_STRATEGY[stratName] || hiddenDivergence
-    if (home.getTradingOn()) {
-      ctx.reply('Está no meio de um trading, tente novamente mais tarde.')
-    } else {
-      home.setPeriodInterval(strategy.getInterval())
-      home.setValidate(strategy.validateEntry)
-      home.execute()
-      ctx.reply('Estrategia Mudada com Sucesso')
-    }
-  } else {
-    ctx.reply('Você não tem autorização')
-  }
+function listenDivergenceStrategy (func) {
+  return bot.hears('HIDDENDIVERGENCE', ctx => func())
+}
+
+function listenStopBot (func) {
+  return bot.hears('Stopbot', ctx => func())
+}
+
+function listen2xLeverage (func) {
+  return bot.hears('2x', ctx => func())
+}
+
+function listen3xLeverage (func) {
+  return bot.hears('3x', ctx => func())
+}
+
+function listen4xLeverage (func) {
+  return bot.hears('4x', ctx => func())
+}
+
+function sendMessage (message, id = telegramUserId) {
+  bot.telegram.sendMessage(id, message)
 }
 
 bot.launch()
@@ -51,5 +46,11 @@ process.once('SIGTERM', () => bot.stop('SIGTERM'))
 
 module.exports = {
   bot,
-  sendMessage
+  listenSharkStrategy,
+  listenDivergenceStrategy,
+  listenStopBot,
+  sendMessage,
+  listen2xLeverage,
+  listen3xLeverage,
+  listen4xLeverage
 }

@@ -1,3 +1,4 @@
+
 const STRATEGIES = {
   SHARK: 'sharkStrategy',
   HIDDEN_DIVERGENCE: 'hiddenDivergence'
