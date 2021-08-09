@@ -15,6 +15,9 @@ bot.hears('Saldo', async ctx => {
 
 function verification (func, id, ctx) { if (id === telegramUserId) { return func(ctx) } }
 
+function listenTurnBotOn (func) {
+  return bot.hears('Ligar bot', ctx => verification(func, ctx.from.id))
+}
 function listenSharkStrategy (func) {
   return bot.hears('SHARKSTRATEGY', ctx => verification(func, ctx.from.id))
 }
@@ -60,5 +63,6 @@ module.exports = {
   listen2xLeverage,
   listen3xLeverage,
   listen4xLeverage,
-  listenStatus
+  listenStatus,
+  listenTurnBotOn
 }

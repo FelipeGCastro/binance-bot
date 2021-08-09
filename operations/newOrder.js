@@ -6,12 +6,6 @@ const help = require('../helpers')
 const tools = require('../tools')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 
-let stake = 80
-const maxStake = stake + (0.3 * stake)
-
-const setStake = (value) => { stake = value }
-const getStake = () => stake
-
 function handleNewOrder (data) {
   if (data.strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
     return handleDivergenceOrder(data)
@@ -23,8 +17,7 @@ function handleNewOrder (data) {
 }
 
 async function handleDivergenceOrder (data) {
-  const closePrice = data.closePrice
-  const quantity = await getQty(closePrice, data.symbol)
+  const quantity = await getQty(data)
   const side = data.side === POSITION.LONG ? SIDE.BUY : SIDE.SELL
   const type = ORDER_TYPE.MARKET
   const symbol = data.symbol
@@ -41,14 +34,14 @@ async function handleDivergenceOrder (data) {
   }
 }
 
-async function getQty (closePrice, symbol) {
+async function getQty (data) {
   let qty
-  const { qtyFormat, minQty } = await help.getQtyRules(symbol)
+  const { qtyFormat, minQty } = await help.getQtyRules(data.symbol)
 
-  const calQty = stake / closePrice
+  const calQty = data.stake / data.closePrice
   console.log(calQty, minQty)
   if (calQty < minQty) {
-    if ((minQty * closePrice) < maxStake) {
+    if ((minQty * data.closePrice) < data.maxStake) {
       console.log('price not expected saida 220')
       qty = minQty
       return qty
@@ -69,7 +62,5 @@ async function getQty (closePrice, symbol) {
 // closePrice: divergence.lastClosePrice
 
 module.exports = {
-  handleNewOrder,
-  setStake,
-  getStake
+  handleNewOrder
 }

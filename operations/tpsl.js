@@ -77,7 +77,11 @@ async function createTpandSLOrder (order) {
 async function hasStopOrProfitOrder (order) {
   const symbol = order.symbol
   const openOrders = await api.getAllOpenOrders(symbol)
-  const hasStopOrProfit = openOrders.filter(order => (order.type === 'STOP_MARKET' || order.type === 'TAKE_PROFIT_MARKET'))
+  let hasStopOrProfit
+  if (openOrders[0]) {
+    hasStopOrProfit = openOrders.filter(order => (order.type === 'STOP_MARKET' ||
+    order.type === 'TAKE_PROFIT_MARKET'))
+  }
 
   if (hasStopOrProfit[0]) {
     console.log('has profit ou stop order')

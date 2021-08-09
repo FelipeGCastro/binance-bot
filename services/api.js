@@ -2,12 +2,12 @@ const axios = require('axios')
 const querystring = require('querystring')
 const crypto = require('crypto')
 const symbolDefault = process.env.SYMBOL
-const apikey = process.env.API_TEST_KEY
-const apiSecret = process.env.SECRET_TEST_KEY
-const apiUrl = process.env.API_TEST_URL
-// const apikey = process.env.API_KEY
-// const apiSecret = process.env.SECRET_KEY
-const apiUrlReal = process.env.API_URL
+// const apikey = process.env.API_TEST_KEY
+// const apiSecret = process.env.SECRET_TEST_KEY
+// const apiUrl = process.env.API_TEST_URL
+const apikey = process.env.API_KEY
+const apiSecret = process.env.SECRET_KEY
+const apiUrl = process.env.API_URL
 
 async function privateCall (path, data = {}, method = 'GET') {
   const timestamp = Date.now()
@@ -61,8 +61,8 @@ async function publicCall (path, data, method = 'GET') {
     const qs = data ? `?${querystring.stringify(data)}` : ''
     const result = await axios({
       method,
-      // url: `${apiUrl}${path}${qs}`
-      url: `${apiUrlReal}${path}${qs}`
+      url: `${apiUrl}${path}${qs}`
+      // url: `${apiUrlReal}${path}${qs}` // TEST ONLY
     })
     return result.data
   } catch (error) {
