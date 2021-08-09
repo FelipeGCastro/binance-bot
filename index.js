@@ -3,28 +3,36 @@ const operations = require('./operations/tpsl')
 const ws = require('./lib/ws.js')
 const telegram = require('./services/telegram')
 const hiddenDivergence = require('./strategies/hiddenDivergence')
+const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
+const STRATEGIES = require('./tools/constants').STRATEGIES
+const telegramUserId = Number(process.env.TELEGRAM_USER_ID)
 
 // TELEGRAM BOT FUNCTIONS
 
 let symbol = process.env.SYMBOL
 let interval = '1m'
 let validateEntry = hiddenDivergence.validateEntry
-const amountCandles = 500
+const amountCandles = 200
 let tradingOn = false
+let botOn = true
 let listenKeyIsOn = false
 let stopMarketPrice, takeProfitPrice
+let leverage = 2
 
 function setPeriodInterval (int) { interval = int }
 function setTradingOn (data) { tradingOn = data }
 function getTradingOn () { return tradingOn }
 function setValidate (func) { validateEntry = func }
+function setBotOn (bool) {
+  console.log('set bot')
+  botOn = bool
+}
 function setSymbol (symb) { symbol = symb }
 function getSymbol () { return symbol }
 function setStopMarketPrice (price) { stopMarketPrice = price }
-function getStopMarketPrice () { return stopMarketPrice }
 function setTakeProfitPrice (price) { takeProfitPrice = price }
-function getTakeProfitPrice () { return takeProfitPrice }
+function setLeverage (value) { leverage = value }
 
 // START MAIN FUNCTION
 async function execute () {
@@ -37,6 +45,7 @@ async function execute () {
 
   // ---------------------------- END
   // ----------------------------
+  changeLeverage(leverage)
 
   const candles = await api.candles(symbol, interval, amountCandles)
   getListenKey()
@@ -55,53 +64,35 @@ async function execute () {
         await getListenKey()
         console.log('listenKeyExpired')
       } else {
-        operations.handleUserDataUpdate(data, candles)
+        let newData
+        if (data.o) {
+          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice }
+          newData = { ...data, o: dataOrder }
+        } else { newData = data }
+        operations.handleUserDataUpdate(newData)
       }
     })
   }
 
-  Math.random = (function xoshiro128p () {
-    // Using the same value for each seed is screamingly wrong
-    // but this is 'good enough' for a toy function.
-    let a = Date.now()
-    let b = Date.now()
-    let c = Date.now()
-    let d = Date.now()
-    return function () {
-      const t = b << 9
-      const r = a + d
-      c = c ^ a
-      d = d ^ b
-      b = b ^ c
-      a = a ^ d
-      c = c ^ t
-      d = (d << 11) | (d >>> 21)
-      return (r >>> 0) / 4294967296
-    }
-  })()
-
-  let canWrite = true
   let lastEventAt = 0
   // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
   ws.onKlineContinuos(symbol, interval, async (data) => {
-    setTimeout(async () => {
-      if (data.k.x && canWrite && data.E > lastEventAt) {
-        lastEventAt = data.E
-        canWrite = false
-        await handleCloseCandle(data)
-        canWrite = true
-      }
-    }, Math.random() * (100 - 30) + 30)
+    if (data.k.x && data.E > lastEventAt) {
+      lastEventAt = data.E
+      await handleCloseCandle(data)
+    }
   })
 
   async function handleCloseCandle (data) {
     await handleAddCandle(data)
-    if (!tradingOn && listenKeyIsOn) {
+    if (!tradingOn && listenKeyIsOn && botOn) {
       const timeMin = new Date()
       console.log('fechou!', timeMin.getMinutes())
       const result = validateEntry(candles)
       if (result) {
         console.log(result)
+        setStopMarketPrice(result.stopPrice)
+        setTakeProfitPrice(result.targetPrice)
         newOrder.handleNewOrder(result)
         telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
       }
@@ -121,16 +112,49 @@ async function execute () {
 
 execute()
 
+telegram.listenSharkStrategy(() => handleChangeStrategy(STRATEGIES.SHARK))
+telegram.listenDivergenceStrategy(() => handleChangeStrategy(STRATEGIES.HIDDEN_DIVERGENCE))
+telegram.listenStopBot(() => setBotOn(true))
+telegram.listen2xLeverage(() => changeLeverage(2))
+telegram.listen3xLeverage(() => changeLeverage(3))
+telegram.listen4xLeverage(() => changeLeverage(4))
+
+async function changeLeverage (value) {
+  const changedLeverage = await api.changeLeverage(leverage, symbol)
+  if (changedLeverage) {
+    setLeverage(value)
+    console.log(value, 'changeLeverage')
+  }
+}
+const SET_STRATEGY = {
+  [STRATEGIES.SHARK]: sharkStrategy,
+  [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
+}
+
+function handleChangeStrategy (stratName, ctx) {
+  if (ctx.from.id === telegramUserId) {
+    const strategy = SET_STRATEGY[stratName] || hiddenDivergence
+    if (getTradingOn()) {
+      ctx.reply('Está no meio de um trading, tente novamente mais tarde.')
+    } else {
+      setPeriodInterval(strategy.getInterval())
+      setValidate(strategy.validateEntry)
+      execute()
+      ctx.reply('Estrategia Mudada com Sucesso')
+    }
+  } else {
+    ctx.reply('Você não tem autorização')
+  }
+}
+
 module.exports = {
   setPeriodInterval,
   setTradingOn,
   getTradingOn,
   setValidate,
+  setLeverage,
+  setBotOn,
   execute,
   setSymbol,
-  getSymbol,
-  setStopMarketPrice,
-  getStopMarketPrice,
-  setTakeProfitPrice,
-  getTakeProfitPrice
+  getSymbol
 }

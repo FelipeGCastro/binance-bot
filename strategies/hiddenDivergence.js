@@ -6,7 +6,6 @@ const CANDLE = require('../tools/constants').CANDLE
 const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
 const STRATEGIES = require('../tools/constants').STRATEGIES
-const home = require('../index')
 
 const periodTime = '1m'
 const rsiPeriod = 14// 80 - 20
@@ -26,12 +25,14 @@ function validateEntry (candles) {
     if (hasCrossStoch === trendingEma) {
       const divergence = validateDivergence(candles, hasCrossStoch)
       if (divergence) {
-        if (handleTpslOrder(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)) {
+        const stopAndTarget = handleTpslOrder(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)
+        if (stopAndTarget) {
           return {
             strategy: STRATEGIES.HIDDEN_DIVERGENCE,
             timeLastCandle: candles[candles.length - 1][0],
             side: hasCrossStoch,
-            stopPrice: divergence.lastTopOrBottomPrice,
+            stopPrice: stopAndTarget.stopPrice,
+            targetPrice: stopAndTarget.targetPrice,
             closePrice: divergence.lastClosePrice
           }
         } else {
@@ -55,9 +56,7 @@ function handleTpslOrder (stopPrice, closePrice) {
   targetPrice = tools.ParseFloatByFormat(targetPrice, closePrice)
   stopPrice = tools.ParseFloatByFormat(stopPrice, stopPrice)
   if (targetPrice && stopPrice) {
-    home.setStopMarketPrice(stopPrice)
-    home.setTakeProfitPrice(targetPrice)
-    return true
+    return { targetPrice, stopPrice }
   } else {
     console.log('Error handleTpslOrder')
     return false

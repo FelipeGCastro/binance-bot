@@ -56,14 +56,12 @@ async function createTpandSLOrder (order) {
   const symbol = home.getSymbol()
   const orderIsSell = order.S === 'SELL'
   const side = orderIsSell ? 'BUY' : 'SELL'
-  const stopMarketPrice = home.getStopMarketPrice()
-  const takeProfitPrice = home.getTakeProfitPrice()
 
-  if (!stopMarketPrice || !takeProfitPrice) {
+  if (!order.stopMarketPrice || !order.takeProfitPrice) {
     console.log('No TP or SL price')
     return false
   }
-  console.log(symbol, side, stopMarketPrice, takeProfitPrice, 'createTpandSLOrder')
+  console.log(symbol, side, order.stopMarketPrice, order.takeProfitPrice, 'createTpandSLOrder')
 
   // await api.newOrder(symbol, null, side, 'STOP_MARKET', true, stopMarketPrice)
   // await api.newOrder(symbol, null, side, 'TAKE_PROFIT_MARKET', true, takeProfitPrice)
