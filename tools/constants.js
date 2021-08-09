@@ -14,6 +14,16 @@ const ORDER_TYPE = {
   TRAILING_STOP_MARKET: 'TRAILING_STOP_MARKET'
 }
 
+const SIDE = {
+  BUY: 'BUY',
+  SELL: 'SELL'
+}
+const POSITION_SIDE = {
+  SHORT: 'SHORT',
+  LONG: 'LONG',
+  BOTH: 'BOTH'
+}
+
 const CANDLE = {
   OPEN_TIME: 0,
   OPEN: 1,
@@ -27,5 +37,7 @@ const CANDLE = {
 module.exports = {
   STRATEGIES,
   CANDLE,
-  ORDER_TYPE
+  ORDER_TYPE,
+  SIDE,
+  POSITION_SIDE
 }

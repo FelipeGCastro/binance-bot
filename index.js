@@ -1,6 +1,6 @@
-const api = require('./api.js')
+const api = require('./services/api.js')
 const operations = require('./operations/tpsl')
-const ws = require('./lib/ws.js')
+const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
 const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
@@ -21,7 +21,7 @@ let stopMarketPrice, takeProfitPrice
 let leverage = 2
 
 function setPeriodInterval (int) { interval = int }
-function setTradingOn (data) { tradingOn = data }
+function setTradingOn (bool) { tradingOn = bool }
 function getTradingOn () { return tradingOn }
 function setValidate (func) { validateEntry = func }
 function setBotOn (bool) {
@@ -39,15 +39,54 @@ async function execute () {
   // TESTING PART CODE, REMOVE AFTER TESTING
   // ----------------------------
   // ----------------------------
-  // const tempCandles = await api.candlesTemp(symbol, interval)
-  // const valid = validateEntry(tempCandles)
-  // console.log(valid, 'Results test')
+  const candles = await api.candlesTemp(symbol, interval)
 
   // ---------------------------- END
   // ----------------------------
   changeLeverage(leverage)
 
-  const candles = await api.candles(symbol, interval, amountCandles)
+  // const candles = await api.candles(symbol, interval, amountCandles)
+
+  let lastEventAt = 0
+  // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
+  ws.onKlineContinuos(symbol, interval, async (data) => {
+    if (data.k.x && data.E > lastEventAt) {
+      lastEventAt = data.E
+      // await handleCloseCandle(data)
+      await handleCloseCandle() // ONLY FOR TEST
+    }
+  })
+
+  async function handleCloseCandle (data) {
+    // await handleAddCandle(data)
+    if (!tradingOn && listenKeyIsOn && botOn) {
+      const timeMin = new Date()
+      console.log('fechou!', timeMin.getMinutes())
+      const result = validateEntry(candles)
+      if (result) {
+        console.log(result)
+        setStopMarketPrice(result.stopPrice)
+        setTakeProfitPrice(result.targetPrice)
+        const ordered = await newOrder.handleNewOrder({ ...result, symbol })
+        if (ordered) {
+          setTradingOn(true)
+        }
+        console.log(tradingOn, 'tradingOn')
+        // telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
+      }
+    }
+  }
+
+  // async function handleAddCandle (data) {
+  //   const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
+  //   if (newCandle[0] === candles[candles.length - 1][0]) {
+  //     candles.pop()
+  //   } else {
+  //     candles.shift()
+  //   }
+  //   candles.push(newCandle)
+  // }
+
   getListenKey()
   async function getListenKey () {
     const data = await api.listenKey()
@@ -66,47 +105,12 @@ async function execute () {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice }
+          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, setTradingOn, symbol }
           newData = { ...data, o: dataOrder }
         } else { newData = data }
         operations.handleUserDataUpdate(newData)
       }
     })
-  }
-
-  let lastEventAt = 0
-  // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
-  ws.onKlineContinuos(symbol, interval, async (data) => {
-    if (data.k.x && data.E > lastEventAt) {
-      lastEventAt = data.E
-      await handleCloseCandle(data)
-    }
-  })
-
-  async function handleCloseCandle (data) {
-    await handleAddCandle(data)
-    if (!tradingOn && listenKeyIsOn && botOn) {
-      const timeMin = new Date()
-      console.log('fechou!', timeMin.getMinutes())
-      const result = validateEntry(candles)
-      if (result) {
-        console.log(result)
-        setStopMarketPrice(result.stopPrice)
-        setTakeProfitPrice(result.targetPrice)
-        newOrder.handleNewOrder({ ...result, symbol })
-        telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
-      }
-    }
-  }
-
-  async function handleAddCandle (data) {
-    const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
-    if (newCandle[0] === candles[candles.length - 1][0]) {
-      candles.pop()
-    } else {
-      candles.shift()
-    }
-    candles.push(newCandle)
   }
 }
 

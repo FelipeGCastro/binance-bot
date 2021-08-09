@@ -1,5 +1,5 @@
 const { Telegraf } = require('telegraf')
-const api = require('../api')
+const api = require('../services/api')
 const telegramUserId = Number(process.env.TELEGRAM_USER_ID)
 const priceFormat = new Intl.NumberFormat('en-us', { style: 'currency', currency: 'USD' })
 
