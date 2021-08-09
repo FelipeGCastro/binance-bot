@@ -2,12 +2,7 @@ const api = require('../api')
 const telegram = require('../services/telegram')
 const home = require('../index')
 
-let stopMarketPrice, takeProfitPrice
 let position
-function setStopMarketPrice (price) { stopMarketPrice = price }
-function getStopMarketPrice () { return stopMarketPrice }
-function setTakeProfitPrice (price) { takeProfitPrice = price }
-function getTakeProfitPrice () { return takeProfitPrice }
 
 async function handleUserDataUpdate (data) {
   const symbol = home.getSymbol()
@@ -61,6 +56,8 @@ async function createTpandSLOrder (order) {
   const symbol = home.getSymbol()
   const orderIsSell = order.S === 'SELL'
   const side = orderIsSell ? 'BUY' : 'SELL'
+  const stopMarketPrice = home.getStopMarketPrice()
+  const takeProfitPrice = home.getTakeProfitPrice()
 
   if (!stopMarketPrice || !takeProfitPrice) {
     console.log('No TP or SL price')
@@ -105,9 +102,5 @@ async function handleTakeProfitMarketOrder () {
 // "ap":"0",                   // Average Price
 module.exports = {
   handleUserDataUpdate,
-  hasStopOrProfitOrder,
-  setStopMarketPrice,
-  getStopMarketPrice,
-  setTakeProfitPrice,
-  getTakeProfitPrice
+  hasStopOrProfitOrder
 }
