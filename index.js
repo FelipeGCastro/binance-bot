@@ -93,7 +93,7 @@ async function execute () {
         console.log(result)
         setStopMarketPrice(result.stopPrice)
         setTakeProfitPrice(result.targetPrice)
-        newOrder.handleNewOrder(result)
+        newOrder.handleNewOrder({ ...result, symbol })
         telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
       }
     }
@@ -112,12 +112,23 @@ async function execute () {
 
 execute()
 
-telegram.listenSharkStrategy(() => handleChangeStrategy(STRATEGIES.SHARK))
-telegram.listenDivergenceStrategy(() => handleChangeStrategy(STRATEGIES.HIDDEN_DIVERGENCE))
-telegram.listenStopBot(() => setBotOn(true))
-telegram.listen2xLeverage(() => changeLeverage(2))
-telegram.listen3xLeverage(() => changeLeverage(3))
-telegram.listen4xLeverage(() => changeLeverage(4))
+telegram.listenSharkStrategy((ctx) => handleChangeStrategy(STRATEGIES.SHARK))
+telegram.listenDivergenceStrategy((ctx) => handleChangeStrategy(STRATEGIES.HIDDEN_DIVERGENCE))
+telegram.listenStopBot((ctx) => setBotOn(true))
+telegram.listen2xLeverage((ctx) => changeLeverage(2))
+telegram.listen3xLeverage((ctx) => changeLeverage(3))
+telegram.listen4xLeverage((ctx) => changeLeverage(4))
+telegram.listenStatus((ctx) => {
+  ctx.reply(`
+  coin: ${symbol},
+  periodo: ${interval},
+  Quantidade de Candles: ${amountCandles},
+  Operando: ${tradingOn},
+  Bot Ligado: ${botOn},
+  Listen Key: ${listenKeyIsOn},
+  Alavancagem: ${leverage}x
+  `)
+})
 
 async function changeLeverage (value) {
   const changedLeverage = await api.changeLeverage(leverage, symbol)
