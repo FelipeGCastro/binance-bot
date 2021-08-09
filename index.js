@@ -104,10 +104,11 @@ async function execute () {
         console.log('listenKeyExpired')
       } else {
         let newData
+        console.log(data)
         if (data.o) {
           const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, setTradingOn, symbol }
           newData = { ...data, o: dataOrder }
-        } else { newData = data }
+        } else { newData = { ...data, symbol } }
         operations.handleUserDataUpdate(newData)
       }
     })

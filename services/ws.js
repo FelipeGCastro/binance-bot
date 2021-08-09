@@ -1,7 +1,6 @@
 const WebSocket = require('ws')
-// const wsBaseUrl = process.env.WS_BASE_URL
-// const wsTestUrl = process.env.WS_TEST_URL
-const wsUrl = process.env.WS_BASE_URL
+const wsUrl = process.env.WS_TEST_URL
+// const wsUrl = process.env.WS_BASE_URL
 
 const streams = {
   depth: symbol => `${symbol.toLowerCase()}@depth`,
