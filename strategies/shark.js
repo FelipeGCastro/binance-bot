@@ -53,12 +53,12 @@ function hasCrossStoch (candles, stochPeriod) {
   const dOver80 = lastD > 80 || beforeD > 80
   const kUnder20 = lastK < 20 || beforeK < 20
   const dUnder20 = lastD < 20 || beforeD < 20
-
+  console.log('k:', lastK, 'd:', lastD)
   if (crossDown) {
-    if (kOver80 && dOver80) return false
+    if (!kOver80 && !dOver80) return false
     return crossDown
   } else if (crossUp) {
-    if (kUnder20 && dUnder20) return false
+    if (!kUnder20 && !dUnder20) return false
     return crossUp
   } else {
     console.log('SAIDA 17')

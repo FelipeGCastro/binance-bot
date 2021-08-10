@@ -8,20 +8,20 @@ const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 
 function handleNewOrder (data) {
   if (data.strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
-    return handleDivergenceOrder(data)
+    return handleOrder(data)
   } else if (data.strategy === STRATEGIES.SHARK) {
-    console.log('strategy ', STRATEGIES.SHARK)
+    return handleOrder(data)
   } else {
     console.log('no strategy')
   }
 }
 
-async function handleDivergenceOrder (data) {
+async function handleOrder (data) {
   const quantity = await getQty(data)
   const side = data.side === POSITION.LONG ? SIDE.BUY : SIDE.SELL
   const type = ORDER_TYPE.MARKET
   const symbol = data.symbol
-  console.log(symbol, quantity, side, type, 'handleDivergenceOrder')
+  console.log(symbol, quantity, side, type, 'handleOrder')
   if (symbol && quantity && side && type) {
     const ordered = await api.newOrder(symbol, quantity, side, type)
     if (ordered) {
