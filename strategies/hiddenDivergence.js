@@ -61,6 +61,8 @@ function validateEntry (candles) {
 
 function handleTpslOrder (stopPrice, closePrice) {
   let targetPrice = ((closePrice - stopPrice) * 2) + Number(closePrice)
+  const percentage = tools.getPercentage(closePrice, stopPrice)
+  if (percentage > 1) return false
 
   targetPrice = tools.ParseFloatByFormat(targetPrice, closePrice)
   stopPrice = tools.ParseFloatByFormat(stopPrice, stopPrice)
