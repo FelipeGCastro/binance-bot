@@ -79,7 +79,8 @@ function ParseFloat (str, val) {
 }
 
 function ParseFloatByFormat (str, formatDecimals) {
-  const decimals = formatDecimals.toString().split('.')[1].length
+  const checkDecimals = formatDecimals.toString().split('.')
+  const decimals = checkDecimals[1] ? checkDecimals[1].length : 0
   str = str.toString()
   const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false })
 
