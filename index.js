@@ -18,8 +18,8 @@ let tradingOn = false
 let botOn = true
 let listenKeyIsOn = false
 let stopMarketPrice, takeProfitPrice
-let leverage = 3
-const stake = 80
+let leverage = 2
+const stake = 50
 const maxStake = stake + (0.3 * stake)
 
 function setPeriodInterval (int) { interval = int }
@@ -62,7 +62,6 @@ async function execute () {
       console.log('fechou!', timeMin.getMinutes())
       const result = validateEntry(candles)
       if (result) {
-        console.log(result)
         setStopMarketPrice(result.stopPrice)
         setTakeProfitPrice(result.targetPrice)
         const ordered = await newOrder.handleNewOrder({ ...result, stake, maxStake, symbol })
