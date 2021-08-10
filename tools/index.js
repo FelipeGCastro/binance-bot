@@ -47,10 +47,12 @@ function handleStopPercentage (price, stopPrice, side, minPercentage = 0.2) {
 
   return priceMirrorFormat(newStopPrice, price)
 }
+
 function getPercentage (from, to) {
   const decreaseValue = from - to
   return Math.abs((decreaseValue / from) * 100)
 }
+
 function getTargetPrice (price, stopPrice) {
   let targetPrice
   const isSell = price < stopPrice
@@ -107,5 +109,6 @@ module.exports = {
   getTpAndSlByPer,
   ParseFloat,
   ParseFloatByFormat,
-  handleStopPercentage
+  handleStopPercentage,
+  getPercentage
 }
