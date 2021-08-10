@@ -18,7 +18,11 @@ async function handleUserDataUpdate (data) {
         console.log('CANCELED')
         hasStopOrProfitOrder(data.o)
       } else {
-        console.log('type:', data.o.o, 'status:', data.o.X, 'type:', data.o.x)
+        console.log('type:', data.o.o,
+          'status:', data.o.X,
+          'type:', data.o.x,
+          'PNL:', data.o.rp
+        )
       }
     } else {
       console.log('Other Coin or Other Status then filled or canceled')
@@ -37,9 +41,9 @@ async function handleFilledOrder (order) {
     if (order.o === ORDER_TYPE.MARKET) {
       return await createTpandSLOrder(order)
     } else if (order.o === ORDER_TYPE.STOP_MARKET) {
-      return await handleStopMarketOrder(order)
+      return await stopAndProfitMarketOrder(order)
     } else if (order.o === ORDER_TYPE.TAKE_PROFIT_MARKET) {
-      return await handleTakeProfitMarketOrder(order)
+      return await stopAndProfitMarketOrder(order)
     } else { console.log('Other type of order') }
   } else {
     if (order.o === ORDER_TYPE.MARKET) {
@@ -100,23 +104,13 @@ async function hasStopOrProfitOrder (order) {
   return !!hasStopOrProfit[0]
 }
 
-async function handleStopMarketOrder (order) {
+async function stopAndProfitMarketOrder (order) {
+  telegram.sendMessage(`PNL: ${order.rp}`)
   const cancelOrder = await api.cancelAllOrders(order.symbol)
   if (cancelOrder) {
-    telegram.sendMessage(`PNL: ${order.rp}`)
     return !!cancelOrder
   } else {
     console.log('Failed to cancel all orders - stopmarket')
-    return false
-  }
-}
-async function handleTakeProfitMarketOrder (order) {
-  const cancelOrder = await api.cancelAllOrders(order.symbol)
-  if (cancelOrder) {
-    telegram.sendMessage(`PNL: ${order.rp}`)
-    return !!cancelOrder
-  } else {
-    console.log('Failed to cancel all orders - takeprofit')
     return false
   }
 }

@@ -1,37 +1,39 @@
 const rsi = require('../indicators/rsi.js')
 const EMA = require('../indicators/ema.js')
-const stoch = require('../indicators/stoch.js')
 const tools = require('../tools/index')
 const CANDLE = require('../tools/constants').CANDLE
 const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
 const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
+const hasCrossStoch = require('../tools/validations').hasCrossStoch
 
 const periodTime = '1m'
 const rsiPeriod = 14// 80 - 20
 const stochPeriod = 14 // 80 - 20
 const lookBackPeriod = 26
 const lastPivotRange = 6
+const EMA1Period = 200
+const EMA2Period = 50
 
 const getInterval = () => periodTime
 
 function validateEntry (candles) {
   const trendingEma = validateEma(candles)
-  const hasCrossStoch = validateStoch(candles)
-  if (!hasCrossStoch) {
+  const crossStoch = hasCrossStoch(candles, stochPeriod)
+  if (!crossStoch) {
     console.log('SAIDA 1')
     return false
   } else {
-    if (hasCrossStoch === trendingEma) {
-      const divergence = validateDivergence(candles, hasCrossStoch)
+    if (crossStoch === trendingEma) {
+      const divergence = validateDivergence(candles, crossStoch)
       if (divergence) {
         const stopAndTarget = handleTpslOrder(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)
         if (stopAndTarget) {
           return {
             strategy: STRATEGIES.HIDDEN_DIVERGENCE,
             timeLastCandle: candles[candles.length - 1][0],
-            side: hasCrossStoch,
+            side: crossStoch,
             stopPrice: stopAndTarget.stopPrice,
             targetPrice: stopAndTarget.targetPrice,
             closePrice: divergence.lastClosePrice
@@ -65,33 +67,13 @@ function handleTpslOrder (stopPrice, closePrice) {
 }
 
 function validateEma (candles) {
-  const ema200 = EMA.checkingEma(candles, 200)
-  const ema50 = EMA.checkingEma(candles, 50)
-  console.log('EMA 200:', ema200, 'EMA50:', ema50)
+  const ema200 = EMA.checkingEma(candles, EMA1Period)
+  const ema50 = EMA.checkingEma(candles, EMA2Period)
+  console.log(`EMA ${EMA1Period}:`, ema200, `EMA ${EMA2Period}:`, ema50)
   if (ema200 < ema50) {
     return POSITION.LONG
   } else {
     return POSITION.SHORT
-  }
-}
-
-function validateStoch (candles) {
-  const stochArray = stoch.checkingStoch(candles, stochPeriod)
-  const lastTwoStoch = tools.getLasts(stochArray, 2)
-  const lastK = lastTwoStoch[1].k
-  const beforeK = lastTwoStoch[0].k
-  const lastD = lastTwoStoch[1].d
-  const beforeD = lastTwoStoch[0].d
-  const crossDown = lastK <= lastD && beforeK > beforeD ? POSITION.SHORT : false
-  const crossUp = lastK >= lastD && beforeK < beforeD ? POSITION.LONG : false
-  console.log(lastTwoStoch[1].k, lastTwoStoch[1].d, 'validateStoch')
-  if (crossDown) {
-    return crossDown
-  } else if (crossUp) {
-    return crossUp
-  } else {
-    console.log('SAIDA 17')
-    return false
   }
 }
 
