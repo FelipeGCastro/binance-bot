@@ -24,32 +24,38 @@ function validateEntry (candles) {
   if (!crossStoch) {
     console.log('SAIDA 1')
     return false
-  } else {
-    if (crossStoch === trendingEma) {
-      const divergence = validateDivergence(candles, crossStoch)
-      if (divergence) {
-        const stopAndTarget = handleTpslOrder(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)
-        if (stopAndTarget) {
-          return {
-            strategy: STRATEGIES.HIDDEN_DIVERGENCE,
-            timeLastCandle: candles[candles.length - 1][0],
-            side: crossStoch,
-            stopPrice: stopAndTarget.stopPrice,
-            targetPrice: stopAndTarget.targetPrice,
-            closePrice: divergence.lastClosePrice
-          }
-        } else {
-          console.log('SAIDA 1.5 - Erro ao setar stop price and target price ')
-          return false
+  }
+  if (trendingEma.position === POSITION.SHORT &&
+      trendingEma.value < candles[candles.length - 1][CANDLE.CLOSE]
+  ) return false
+  if (trendingEma.position === POSITION.LONG &&
+      trendingEma.value > candles[candles.length - 1][CANDLE.CLOSE]
+  ) return false
+
+  if (crossStoch === trendingEma.position) {
+    const divergence = validateDivergence(candles, crossStoch)
+    if (divergence) {
+      const stopAndTarget = handleTpslOrder(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)
+      if (stopAndTarget) {
+        return {
+          strategy: STRATEGIES.HIDDEN_DIVERGENCE,
+          timeLastCandle: candles[candles.length - 1][0],
+          side: crossStoch,
+          stopPrice: stopAndTarget.stopPrice,
+          targetPrice: stopAndTarget.targetPrice,
+          closePrice: divergence.lastClosePrice
         }
       } else {
-        console.log('SAIDA 2')
+        console.log('SAIDA 1.5 - Erro ao setar stop price and target price ')
         return false
       }
     } else {
-      console.log('SAIDA 3')
+      console.log('SAIDA 2')
       return false
     }
+  } else {
+    console.log('SAIDA 3')
+    return false
   }
 }
 
@@ -70,11 +76,13 @@ function validateEma (candles) {
   const ema200 = EMA.checkingEma(candles, EMA1Period)
   const ema50 = EMA.checkingEma(candles, EMA2Period)
   console.log(`EMA ${EMA1Period}:`, ema200, `EMA ${EMA2Period}:`, ema50)
+  const data = { value: ema50, position: '' }
   if (ema200 < ema50) {
-    return POSITION.LONG
+    data.position = POSITION.LONG
   } else {
-    return POSITION.SHORT
+    data.position = POSITION.SHORT
   }
+  return data
 }
 
 function validateDivergence (candles, side) {
@@ -87,11 +95,10 @@ function validateDivergence (candles, side) {
   const firstsCandles = tools.getFirsts(lastsCandles, firstsCandlesLength)
   const firstsRsi = tools.getFirsts(lastsRsi, firstsCandlesLength)
   const lastClosePrice = lastSixCandles[lastSixCandles.length - 1][CANDLE.CLOSE]
+  let lastPivot, firstPivot
   let lastPivotRsi, firstPivotRsi
-  let lastPivotPrice, firstPivotPrice
 
   let lastPriceIndex, firstPriceIndex
-  let lastPrice = 0
   let lastTopOrBottomPrice
   if (side === POSITION.SHORT) {
     lastSixCandles.forEach((candle, i) => {
@@ -102,13 +109,14 @@ function validateDivergence (candles, side) {
         : false
       // CONDITIONS FOR PIVOT HIGH
       const last = !lastSixCandles[i + 1]
-      if (candle[CANDLE.HIGH] > lastPrice &&
+      lastPivot = lastPivot || candle
+      if (candle[CANDLE.HIGH] > lastPivot[CANDLE.HIGH] &&
         candleBeforeCondition &&
         !last &&
         tools.isBlueCandle(candle) &&
         tools.isRedCandle(lastSixCandles[i + 1])) {
         lastPriceIndex = i
-        lastPrice = candle[CANDLE.HIGH]
+        lastPivot = candle
         lastTopOrBottomPrice = Highest.calculate({
           values: [
             lastSixCandles[i - 1][CANDLE.HIGH],
@@ -131,7 +139,6 @@ function validateDivergence (candles, side) {
     }
     console.log(lastSixCandles.length, lastPriceIndex, 'linha132')
     lastPivotRsi = lastSixRsi[lastPriceIndex]
-    lastPivotPrice = lastSixCandles[lastPriceIndex][CANDLE.HIGH]
 
     // FIRSTS 20 CANDLES
     // ----------------------------
@@ -139,33 +146,34 @@ function validateDivergence (candles, side) {
     // ----------------------------
 
     const firstsCandlesReversed = firstsCandles.slice().reverse()
-    const isDivergence = firstsCandlesReversed.find((candle, i) => {
+    const hasDivergence = firstsCandlesReversed.find((candle, i) => {
       const normalIndex = ((firstsCandlesLength - 1) - i)
       const last = !firstsCandles[normalIndex + 1]
-      firstPivotPrice = firstPivotPrice || candle[CANDLE.HIGH]
+      firstPivot = firstPivot || candle
       // CHECKING IF CANDLE BEFORE EXIST AND IF MEET REQUIREMENTS
       const candleBeforeCondition = firstsCandles[normalIndex - 1]
         ? tools.isBlueCandle(firstsCandles[normalIndex - 1]) ||
       firstsCandles[normalIndex - 1][CANDLE.OPEN] <= candle[CANDLE.CLOSE]
         : false
       // CONDITIONS TO BE CONSIDERED A PIVOT
-      if (candle[CANDLE.HIGH] > lastPrice &&
+      if (candle[CANDLE.HIGH] > lastPivot[CANDLE.HIGH] &&
         candleBeforeCondition &&
-        candle[CANDLE.HIGH] >= firstPivotPrice &&
+        candle[CANDLE.HIGH] >= firstPivot[CANDLE.HIGH] &&
         tools.isBlueCandle(candle) &&
         !last &&
         tools.isRedCandle(firstsCandles[normalIndex + 1])) {
         firstPriceIndex = normalIndex
         firstPivotRsi = firstsRsi[firstPriceIndex]
-        firstPivotPrice = firstsCandles[firstPriceIndex][CANDLE.HIGH]
-        const candleDivergence = firstPivotPrice > lastPivotPrice
+        firstPivot = candle
+        const candleDivergence = firstPivot[CANDLE.HIGH] > lastPivot[CANDLE.HIGH]
+        const candleCloseDivergence = firstPivot[CANDLE.CLOSE] > lastPivot[CANDLE.CLOSE]
         const rsiDivergence = firstPivotRsi < lastPivotRsi
-        return (!!candleDivergence && !!rsiDivergence)
+        return (!!candleDivergence && !!rsiDivergence && !!candleCloseDivergence)
       }
       return false
     })
 
-    if (isDivergence) return { lastPivotPrice, lastTopOrBottomPrice, lastClosePrice }
+    if (hasDivergence) return { lastTopOrBottomPrice, lastClosePrice }
   } else {
     lastSixCandles.forEach((candle, i) => {
       // CHECKING IF CANDLE BEFORE EXIST AND IF MEET REQUIREMENTS
@@ -174,15 +182,15 @@ function validateDivergence (candles, side) {
       lastSixCandles[i - 1][CANDLE.OPEN] >= candle[CANDLE.CLOSE]
         : false
       // CHECKING LAST PRICE
-      lastPrice = lastPrice || candle[CANDLE.LOW]
+      lastPivot = lastPivot || candle
       const last = !lastSixCandles[i + 1]
-      if (candle[CANDLE.LOW] <= lastPrice &&
+      if (candle[CANDLE.LOW] <= lastPivot[CANDLE.LOW] &&
         candleBeforeCondition &&
         !last &&
         tools.isRedCandle(candle) &&
         tools.isBlueCandle(lastSixCandles[i + 1])) {
         lastPriceIndex = i
-        lastPrice = candle[CANDLE.LOW]
+        lastPivot = candle
         lastTopOrBottomPrice = Lowest.calculate({
           values: [
             lastSixCandles[i - 1][CANDLE.LOW],
@@ -207,7 +215,6 @@ function validateDivergence (candles, side) {
       return false
     }
     lastPivotRsi = lastSixRsi[lastPriceIndex]
-    lastPivotPrice = lastSixCandles[lastPriceIndex][CANDLE.LOW]
 
     // firsts 20 candles
     // ----------------------------
@@ -225,26 +232,27 @@ function validateDivergence (candles, side) {
       firstsCandles[normalIndex - 1][CANDLE.OPEN] >= candle[CANDLE.CLOSE]
         : false
       // CHECKING FIRST PIVOT PRICE
-      firstPivotPrice = firstPivotPrice || candle[CANDLE.LOW]
+      firstPivot = firstPivot || candle
       // CONDITIONS TO BE CONSIDERED A PIVOT
-      if (candle[CANDLE.LOW] < lastPrice &&
+      if (candle[CANDLE.LOW] < lastPivot[CANDLE.LOW] &&
         candleBeforeCondition &&
-        candle[CANDLE.LOW] <= firstPivotPrice &&
+        candle[CANDLE.LOW] <= firstPivot[CANDLE.LOW] &&
         tools.isRedCandle(candle) &&
         !last &&
         tools.isBlueCandle(firstsCandles[normalIndex + 1])) {
         firstPriceIndex = normalIndex
         firstPivotRsi = firstsRsi[firstPriceIndex]
-        firstPivotPrice = candle[CANDLE.LOW]
+        firstPivot = candle
         // CONDITIONS TO BE CONSIDERED A DIVERGENCE
-        const candleDivergence = firstPivotPrice < lastPivotPrice
+        const candleDivergence = firstPivot[CANDLE.LOW] < lastPivot[CANDLE.LOW]
+        const candleCloseDivergence = firstPivot[CANDLE.CLOSE] < lastPivot[CANDLE.CLOSE]
         const rsiDivergence = firstPivotRsi > lastPivotRsi
-        return (!!candleDivergence && !!rsiDivergence)
+        return (!!candleDivergence && !!rsiDivergence && !!candleCloseDivergence)
       }
       return false
     })
 
-    if (isDivergence) return { lastPivotPrice, lastTopOrBottomPrice, lastClosePrice }
+    if (isDivergence) return { lastTopOrBottomPrice, lastClosePrice }
   }
 
   console.log('SAIDA 16')
