@@ -22,7 +22,6 @@ function validateEntry (candles) {
   const trendingEma = validateEma(candles)
   const crossStoch = hasCrossStoch(candles, stochPeriod)
   if (!crossStoch) {
-    console.log('SAIDA 1')
     return false
   }
   if (trendingEma.position === POSITION.SHORT &&
@@ -46,15 +45,12 @@ function validateEntry (candles) {
           closePrice: divergence.lastClosePrice
         }
       } else {
-        console.log('SAIDA 1.5 - Erro ao setar stop price and target price ')
         return false
       }
     } else {
-      console.log('SAIDA 2')
       return false
     }
   } else {
-    console.log('SAIDA 3')
     return false
   }
 }
@@ -69,7 +65,6 @@ function handleTpslOrder (stopPrice, closePrice) {
   if (targetPrice && stopPrice) {
     return { targetPrice, stopPrice }
   } else {
-    console.log('Error handleTpslOrder')
     return false
   }
 }
@@ -77,7 +72,6 @@ function handleTpslOrder (stopPrice, closePrice) {
 function validateEma (candles) {
   const ema200 = EMA.checkingEma(candles, EMA1Period)
   const ema50 = EMA.checkingEma(candles, EMA2Period)
-  console.log(`EMA ${EMA1Period}:`, ema200, `EMA ${EMA2Period}:`, ema50)
   const data = { value: ema50, position: '' }
   if (ema200 < ema50) {
     data.position = POSITION.LONG
@@ -131,15 +125,13 @@ function validateDivergence (candles, side) {
     })
 
     if (lastPriceIndex < 2 || lastPriceIndex === 5) {
-      console.log('SAIDA 5')
       return false
     }
 
     if (!lastPriceIndex) {
-      console.log('SAIDA 6')
       return false
     }
-    console.log(lastSixCandles.length, lastPriceIndex, 'linha132')
+
     lastPivotRsi = lastSixRsi[lastPriceIndex]
 
     // FIRSTS 20 CANDLES
@@ -202,18 +194,15 @@ function validateDivergence (candles, side) {
           period: 3
         })[0]
       } else {
-        console.log('SAIDA 10')
         return false
       }
     })
 
     if (lastPriceIndex < 2 || lastPriceIndex === 5) {
-      console.log('SAIDA 11')
       return false
     }
 
     if (!lastPriceIndex) {
-      console.log('SAIDA 12')
       return false
     }
     lastPivotRsi = lastSixRsi[lastPriceIndex]
@@ -256,8 +245,6 @@ function validateDivergence (candles, side) {
 
     if (isDivergence) return { lastTopOrBottomPrice, lastClosePrice }
   }
-
-  console.log('SAIDA 16')
 
   return false
 }

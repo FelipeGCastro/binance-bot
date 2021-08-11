@@ -16,7 +16,6 @@ function hasCrossStoch (candles, stochPeriod) {
   } else if (crossUp) {
     return crossUp
   } else {
-    console.log('SAIDA 17')
     return false
   }
 }

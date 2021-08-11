@@ -12,7 +12,7 @@ function handleNewOrder (data) {
   } else if (data.strategy === STRATEGIES.SHARK) {
     return handleOrder(data)
   } else {
-    console.log('no strategy')
+    return false
   }
 }
 
@@ -21,7 +21,6 @@ async function handleOrder (data) {
   const side = data.side === POSITION.LONG ? SIDE.BUY : SIDE.SELL
   const type = ORDER_TYPE.MARKET
   const symbol = data.symbol
-  console.log(symbol, quantity, side, type, 'handleOrder')
   if (symbol && quantity && side && type) {
     const ordered = await api.newOrder(symbol, quantity, side, type)
     if (ordered) {
@@ -39,19 +38,15 @@ async function getQty (data) {
   const { qtyFormat, minQty } = await help.getQtyRules(data.symbol)
 
   const calQty = data.stake / data.closePrice
-  console.log(calQty, minQty)
   if (calQty < minQty) {
     if ((minQty * data.closePrice) < data.maxStake) {
-      console.log('price not expected saida 220')
       qty = minQty
       return qty
     } else {
-      console.log('price not expected saida 221')
       return false
     }
   } else {
     qty = tools.ParseFloatByFormat(calQty, qtyFormat)
-    console.log(qty, 'saida 222')
     return qty
   }
 }
