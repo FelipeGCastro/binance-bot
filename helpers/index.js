@@ -3,7 +3,7 @@ let exchangeInfo
 async function getQtyRules (symbol) {
   if (!exchangeInfo) {
     exchangeInfo = await api.exchangeInfo()
-    if (!exchangeInfo) return console.log('Error getting exchange info.')
+    if (!exchangeInfo) return console.error('Error getting exchange info.')
   }
   const symbolData = exchangeInfo.symbols.find(data => data.symbol === symbol)
   const filter = symbolData.filters.find(filter => filter.filterType === 'LOT_SIZE')
@@ -16,7 +16,7 @@ async function getQtyRules (symbol) {
 async function getAllSymbols () {
   if (!exchangeInfo) {
     exchangeInfo = await api.exchangeInfo()
-    if (!exchangeInfo) return console.log('Error getting exchange info.')
+    if (!exchangeInfo) return console.error('Error getting exchange info.')
   }
   const allSymbols = exchangeInfo.symbols.map(data => data.symbol)
 

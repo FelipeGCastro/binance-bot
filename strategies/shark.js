@@ -35,7 +35,6 @@ function validateEntry (candles) {
         closePrice: lastCandle[CANDLE.CLOSE]
       }
     } else {
-      console.log('SAIDA 1.5 - Erro ao setar stop price and target price ')
       return false
     }
   }
@@ -53,7 +52,7 @@ function hasCrossStoch (candles, stochPeriod) {
   const dOver80 = lastD > 80 || beforeD > 80
   const kUnder20 = lastK < 20 || beforeK < 20
   const dUnder20 = lastD < 20 || beforeD < 20
-  console.log('k:', lastK, 'd:', lastD)
+
   if (crossDown) {
     if (!kOver80 && !dOver80) return false
     return crossDown
@@ -61,7 +60,6 @@ function hasCrossStoch (candles, stochPeriod) {
     if (!kUnder20 && !dUnder20) return false
     return crossUp
   } else {
-    console.log('SAIDA 17')
     return false
   }
 }
@@ -84,7 +82,6 @@ function handleTpslOrder (closePrice, side) {
   if (targetPrice && stopPrice) {
     return { targetPrice, stopPrice }
   } else {
-    console.log('Error handleTpslOrder')
     return false
   }
 }
@@ -105,7 +102,6 @@ function validateRsi (candles) {
   const lastTwoRsi = tools.getLasts(rsiArray, 2)
   const over80 = lastTwoRsi[0] > 80 || lastTwoRsi[1] > 80
   const under20 = lastTwoRsi[0] < 20 || lastTwoRsi[1] < 20
-  console.log(lastTwoRsi[1], 'validateRsi')
   if (over80) return POSITION.SHORT
   if (under20) return POSITION.LONG
   return false

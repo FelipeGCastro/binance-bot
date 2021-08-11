@@ -58,8 +58,6 @@ async function execute () {
   async function handleCloseCandle (data) {
     await handleAddCandle(data)
     if (!tradingOn && listenKeyIsOn && botOn) {
-      const timeMin = new Date()
-      console.log('fechou!', timeMin.getMinutes())
       const result = validateEntry(candles)
       if (result) {
         setStopMarketPrice(result.stopPrice)
@@ -68,7 +66,6 @@ async function execute () {
         if (ordered) {
           setTradingOn(true)
         }
-        console.log(tradingOn, 'tradingOn')
         telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
       }
     }
@@ -98,7 +95,6 @@ async function execute () {
       if (data.e === 'listenKeyExpired' && listenKeyIsOn) {
         listenKeyIsOn = false
         await getListenKey()
-        console.log('listenKeyExpired')
       } else {
         let newData
         if (data.o) {
@@ -134,7 +130,6 @@ async function changeLeverage (value) {
   const changedLeverage = await api.changeLeverage(leverage, symbol)
   if (changedLeverage) {
     setLeverage(value)
-    console.log(value, 'changeLeverage')
   }
 }
 const SET_STRATEGY = {
