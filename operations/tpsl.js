@@ -47,6 +47,11 @@ async function handleFilledOrder (order) {
     } else { console.log('Other type of order') }
   } else {
     if (order.o === ORDER_TYPE.MARKET) {
+      if (order.ot === ORDER_TYPE.STOP_MARKET) {
+        return await stopAndProfitMarketOrder(order)
+      } else if (order.ot === ORDER_TYPE.TAKE_PROFIT_MARKET) {
+        return await stopAndProfitMarketOrder(order)
+      }
       return await hasStopOrProfitOrder(order)
     } else {
       console.log('unkown order update')
