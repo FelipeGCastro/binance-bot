@@ -11,26 +11,29 @@ const telegramUserId = Number(process.env.TELEGRAM_USER_ID)
 // TELEGRAM BOT FUNCTIONS
 
 let symbol = process.env.SYMBOL
-let interval = '1m'
-let validateEntry = hiddenDivergence.validateEntry
-const amountCandles = 300
-let tradingOn = false
 let botOn = true
-let listenKeyIsOn = false
-let stopMarketPrice, takeProfitPrice
 let leverage = 2
-const stake = 50
-const maxStake = stake + (0.3 * stake)
+let entryValue = 50
 
+let interval = '1m'
+let tradingOn = false
+const maxStake = entryValue + (0.3 * entryValue)
+let stopMarketPrice, takeProfitPrice
+let listenKeyIsOn = false
+let validateEntry = hiddenDivergence.validateEntry
+
+function setBotOn (bool) { botOn = bool }
+function setSymbol (symb) { symbol = symb }
+function setLeverage (value) { leverage = value }
+function setEntryValue (value) { entryValue = value }
+function getAccountData () { return { symbol, botOn, leverage, entryValue } }
+
+function setValidate (func) { validateEntry = func }
 function setPeriodInterval (int) { interval = int }
 function setTradingOn (bool) { tradingOn = bool }
 
-function setValidate (func) { validateEntry = func }
-function setBotOn (bool) { botOn = bool }
-function setSymbol (symb) { symbol = symb }
 function setStopMarketPrice (price) { stopMarketPrice = price }
 function setTakeProfitPrice (price) { takeProfitPrice = price }
-function setLeverage (value) { leverage = value }
 
 // START MAIN FUNCTION
 async function execute () {
@@ -43,7 +46,7 @@ async function execute () {
   // ----------------------------
   changeLeverage(leverage)
 
-  const candles = await api.candles(symbol, interval, amountCandles)
+  const candles = await api.candles(symbol, interval)
 
   let lastEventAt = 0
   // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
@@ -62,7 +65,7 @@ async function execute () {
       if (result) {
         setStopMarketPrice(result.stopPrice)
         setTakeProfitPrice(result.targetPrice)
-        const ordered = await newOrder.handleNewOrder({ ...result, stake, maxStake, symbol })
+        const ordered = await newOrder.handleNewOrder({ ...result, entryValue, maxStake, symbol })
         if (ordered) {
           setTradingOn(true)
         }
@@ -108,8 +111,6 @@ async function execute () {
 }
 
 telegram.listenTurnBotOn((ctx) => execute())
-telegram.listenSharkStrategy((ctx) => handleChangeStrategy(STRATEGIES.SHARK))
-telegram.listenDivergenceStrategy((ctx) => handleChangeStrategy(STRATEGIES.HIDDEN_DIVERGENCE))
 telegram.listenStopBot((ctx) => setBotOn(true))
 telegram.listen2xLeverage((ctx) => changeLeverage(2))
 telegram.listen3xLeverage((ctx) => changeLeverage(3))
@@ -118,7 +119,6 @@ telegram.listenStatus((ctx) => {
   ctx.reply(`
   coin: ${symbol},
   periodo: ${interval},
-  Quantidade de Candles: ${amountCandles},
   Operando: ${tradingOn},
   Bot Ligado: ${botOn},
   Listen Key: ${listenKeyIsOn},
@@ -160,5 +160,8 @@ module.exports = {
   setLeverage,
   setBotOn,
   execute,
-  setSymbol
+  setSymbol,
+  setEntryValue,
+  getAccountData,
+  handleChangeStrategy
 }
