@@ -42,7 +42,6 @@ async function getQty (data) {
   console.log(calQty, minQty)
   if (calQty < minQty) {
     if ((minQty * data.closePrice) < data.maxStake) {
-      console.log('price not expected saida 220')
       qty = minQty
       return qty
     } else {
