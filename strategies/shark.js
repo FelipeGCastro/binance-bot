@@ -1,5 +1,5 @@
 const rsi = require('../indicators/rsi.js')
-const EMA = require('../indicators/ema.js')
+// const EMA = require('../indicators/ema.js')
 const tools = require('../tools/index')
 const stoch = require('../indicators/stoch.js')
 const CANDLE = require('../tools/constants').CANDLE
@@ -9,18 +9,18 @@ const POSITION = require('../tools/constants').POSITION_SIDE
 const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
-const emaPeriod = 100
+// const emaPeriod = 100
 const stopPerc = 0.5
 const profitPerc = 0.5
 
 function validateEntry (candles) {
   const lastCandle = candles[candles.length - 1]
-  const checkinPosition = emaValue(candles)
+  // const checkinPosition = emaValue(candles)
   const crossStoch = hasCrossStoch(candles, stochPeriod)
   const validatedRsi = validateRsi(candles)
-  if (!checkinPosition) return false
+  // if (!checkinPosition) return false
   if (!crossStoch) return false
-  if (crossStoch !== checkinPosition) return false
+  // if (crossStoch !== checkinPosition) return false
   if (!validatedRsi) {
     return false
   } else {
@@ -55,10 +55,14 @@ function hasCrossStoch (candles, stochPeriod) {
   const dUnder20 = lastD < 20 || beforeD < 20
   console.log('k:', lastK, 'd:', lastD)
   if (crossDown) {
+    console.log('crossDown 1')
     if (!kOver80 && !dOver80) return false
+    console.log('crossDown 2')
     return crossDown
   } else if (crossUp) {
+    console.log('crossUp 1')
     if (!kUnder20 && !dUnder20) return false
+    console.log('crossUp 2')
     return crossUp
   } else {
     console.log('SAIDA 17')
@@ -89,16 +93,16 @@ function handleTpslOrder (closePrice, side) {
   }
 }
 
-function emaValue (candles) {
-  const emaValue = EMA.checkingEma(candles, emaPeriod)
-  const lastClosePrice = candles[candles.length - 1][CANDLE.CLOSE]
-  if (!emaValue && !lastClosePrice) return false
-  if (emaValue < lastClosePrice) {
-    return POSITION.LONG
-  } else {
-    return POSITION.SHORT
-  }
-}
+// function emaValue (candles) {
+//   const emaValue = EMA.checkingEma(candles, emaPeriod)
+//   const lastClosePrice = candles[candles.length - 1][CANDLE.CLOSE]
+//   if (!emaValue || !lastClosePrice) return false
+//   if (emaValue < lastClosePrice) {
+//     return POSITION.LONG
+//   } else {
+//     return POSITION.SHORT
+//   }
+// }
 
 function validateRsi (candles) {
   const rsiArray = rsi.checkingRsi(candles, rsiPeriod)
