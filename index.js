@@ -11,8 +11,8 @@ const telegramUserId = Number(process.env.TELEGRAM_USER_ID)
 // TELEGRAM BOT FUNCTIONS
 
 let symbol = process.env.SYMBOL
-let interval = '1m'
-let validateEntry = hiddenDivergence.validateEntry
+let interval = '5m'
+let validateEntry = sharkStrategy.validateEntry
 const amountCandles = 300
 let tradingOn = false
 let botOn = true
