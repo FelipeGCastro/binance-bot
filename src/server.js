@@ -1,13 +1,14 @@
 const express = require('express')
 
-const account = require('./controllers/authControllers')
-const pair = require('./controllers/pairController')
+const auth = require('./controllers/authControllers')
+const account = require('./controllers/accountControler')
+const authMiddleware = require('./middlewares/auth')
 
 const app = express()
 app.use(express.json())
 
+app.use('/user', auth).use(authMiddleware)
 app.use('/account', account)
-app.use('/pair', pair)
 
 app.listen(3333, () => console.log('Server is running'))
 
