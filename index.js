@@ -19,6 +19,7 @@ let botOn = true
 let listenKeyIsOn = false
 let stopMarketPrice, takeProfitPrice
 let leverage = 2
+let entryPrice = 0
 const stake = 50
 const maxStake = stake + (0.3 * stake)
 
@@ -31,6 +32,7 @@ function setSymbol (symb) { symbol = symb }
 function setStopMarketPrice (price) { stopMarketPrice = price }
 function setTakeProfitPrice (price) { takeProfitPrice = price }
 function setLeverage (value) { leverage = value }
+function setEntryPrice (price) { entryPrice = price }
 
 // START MAIN FUNCTION
 async function execute () {
@@ -67,6 +69,7 @@ async function execute () {
         const ordered = await newOrder.handleNewOrder({ ...result, stake, maxStake, symbol })
         if (ordered) {
           setTradingOn(true)
+          setEntryPrice(ordered.avgPrice)
         }
         console.log(tradingOn, 'tradingOn')
         telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
@@ -102,7 +105,7 @@ async function execute () {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, setTradingOn, symbol }
+          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, setTradingOn, symbol, entryPrice }
           newData = { ...data, o: dataOrder }
         } else { newData = { ...data, symbol } }
         operations.handleUserDataUpdate(newData)
