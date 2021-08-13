@@ -1,7 +1,9 @@
 const api = require('../services/api')
+const Trade = require('../src/models/trade')
 const telegram = require('../services/telegram')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 const SIDE = require('../tools/constants').SIDE
+const { POSITION_SIDE } = require('../tools/constants')
 
 let position = { pa: '0' }
 
@@ -106,6 +108,19 @@ async function hasStopOrProfitOrder (order) {
 async function stopAndProfitMarketOrder (order) {
   telegram.sendMessage(`PNL: ${order.rp}`)
   order.setTradingOn(false)
+  const data = {
+    symbol: order.symbol,
+    side: order.S === SIDE.SELL ? POSITION_SIDE.LONG : POSITION_SIDE.SHORT,
+    closePrice: order.L,
+    entryPrice: order.entryPrice,
+    stopPrice: order.stopMarketPrice,
+    profitPrice: order.takeProfitPrice,
+    quantity: order.q,
+    profit: order.rp,
+    timestamp: order.T
+  }
+  const trade = await Trade.create(data)
+  if (!trade) console.log('Cannot create trade')
   const cancelOrder = await api.cancelAllOrders(order.symbol)
   console.log(order)
   if (cancelOrder) {
