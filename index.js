@@ -95,6 +95,7 @@ async function execute () {
         if (ordered) {
           const entreValidTime = new Date(valid.timeLastCandle)
           setTradingOn(true)
+          console.log(ordered, 'ordered')
           setEntryPrice(ordered.avgPrice)
           telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${valid.stopPrice} e Side: ${valid.side}, ${entreValidTime}`)
         }
