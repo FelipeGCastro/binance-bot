@@ -1,22 +1,11 @@
 const api = require('../services/api')
-const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
 const SIDE = require('../tools/constants').SIDE
 const help = require('../helpers')
 const tools = require('../tools')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 
-function handleNewOrder (data) {
-  if (data.strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
-    return handleOrder(data)
-  } else if (data.strategy === STRATEGIES.SHARK) {
-    return handleOrder(data)
-  } else {
-    return false
-  }
-}
-
-async function handleOrder (data) {
+async function handleNewOrder (data) {
   const quantity = await getQty(data)
   const side = data.side === POSITION.LONG ? SIDE.BUY : SIDE.SELL
   const type = ORDER_TYPE.MARKET
@@ -24,6 +13,7 @@ async function handleOrder (data) {
   if (symbol && quantity && side && type) {
     const ordered = await api.newOrder(symbol, quantity, side, type)
     if (ordered) {
+      console.log('Ordered successfully')
       return ordered
     } else {
       return false
@@ -43,6 +33,7 @@ async function getQty (data) {
       qty = minQty
       return qty
     } else {
+      console.log('Minimum qty is bigger then your max entry price')
       return false
     }
   } else {

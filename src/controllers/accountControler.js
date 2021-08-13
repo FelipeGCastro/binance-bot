@@ -1,6 +1,7 @@
 const express = require('express')
 const home = require('../../index')
 const STRATEGIES = require('../../tools/constants').STRATEGIES
+const api = require('../../services/api')
 
 const accountRoutes = express.Router()
 
@@ -20,11 +21,17 @@ accountRoutes.put('/symbol', async (req, res) => {
   return res.send(accountdata)
 })
 
+accountRoutes.get('/symbols', async (req, res) => {
+  const exchangeInfo = await api.exchangeInfo()
+  const allSymbols = exchangeInfo.symbols.map(data => data.symbol)
+  return res.send(allSymbols)
+})
+
 accountRoutes.put('/boton', async (req, res) => {
   const { botOn } = req.body
   if (typeof botOn !== 'boolean') return res.status(400).send({ error: 'Bad type' })
   home.turnBotOn(botOn)
-
+  console.log('bot its on')
   const accountdata = await home.getAccountData()
   res.send(accountdata)
 })
