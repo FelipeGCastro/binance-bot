@@ -69,16 +69,19 @@ async function execute () {
   async function handleCloseCandle (data) {
     await handleAddCandle(data)
     if (!tradingOn && listenKeyIsOn && botOn) {
-      const result = validateEntry(candles)
-      if (result) {
-        setStopMarketPrice(result.stopPrice)
-        setTakeProfitPrice(result.targetPrice)
-        const ordered = await newOrder.handleNewOrder({ ...result, entryValue, maxStake, symbol })
+      const valid = validateEntry(candles)
+      console.log('Fechou!')
+      if (valid) {
+        setStopMarketPrice(valid.stopPrice)
+        setTakeProfitPrice(valid.targetPrice)
+        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxStake, symbol })
         if (ordered) {
+          const entreValidTime = new Date(valid.timeLastCandle)
           setTradingOn(true)
           setEntryPrice(ordered.avgPrice)
+          telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${valid.stopPrice} e Side: ${valid.side}, ${entreValidTime}`)
         }
-        telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
+        console.log('Entry is Valid')
       }
     }
   }
