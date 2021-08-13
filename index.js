@@ -16,7 +16,7 @@ const SET_STRATEGY = {
 let strategy = STRATEGIES.SHARK
 let symbol = process.env.SYMBOL
 let botOn = false
-let leverage = 2
+let leverage = 4
 let entryValue = 50
 
 let validateEntry = SET_STRATEGY[strategy].validateEntry

@@ -16,9 +16,11 @@ async function handleNewOrder (data) {
       console.log('Ordered successfully')
       return ordered
     } else {
+      console.log('Ordered Failed')
       return false
     }
   } else {
+    console.log('Some problem with create new order')
     return false
   }
 }
@@ -41,11 +43,6 @@ async function getQty (data) {
     return qty
   }
 }
-// strategy: STRATEGIES.HIDDEN_DIVERGENCE,
-// timeLastCandle: candles[candles.length - 1][0],
-// side: hasCrossStoch,
-// stopPrice: divergence.lastTopOrBottomPrice,
-// closePrice: divergence.lastClosePrice
 
 module.exports = {
   handleNewOrder
