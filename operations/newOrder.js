@@ -29,7 +29,7 @@ async function getQty (data) {
 
   const calQty = data.stake / data.closePrice
   if (calQty < minQty) {
-    if ((minQty * data.closePrice) < data.maxStake) {
+    if ((minQty * data.closePrice) < data.maxEntryValue) {
       qty = minQty
       return qty
     } else {

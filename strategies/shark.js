@@ -4,6 +4,7 @@ const stoch = require('../indicators/stoch.js')
 const CANDLE = require('../tools/constants').CANDLE
 const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
+const INDICATORS_OBJ = require('../tools/constants').INDICATORS_OBJ
 
 const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
@@ -11,10 +12,10 @@ const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
 const profitPerc = 0.5
 
-function validateEntry (candles) {
+function validateEntry (candles, setLastIndicatorsData) {
   const lastCandle = candles[candles.length - 1]
-  const crossStoch = hasCrossStoch(candles, stochPeriod)
-  const validatedRsi = validateRsi(candles)
+  const crossStoch = hasCrossStoch(candles, stochPeriod, setLastIndicatorsData)
+  const validatedRsi = validateRsi(candles, setLastIndicatorsData)
   if (!crossStoch) return false
   if (!checkLastCandle(candles, crossStoch)) return false
   if (!validatedRsi) return false
@@ -42,7 +43,7 @@ function checkLastCandle (candles, position) {
   if (position === POSITION.LONG && !isBlueCandle) return false
   return true
 }
-function hasCrossStoch (candles, stochPeriod) {
+function hasCrossStoch (candles, stochPeriod, setLastIndicatorsData) {
   const stochArray = stoch.checkingStoch(candles, stochPeriod)
   const lastTwoStoch = tools.getLasts(stochArray, 2)
   const lastK = lastTwoStoch[1].k
@@ -55,6 +56,7 @@ function hasCrossStoch (candles, stochPeriod) {
   const dOver80 = lastD > 80 || beforeD > 80
   const kUnder20 = lastK < 20 || beforeK < 20
   const dUnder20 = lastD < 20 || beforeD < 20
+  setLastIndicatorsData(INDICATORS_OBJ.STOCH, [lastK, lastD])
   console.log('k:', lastK, 'd:', lastD)
   if (crossDown) {
     console.log('crossDown 1')
@@ -93,11 +95,12 @@ function handleTpslOrder (closePrice, side) {
   }
 }
 
-function validateRsi (candles) {
+function validateRsi (candles, setLastIndicatorsData) {
   const rsiArray = rsi.checkingRsi(candles, rsiPeriod)
   const lastTwoRsi = tools.getLasts(rsiArray, 2)
   const over80 = lastTwoRsi[0] > 80 || lastTwoRsi[1] > 80
   const under20 = lastTwoRsi[0] < 20 || lastTwoRsi[1] < 20
+  setLastIndicatorsData(INDICATORS_OBJ.RSI, lastTwoRsi[1])
   if (over80) return POSITION.SHORT
   if (under20) return POSITION.LONG
   return false

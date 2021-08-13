@@ -14,6 +14,13 @@ const ORDER_TYPE = {
   TRAILING_STOP_MARKET: 'TRAILING_STOP_MARKET'
 }
 
+const INDICATORS_OBJ = {
+  RSI: 'rsi',
+  EMA: 'ema',
+  STOCH: 'stoch',
+  TIME: 'time'
+}
+
 const SIDE = {
   BUY: 'BUY',
   SELL: 'SELL'
@@ -39,5 +46,6 @@ module.exports = {
   CANDLE,
   ORDER_TYPE,
   SIDE,
-  POSITION_SIDE
+  POSITION_SIDE,
+  INDICATORS_OBJ
 }
