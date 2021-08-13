@@ -105,7 +105,9 @@ async function hasStopOrProfitOrder (order) {
 
 async function stopAndProfitMarketOrder (order) {
   telegram.sendMessage(`PNL: ${order.rp}`)
+  order.setTradingOn(false)
   const cancelOrder = await api.cancelAllOrders(order.symbol)
+  console.log(order)
   if (cancelOrder) {
     return !!cancelOrder
   } else {
