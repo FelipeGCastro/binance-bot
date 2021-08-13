@@ -6,6 +6,7 @@ const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
 const STRATEGIES = require('./tools/constants').STRATEGIES
+const INDICATORS_OBJ = require('./tools/constants').INDICATORS_OBJ
 
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
@@ -18,19 +19,43 @@ let botOn = false
 let leverage = 2
 let entryValue = 50
 
-let interval = '5m'
 let validateEntry = SET_STRATEGY[strategy].validateEntry
 let tradingOn = false
-const maxStake = entryValue + (0.3 * entryValue)
+const maxEntryValue = entryValue + (0.3 * entryValue)
+let entryPrice = 0
 let stopMarketPrice, takeProfitPrice
 let listenKeyIsOn = false
-let entryPrice = 0
+let interval = '5m'
+
+const lastIndicatorsData = {
+  [INDICATORS_OBJ.RSI]: null,
+  [INDICATORS_OBJ.EMA]: null,
+  [INDICATORS_OBJ.STOCH]: null,
+  [INDICATORS_OBJ.TIME]: null
+}
+function setLastIndicatorsData (key, value) {
+  lastIndicatorsData[key] = value
+}
 
 function setBotOn (bool) { botOn = bool }
 function setSymbol (symb) { symbol = symb }
 function setLeverage (value) { leverage = value }
 function setEntryValue (value) { entryValue = value }
-function getAccountData () { return { symbol, botOn, leverage, entryValue, strategy } }
+function getAccountData () {
+  return {
+    symbol,
+    botOn,
+    leverage,
+    entryValue,
+    strategy,
+    maxEntryValue,
+    stopMarketPrice,
+    takeProfitPrice,
+    entryPrice,
+    tradingOn,
+    lastIndicatorsData
+  }
+}
 function getTradeOn () { return tradingOn }
 
 function setValidate (func) { validateEntry = func }
@@ -61,12 +86,12 @@ async function execute () {
   async function handleCloseCandle (data) {
     await handleAddCandle(data)
     if (!tradingOn && listenKeyIsOn && botOn) {
-      const valid = validateEntry(candles)
+      const valid = validateEntry(candles, setLastIndicatorsData)
       console.log('Fechou!')
       if (valid) {
         setStopMarketPrice(valid.stopPrice)
         setTakeProfitPrice(valid.targetPrice)
-        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxStake, symbol })
+        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol })
         if (ordered) {
           const entreValidTime = new Date(valid.timeLastCandle)
           setTradingOn(true)

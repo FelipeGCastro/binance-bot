@@ -7,6 +7,7 @@ const Lowest = require('technicalindicators').Lowest
 const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
 const hasCrossStoch = require('../tools/validations').hasCrossStoch
+const INDICATORS_OBJ = require('../tools/constants').INDICATORS_OBJ
 
 const periodTime = '1m'
 const rsiPeriod = 14// 80 - 20
@@ -18,9 +19,9 @@ const EMA2Period = 50
 
 const getInterval = () => periodTime
 
-function validateEntry (candles) {
-  const trendingEma = validateEma(candles)
-  const crossStoch = hasCrossStoch(candles, stochPeriod)
+function validateEntry (candles, setLastIndicatorsData) {
+  const trendingEma = validateEma(candles, setLastIndicatorsData)
+  const crossStoch = hasCrossStoch(candles, stochPeriod, setLastIndicatorsData)
   if (!crossStoch) {
     return false
   }
@@ -32,7 +33,7 @@ function validateEntry (candles) {
   ) return false
 
   if (crossStoch === trendingEma.position) {
-    const divergence = validateDivergence(candles, crossStoch)
+    const divergence = validateDivergence(candles, crossStoch, setLastIndicatorsData)
     if (divergence) {
       const stopAndTarget = handleTpslOrder(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)
       if (stopAndTarget) {
@@ -69,10 +70,11 @@ function handleTpslOrder (stopPrice, closePrice) {
   }
 }
 
-function validateEma (candles) {
+function validateEma (candles, setLastIndicatorsData) {
   const ema200 = EMA.checkingEma(candles, EMA1Period)
   const ema50 = EMA.checkingEma(candles, EMA2Period)
   const data = { value: ema50, position: '' }
+  setLastIndicatorsData(INDICATORS_OBJ.EMA, { 200: ema200, 50: ema50 })
   if (ema200 < ema50) {
     console.log('LONG')
     data.position = POSITION.LONG
@@ -83,7 +85,7 @@ function validateEma (candles) {
   return data
 }
 
-function validateDivergence (candles, side) {
+function validateDivergence (candles, side, setLastIndicatorsData) {
   const rsiArray = rsi.checkingRsi(candles, rsiPeriod)
   const lastsRsi = tools.getLasts(rsiArray, lookBackPeriod)
   const lastsCandles = tools.getLasts(candles, lookBackPeriod)
@@ -93,6 +95,7 @@ function validateDivergence (candles, side) {
   const firstsCandles = tools.getFirsts(lastsCandles, firstsCandlesLength)
   const firstsRsi = tools.getFirsts(lastsRsi, firstsCandlesLength)
   const lastClosePrice = lastSixCandles[lastSixCandles.length - 1][CANDLE.CLOSE]
+  setLastIndicatorsData(INDICATORS_OBJ.RSI, lastsRsi[lastsRsi.length - 1])
   let lastPivot, firstPivot
   let lastPivotRsi, firstPivotRsi
 
