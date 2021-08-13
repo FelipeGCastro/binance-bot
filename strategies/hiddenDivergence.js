@@ -74,8 +74,10 @@ function validateEma (candles) {
   const ema50 = EMA.checkingEma(candles, EMA2Period)
   const data = { value: ema50, position: '' }
   if (ema200 < ema50) {
+    console.log('LONG')
     data.position = POSITION.LONG
   } else {
+    console.log('SHORT')
     data.position = POSITION.SHORT
   }
   return data

@@ -12,8 +12,10 @@ function hasCrossStoch (candles, stochPeriod) {
   const crossDown = lastK <= lastD && beforeK > beforeD ? POSITION.SHORT : false
   const crossUp = lastK >= lastD && beforeK < beforeD ? POSITION.LONG : false
   if (crossDown) {
+    console.log('crossDown')
     return crossDown
   } else if (crossUp) {
+    console.log('crossUp')
     return crossUp
   } else {
     return false
