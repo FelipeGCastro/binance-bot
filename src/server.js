@@ -13,7 +13,7 @@ app.use('/user', auth).use(authMiddleware)
 app.use('/account', account).use(authMiddleware)
 app.use('/trade', tradeRoutes).use(authMiddleware)
 
-app.listen(3333, () => console.log('Server is running'))
+app.listen(process.env.PORT || 3333, () => console.log('Server is running'))
 
 module.exports = {
   app
