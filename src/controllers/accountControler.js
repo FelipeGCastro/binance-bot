@@ -20,7 +20,7 @@ accountRoutes.put('/symbol', async (req, res) => {
   return res.send(accountdata)
 })
 
-accountRoutes.put('/botOn', async (req, res) => {
+accountRoutes.put('/boton', async (req, res) => {
   const { botOn } = req.body
   if (typeof botOn !== 'boolean') return res.status(400).send({ error: 'Bad type' })
   home.turnBotOn(botOn)
