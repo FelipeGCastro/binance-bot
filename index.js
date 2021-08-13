@@ -13,7 +13,7 @@ const SET_STRATEGY = {
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
 }
 
-const strategy = STRATEGIES.SHARK
+let strategy = STRATEGIES.SHARK
 let symbol = process.env.SYMBOL
 let botOn = false
 let leverage = 2
@@ -37,6 +37,7 @@ function getTradeOn () { return tradingOn }
 function setValidate (func) { validateEntry = func }
 function setPeriodInterval (int) { interval = int }
 function setTradingOn (bool) { tradingOn = bool }
+function setStrategy (value) { strategy = value }
 
 function setStopMarketPrice (price) { stopMarketPrice = price }
 function setTakeProfitPrice (price) { takeProfitPrice = price }
@@ -136,6 +137,7 @@ function handleChangeStrategy (stratName) {
   } else {
     setPeriodInterval(strategy.getInterval())
     setValidate(strategy.validateEntry)
+    setStrategy(stratName)
     return true
   }
 }

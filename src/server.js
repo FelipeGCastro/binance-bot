@@ -6,6 +6,7 @@ const tradeRoutes = require('./controllers/tradeController')
 const authMiddleware = require('./middlewares/auth')
 
 const app = express()
+
 app.use(express.json())
 
 app.use('/user', auth).use(authMiddleware)
