@@ -100,6 +100,7 @@ async function execute () {
         }
         console.log('Entry is Valid')
       }
+      setLastIndicatorsData(INDICATORS_OBJ.TIME, data.k.t)
     }
   }
 
