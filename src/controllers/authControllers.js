@@ -7,9 +7,7 @@ const authConfig = require('../config/auth')
 const userRoutes = express.Router()
 
 function generateToken (params = {}) {
-  return jwt.sign(params, authConfig.secret, {
-    expiresIn: 86400
-  })
+  return jwt.sign(params, authConfig.secret)
 }
 
 userRoutes.post('/register', async (req, res) => {
