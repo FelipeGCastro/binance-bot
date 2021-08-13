@@ -24,7 +24,7 @@ async function privateCall (path, data = {}, method = 'GET') {
     })
     return result.data
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
@@ -52,7 +52,8 @@ async function cancelOrder (symbol = symbolDefault, orderId, origClientOrderId) 
   if (data.orderId || data.origClientOrderId) {
     return privateCall('/fapi/v1/order', { symbol }, 'DELETE')
   } else {
-    console.log('orderId or origClientOrderId is Require!')
+    console.error('orderId or origClientOrderId is Require!')
+    return false
   }
 }
 
@@ -66,7 +67,7 @@ async function publicCall (path, data, method = 'GET') {
     })
     return result.data
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
@@ -74,7 +75,7 @@ async function time () {
   return publicCall('/fapi/v1/time')
 }
 
-async function candles (pair = symbolDefault.toLowerCase(), interval = '1m', limit = 200) {
+async function candles (pair = symbolDefault.toLowerCase(), interval = '1m', limit = 300) {
   return publicCall('/fapi/v1/continuousKlines',
     { pair, contractType: 'PERPETUAL', interval, limit })
 }
