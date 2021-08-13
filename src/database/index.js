@@ -1,6 +1,8 @@
 const mongoose = require('mongoose')
-
-mongoose.connect('mongodb://localhost/luizbot', {
+const mongoUser = process.env.DB_USER
+const mongoSecret = process.env.DB_SECRET
+const mongoURI = `mongodb+srv://${mongoUser}:${mongoSecret}@luizbotapi.mzzrx.mongodb.net/luizbot?retryWrites=true&w=majority`
+mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
