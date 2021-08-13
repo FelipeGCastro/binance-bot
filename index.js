@@ -7,7 +7,6 @@ const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
 const STRATEGIES = require('./tools/constants').STRATEGIES
 
-// TELEGRAM BOT FUNCTIONS
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
@@ -45,13 +44,6 @@ function setEntryPrice (price) { entryPrice = price }
 
 // START MAIN FUNCTION
 async function execute () {
-  // TESTING PART CODE, REMOVE AFTER TESTING
-  // ----------------------------
-  // ----------------------------
-  // const candles = await api.candlesTemp(symbol, interval)
-
-  // ---------------------------- END
-  // ----------------------------
   console.log('init')
   changeLeverage(leverage)
 
@@ -63,7 +55,6 @@ async function execute () {
     if (data.k.x && data.E > lastEventAt) {
       lastEventAt = data.E
       await handleCloseCandle(data)
-      // await handleCloseCandle() // ONLY FOR TEST
     }
   })
 
