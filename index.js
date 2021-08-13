@@ -13,18 +13,19 @@ const SET_STRATEGY = {
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
 }
 
-const strategy = STRATEGIES.HIDDEN_DIVERGENCE
+const strategy = STRATEGIES.SHARK
 let symbol = process.env.SYMBOL
 let botOn = false
 let leverage = 2
 let entryValue = 50
 
-let interval = '1m'
+let interval = '5m'
+let validateEntry = SET_STRATEGY[strategy].validateEntry
 let tradingOn = false
 const maxStake = entryValue + (0.3 * entryValue)
 let stopMarketPrice, takeProfitPrice
 let listenKeyIsOn = false
-let validateEntry = SET_STRATEGY[strategy].validateEntry
+let entryPrice = 0
 
 function setBotOn (bool) { botOn = bool }
 function setSymbol (symb) { symbol = symb }
@@ -39,6 +40,7 @@ function setTradingOn (bool) { tradingOn = bool }
 
 function setStopMarketPrice (price) { stopMarketPrice = price }
 function setTakeProfitPrice (price) { takeProfitPrice = price }
+function setEntryPrice (price) { entryPrice = price }
 
 // START MAIN FUNCTION
 async function execute () {
@@ -74,6 +76,7 @@ async function execute () {
         const ordered = await newOrder.handleNewOrder({ ...result, entryValue, maxStake, symbol })
         if (ordered) {
           setTradingOn(true)
+          setEntryPrice(ordered.avgPrice)
         }
         telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${result.stopPrice} e Side: ${result.side}, ${result.timeLastCandle}`)
       }
@@ -107,7 +110,7 @@ async function execute () {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, setTradingOn, symbol }
+          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, setTradingOn, symbol, entryPrice }
           newData = { ...data, o: dataOrder }
         } else { newData = { ...data, symbol } }
         operations.handleUserDataUpdate(newData)
