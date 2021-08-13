@@ -1,7 +1,7 @@
 const mongoose = require('../database')
 
 const TradeSchema = new mongoose.Schema({
-  pair: {
+  symbol: {
     type: String,
     require: true
   },
@@ -9,20 +9,33 @@ const TradeSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  price: {
+  closePrice: {
     type: String,
-    required: true,
-    select: false
+    required: true
+  },
+  entryPrice: {
+    type: String,
+    required: true
+  },
+  stopPrice: {
+    type: String,
+    required: true
+  },
+  profitPrice: {
+    type: String,
+    required: true
   },
   quantity: {
     type: String,
-    required: true,
-    select: false
+    required: true
   },
   profit: {
     type: String,
-    required: true,
-    select: false
+    required: true
+  },
+  timestamp: {
+    type: Date,
+    required: true
   },
   createdAt: {
     type: Date,
