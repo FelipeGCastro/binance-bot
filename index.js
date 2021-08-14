@@ -79,6 +79,7 @@ async function execute () {
 
     addAllCandles(symbol)
     setWsListeners(symbol, symbolIndex)
+    console.log(symbol, symbolIndex, 'foreach')
   })
   async function addAllCandles (symbol) {
     const candles = await api.candles(symbol, interval)
@@ -88,10 +89,10 @@ async function execute () {
   async function setWsListeners (symbol, symbolIndex) {
     let lastEventAt = 0
     // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
-    ws.onKlineContinuos(symbol, interval, async (data) => {
+    ws.onKlineContinuos(symbol, interval, (data) => {
       if (data.k.x && data.E > lastEventAt) {
         lastEventAt = data.E
-        await handleCloseCandle(data, symbolIndex)
+        handleCloseCandle(data, symbolIndex)
       }
     })
   }
@@ -172,7 +173,6 @@ function setSymbols (symb) {
   const hasSymbol = symbols.includes(symb)
   if (symbols.length < 5 && !hasSymbol) {
     symbols.push(symb)
-    execute()
     return true
   } else {
     return false
@@ -181,7 +181,6 @@ function setSymbols (symb) {
 function updateSymbols (remSymbol, newSymbol) {
   const index = symbols.findIndex(symbol => symbol === remSymbol)
   if (index === -1) return false
-  execute()
   return symbols.splice(index, 1, newSymbol)
 }
 
