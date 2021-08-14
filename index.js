@@ -14,13 +14,13 @@ const SET_STRATEGY = {
 }
 
 let strategy = STRATEGIES.SHARK
-let symbol = process.env.SYMBOL
+const symbols = [process.env.SYMBOL]
 let botOn = false
 let leverage = 4
 let entryValue = 50
 
 let validateEntry = SET_STRATEGY[strategy].validateEntry
-let tradingOn = false
+let tradesOn = []
 const maxEntryValue = entryValue + (0.3 * entryValue)
 let entryPrice = 0
 let stopMarketPrice, takeProfitPrice
@@ -38,12 +38,12 @@ function setLastIndicatorsData (key, value) {
 }
 
 function setBotOn (bool) { botOn = bool }
-function setSymbol (symb) { symbol = symb }
+
 function setLeverage (value) { leverage = value }
 function setEntryValue (value) { entryValue = value }
 function getAccountData () {
   return {
-    symbol,
+    symbols,
     botOn,
     leverage,
     entryValue,
@@ -52,15 +52,16 @@ function getAccountData () {
     stopMarketPrice,
     takeProfitPrice,
     entryPrice,
-    tradingOn,
+    tradesOn,
     lastIndicatorsData
   }
 }
-function getTradeOn () { return tradingOn }
+function getTradesOn () { return tradesOn }
+function setTradesOn (symb) { return tradesOn.push(symb) }
+function removeFromTradesOn (symb) { tradesOn = tradesOn.filter(symbTrade => symbTrade === symb) }
 
 function setValidate (func) { validateEntry = func }
 function setPeriodInterval (int) { interval = int }
-function setTradingOn (bool) { tradingOn = bool }
 function setStrategy (value) { strategy = value }
 
 function setStopMarketPrice (price) { stopMarketPrice = price }
@@ -70,34 +71,36 @@ function setEntryPrice (price) { entryPrice = price }
 // START MAIN FUNCTION
 async function execute () {
   console.log('init')
-  changeLeverage(leverage)
+  const allCandles = []
 
-  const candles = await api.candles(symbol, interval)
+  symbols.forEach(async (symbol, symbolIndex) => {
+    if (!symbol) return
+    await changeLeverage(leverage, symbol)
 
-  let lastEventAt = 0
-  // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
-  ws.onKlineContinuos(symbol, interval, async (data) => {
-    if (data.k.x && data.E > lastEventAt) {
-      lastEventAt = data.E
-      await handleCloseCandle(data)
-    }
+    allCandles.push(await api.candles(symbol, interval))
+
+    let lastEventAt = 0
+    // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
+    ws.onKlineContinuos(symbol, interval, async (data) => {
+      if (data.k.x && data.E > lastEventAt) {
+        lastEventAt = data.E
+        await handleCloseCandle(data, symbolIndex)
+      }
+    })
   })
 
-  async function handleCloseCandle (data) {
-    await handleAddCandle(data)
-    if (!tradingOn && listenKeyIsOn && botOn) {
-      const valid = validateEntry(candles, setLastIndicatorsData)
+  async function handleCloseCandle (data, symbolIndex) {
+    await handleAddCandle(data, symbolIndex)
+    const hasTradeOn = tradesOn.includes(symbols[symbolIndex])
+    if (!hasTradeOn && listenKeyIsOn && botOn) {
+      const valid = await validateEntry(allCandles[symbolIndex], setLastIndicatorsData)
       console.log('Fechou!')
       if (valid) {
         setStopMarketPrice(valid.stopPrice)
         setTakeProfitPrice(valid.targetPrice)
-        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol })
+        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol: symbols[symbolIndex] })
         if (ordered) {
-          const entreValidTime = new Date(valid.timeLastCandle)
-          setTradingOn(true)
-          console.log(ordered, 'ordered')
-          setEntryPrice(ordered.avgPrice)
-          telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${valid.stopPrice} e Side: ${valid.side}, ${entreValidTime}`)
+          handleOrdered(ordered, valid, symbolIndex)
         }
         console.log('Entry is Valid')
       }
@@ -105,7 +108,16 @@ async function execute () {
     }
   }
 
-  function handleAddCandle (data) {
+  function handleOrdered (ordered, valid, symbolIndex) {
+    const entreValidTime = new Date(valid.timeLastCandle)
+    setTradesOn(symbols[symbolIndex])
+    console.log(ordered, 'ordered')
+    setEntryPrice(ordered.avgPrice)
+    telegram.sendMessage(`Hora de entrar no ${symbols[symbolIndex]}PERP, com stopLoss: ${valid.stopPrice} e Side: ${valid.side}, ${entreValidTime}`)
+  }
+
+  function handleAddCandle (data, symbolIndex) {
+    const candles = allCandles[symbolIndex]
     const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
     if (newCandle[0] === candles[candles.length - 1][0]) {
       candles.pop()
@@ -113,6 +125,7 @@ async function execute () {
       candles.shift()
     }
     candles.push(newCandle)
+    allCandles.splice(symbolIndex, 1, candles)
   }
 
   await getListenKey()
@@ -132,32 +145,45 @@ async function execute () {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, setTradingOn, symbol, entryPrice }
+          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, removeFromTradesOn, symbols: tradesOn, entryPrice }
           newData = { ...data, o: dataOrder }
-        } else { newData = { ...data, symbol } }
+        } else { newData = { ...data, symbols: tradesOn } }
         operations.handleUserDataUpdate(newData)
       }
     })
   }
 }
 
-async function changeLeverage (value) {
+async function changeLeverage (value, symbol) {
   const changedLeverage = await api.changeLeverage(leverage, symbol)
   if (changedLeverage) {
     setLeverage(value)
   }
 }
 
+function setSymbols (symb) {
+  const hasSymbol = symbols.includes(symb)
+  if (symbols.length < 5 && !hasSymbol) {
+    symbols.push(symb)
+    execute()
+    return true
+  } else {
+    return false
+  }
+}
+function updateSymbols (remSymbol, newSymbol) {
+  const index = symbols.findIndex(symbol => symbol === remSymbol)
+  if (index === -1) return false
+  execute()
+  return symbols.splice(index, 1, newSymbol)
+}
+
 function handleChangeStrategy (stratName) {
   const strategy = SET_STRATEGY[stratName] || hiddenDivergence
-  if (tradingOn) {
-    return false
-  } else {
-    setPeriodInterval(strategy.getInterval())
-    setValidate(strategy.validateEntry)
-    setStrategy(stratName)
-    return true
-  }
+  setPeriodInterval(strategy.getInterval())
+  setValidate(strategy.validateEntry)
+  setStrategy(stratName)
+  return true
 }
 function turnBotOn (bool) {
   if (bool) {
@@ -172,15 +198,15 @@ function turnBotOn (bool) {
 
 module.exports = {
   setPeriodInterval,
-  setTradingOn,
   setValidate,
   setLeverage,
   setBotOn,
   execute,
-  setSymbol,
+  setSymbols,
+  updateSymbols,
   setEntryValue,
   getAccountData,
   handleChangeStrategy,
-  getTradeOn,
+  getTradesOn,
   turnBotOn
 }

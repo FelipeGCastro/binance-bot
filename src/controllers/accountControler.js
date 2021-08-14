@@ -19,12 +19,21 @@ accountRoutes.get('/symbols', async (req, res) => {
   const allSymbols = exchangeInfo.symbols.map(data => data.symbol)
   return res.send(allSymbols)
 })
-accountRoutes.put('/symbol', async (req, res) => {
+
+accountRoutes.post('/symbol', async (req, res) => {
   const { symbol } = req.body
   if (typeof symbol !== 'string') return res.status(400).send({ error: 'Bad type' })
-  home.setSymbol(symbol)
+  if (!home.setSymbols(symbol)) return res.status(400).send({ error: 'Error to add Symbol' })
   const accountdata = await home.getAccountData()
 
+  return res.send(accountdata)
+})
+accountRoutes.put('/symbol', async (req, res) => {
+  const { symbol, removeSymbol } = req.body
+  if (typeof symbol !== 'string') return res.status(400).send({ error: 'Bad type' })
+  if (typeof removeSymbol !== 'string') return res.status(400).send({ error: 'Bad type' })
+  if (!home.updateSymbols(removeSymbol, symbol)) return res.status(400).send({ error: 'Cannot remove updatesymbol' })
+  const accountdata = await home.getAccountData()
   return res.send(accountdata)
 })
 

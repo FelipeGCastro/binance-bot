@@ -12,12 +12,12 @@ async function handleUserDataUpdate (data) {
   if (data.e === 'ACCOUNT_UPDATE') {
     setPosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
-    const symbol = data.o.symbol
-    if (data.o.s === symbol) {
+    const symbol = data.o.symbols.find(symb => symb === data.o.s)
+    if (symbol) {
       if (data.o.X === 'FILLED') {
-        handleFilledOrder(data.o)
+        handleFilledOrder({ ...data.o, symbol })
       } else if (data.o.X === 'CANCELED') {
-        hasStopOrProfitOrder(data.o)
+        hasStopOrProfitOrder({ ...data.o, symbol })
       } else {
         console.info('type:', data.o.o,
           'status:', data.o.X,
@@ -33,7 +33,10 @@ async function handleUserDataUpdate (data) {
 }
 
 function setPosition (data) {
-  const positionFiltered = data.a.P.filter(pos => (pos.s === data.symbol))
+  const positionFiltered = data.a.P.filter(pos => {
+    const position = data.symbols.find(symb => symb === pos.s)
+    return !!position
+  })
   position = positionFiltered[0] || { pa: '0' }
 }
 
@@ -59,7 +62,7 @@ async function handleFilledOrder (order) {
 async function stopAndProfitMarketOrder (order) {
   console.log('Stop or Profit Order was triggered')
   telegram.sendMessage(`PNL: ${order.rp}`)
-  order.setTradingOn(false)
+  order.setTradesOn(false)
   const data = {
     symbol: order.symbol,
     side: order.S === SIDE.SELL ? POSITION_SIDE.LONG : POSITION_SIDE.SHORT,
@@ -89,7 +92,7 @@ async function hasStopOrProfitOrder (order) {
 
   if (hasStopOrProfit && hasStopOrProfit[0]) {
     await api.cancelAllOrders(symbol)
-    order.setTradingOn(false)
+    order.removeFromTradesOn(symbol)
   }
 
   return !!hasStopOrProfit[0]
