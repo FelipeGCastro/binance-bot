@@ -19,7 +19,7 @@ const EMA2Period = 50
 
 const getInterval = () => periodTime
 
-function validateEntry (candles, setLastIndicatorsData) {
+function validateEntry (candles, setLastIndicatorsData, symbol) {
   const trendingEma = validateEma(candles, setLastIndicatorsData)
   const crossStoch = hasCrossStoch(candles, stochPeriod, setLastIndicatorsData)
   if (!crossStoch) {
@@ -43,7 +43,8 @@ function validateEntry (candles, setLastIndicatorsData) {
           side: crossStoch,
           stopPrice: stopAndTarget.stopPrice,
           targetPrice: stopAndTarget.targetPrice,
-          closePrice: divergence.lastClosePrice
+          closePrice: divergence.lastClosePrice,
+          symbol
         }
       } else {
         return false

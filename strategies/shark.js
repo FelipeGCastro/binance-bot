@@ -12,9 +12,9 @@ const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
 const profitPerc = 0.5
 
-function validateEntry (candles, setLastIndicatorsData) {
+function validateEntry (candles, setLastIndicatorsData, symbol) {
   const lastCandle = candles[candles.length - 1]
-  const crossStoch = hasCrossStoch(candles, stochPeriod, setLastIndicatorsData)
+  const crossStoch = hasCrossStoch(candles, setLastIndicatorsData, symbol)
   const validatedRsi = validateRsi(candles, setLastIndicatorsData)
   if (!crossStoch) return false
   if (!checkLastCandle(candles, crossStoch)) return false
@@ -28,7 +28,8 @@ function validateEntry (candles, setLastIndicatorsData) {
         side: crossStoch,
         stopPrice: stopAndTarget.stopPrice,
         targetPrice: stopAndTarget.targetPrice,
-        closePrice: lastCandle[CANDLE.CLOSE]
+        closePrice: lastCandle[CANDLE.CLOSE],
+        symbol
       }
     } else {
       return false
@@ -43,7 +44,7 @@ function checkLastCandle (candles, position) {
   if (position === POSITION.LONG && !isBlueCandle) return false
   return true
 }
-function hasCrossStoch (candles, stochPeriod, setLastIndicatorsData) {
+function hasCrossStoch (candles, setLastIndicatorsData, symbol) {
   const stochArray = stoch.checkingStoch(candles, stochPeriod)
   const lastTwoStoch = tools.getLasts(stochArray, 2)
   const lastK = lastTwoStoch[1].k
@@ -57,16 +58,12 @@ function hasCrossStoch (candles, stochPeriod, setLastIndicatorsData) {
   const kUnder20 = lastK < 20 || beforeK < 20
   const dUnder20 = lastD < 20 || beforeD < 20
   setLastIndicatorsData(INDICATORS_OBJ.STOCH, [lastK, lastD])
-  console.log('k:', lastK, 'd:', lastD, candles[candles.length - 2][1], candles[candles.length - 1][1])
+  console.log(symbol, 'k:', lastK, 'd:', lastD, candles[candles.length - 2][1], candles[candles.length - 1][1])
   if (crossDown) {
-    console.log('crossDown 1')
     if (!kOver80 && !dOver80) return false
-    console.log('crossDown 2')
     return crossDown
   } else if (crossUp) {
-    console.log('crossUp 1')
     if (!kUnder20 && !dUnder20) return false
-    console.log('crossUp 2')
     return crossUp
   } else {
     return false

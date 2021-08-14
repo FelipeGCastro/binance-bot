@@ -10,7 +10,6 @@ async function handleNewOrder (data) {
   const side = data.side === POSITION.LONG ? SIDE.BUY : SIDE.SELL
   const type = ORDER_TYPE.MARKET
   const symbol = data.symbol
-  console.log(symbol, quantity, side, type, 'handleNewOrder')
   if (symbol && quantity && side && type) {
     const ordered = await api.newOrder(symbol, quantity, side, type)
     if (ordered) {

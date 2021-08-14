@@ -20,13 +20,11 @@ let leverage = 4
 let entryValue = 50
 
 let validateEntry = SET_STRATEGY[strategy].validateEntry
-let tradesOn = []
 const maxEntryValue = entryValue + (0.3 * entryValue)
-let entryPrice = 0
-let stopMarketPrice, takeProfitPrice
 let listenKeyIsOn = false
 let interval = '5m'
 
+let tradesOn = [] // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
 const lastIndicatorsData = {
   [INDICATORS_OBJ.RSI]: null,
   [INDICATORS_OBJ.EMA]: null,
@@ -49,24 +47,24 @@ function getAccountData () {
     entryValue,
     strategy,
     maxEntryValue,
-    stopMarketPrice,
-    takeProfitPrice,
-    entryPrice,
+
     tradesOn,
     lastIndicatorsData
   }
 }
 function getTradesOn () { return tradesOn }
-function setTradesOn (symb) { return tradesOn.push(symb) }
-function removeFromTradesOn (symb) { tradesOn = tradesOn.filter(symbTrade => symbTrade === symb) }
+function setTradesOn (trade) { return tradesOn.push(trade) }
+function updateTradesOn (symbol, key, value) {
+  const oldObject = tradesOn.find(trade => trade.symbol === symbol)
+  const newObject = { ...oldObject, [key]: value }
+  removeFromTradesOn(newObject.symbol)
+  setTradesOn(newObject)
+}
+function removeFromTradesOn (symb) { tradesOn = tradesOn.filter(trade => trade.symbol !== symb) }
 
 function setValidate (func) { validateEntry = func }
 function setPeriodInterval (int) { interval = int }
 function setStrategy (value) { strategy = value }
-
-function setStopMarketPrice (price) { stopMarketPrice = price }
-function setTakeProfitPrice (price) { takeProfitPrice = price }
-function setEntryPrice (price) { entryPrice = price }
 
 let listeners = []
 let allCandles = []
@@ -104,13 +102,11 @@ async function execute () {
     const candlesObj = allCandles.find(cand => cand.symbol === symbol)
     if (!candlesObj) return
     const newCandles = await handleAddCandle(data, candlesObj)
-    const hasTradeOn = tradesOn.includes(candlesObj.symbol)
+    const hasTradeOn = tradesOn.find(trade => trade.symbol === candlesObj.symbol)
     if (!hasTradeOn && listenKeyIsOn && botOn) {
-      const valid = await validateEntry(newCandles, setLastIndicatorsData)
-      console.log('Fechou!', candlesObj.symbol)
-      if (valid) {
-        setStopMarketPrice(valid.stopPrice)
-        setTakeProfitPrice(valid.targetPrice)
+      const valid = await validateEntry(newCandles, setLastIndicatorsData, symbol)
+      console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
+      if (valid && valid.symbol === candlesObj.symbol) {
         const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol: candlesObj.symbol })
         if (ordered) {
           handleOrdered(ordered, valid, candlesObj.symbol)
@@ -138,12 +134,20 @@ async function execute () {
 
   function handleOrdered (ordered, valid, symbol) {
     const entreValidTime = new Date(valid.timeLastCandle)
-    setTradesOn(symbol)
-    console.log(ordered, 'ordered')
-    setEntryPrice(ordered.avgPrice)
+    // TRADES ON = { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
+    setTradesOn({
+      symbol,
+      stopMarketPrice: valid.stopPrice,
+      takeProfitPrice: valid.targetPrice,
+      entryPrice: ordered.avgPrice,
+      stopOrderCreated: false,
+      profitOrderCreated: false
+    })
     telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${valid.stopPrice} e Side: ${valid.side}, ${entreValidTime}`)
   }
+
   await getListenKey()
+
   async function getListenKey () {
     const data = await api.listenKey()
     if (data) {
@@ -160,9 +164,9 @@ async function execute () {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = { ...data.o, stopMarketPrice, takeProfitPrice, removeFromTradesOn, symbols: tradesOn, entryPrice }
+          const dataOrder = { ...data.o, updateTradesOn, removeFromTradesOn, tradesOn }
           newData = { ...data, o: dataOrder }
-        } else { newData = { ...data, symbols: tradesOn } }
+        } else { newData = { ...data, tradesOn } }
         operations.handleUserDataUpdate(newData)
       }
     })

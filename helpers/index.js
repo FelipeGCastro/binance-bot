@@ -7,7 +7,6 @@ async function getQtyRules (symbol) {
   }
   const symbolData = exchangeInfo.symbols.find(data => data.symbol === symbol)
   const filter = symbolData.filters.find(filter => filter.filterType === 'LOT_SIZE')
-  console.log(filter, symbolData.length)
   if (!!filter.stepSize && !!filter.minQty) {
     return {
       qtyFormat: filter.stepSize,
