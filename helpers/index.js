@@ -3,14 +3,17 @@ let exchangeInfo
 async function getQtyRules (symbol) {
   if (!exchangeInfo) {
     exchangeInfo = await api.exchangeInfo()
-    if (!exchangeInfo) return console.error('Error getting exchange info.')
+    if (!exchangeInfo) return false
   }
   const symbolData = exchangeInfo.symbols.find(data => data.symbol === symbol)
   const filter = symbolData.filters.find(filter => filter.filterType === 'LOT_SIZE')
-  return {
-    qtyFormat: filter.stepSize,
-    minQty: filter.minQty
-  }
+  console.log(filter, symbolData.length)
+  if (!!filter.stepSize && !!filter.minQty) {
+    return {
+      qtyFormat: filter.stepSize,
+      minQty: filter.minQty
+    }
+  } else return false
 }
 
 async function getAllSymbols () {

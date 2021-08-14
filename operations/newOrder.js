@@ -28,7 +28,13 @@ async function handleNewOrder (data) {
 
 async function getQty (data) {
   let qty
-  const { qtyFormat, minQty } = await help.getQtyRules(data.symbol)
+  let qtyFormat = '0.001'
+  let minQty = '0.001'
+  const checkRule = await help.getQtyRules(data.symbol)
+  if (checkRule) {
+    qtyFormat = checkRule.qtyFormat
+    minQty = checkRule.minQty
+  }
 
   const calQty = data.stake / data.closePrice
   if (calQty < minQty) {

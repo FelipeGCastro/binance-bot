@@ -94,7 +94,7 @@ async function execute () {
     const hasTradeOn = tradesOn.includes(symbols[symbolIndex])
     if (!hasTradeOn && listenKeyIsOn && botOn) {
       const valid = await validateEntry(allCandles[symbolIndex], setLastIndicatorsData)
-      console.log('Fechou!')
+      console.log('Fechou!', symbols[symbolIndex])
       if (valid) {
         setStopMarketPrice(valid.stopPrice)
         setTakeProfitPrice(valid.targetPrice)
