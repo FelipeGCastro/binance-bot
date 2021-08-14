@@ -12,18 +12,13 @@ async function handleUserDataUpdate (data) {
   if (data.e === 'ACCOUNT_UPDATE') {
     setPosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
-    const symbol = data.o.symbols.find(symb => symb === data.o.s)
-    if (symbol) {
+    const trade = data.o.tradesOn.find(trade => trade.symbol === data.o.s)
+    if (trade) {
       if (data.o.X === 'FILLED') {
-        handleFilledOrder({ ...data.o, symbol })
+        handleFilledOrder({ ...data.o, trade, symbol: trade.symbol })
       } else if (data.o.X === 'CANCELED') {
-        hasStopOrProfitOrder({ ...data.o, symbol })
+        hasStopOrProfitOrder({ ...data.o, trade, symbol: trade.symbol })
       } else {
-        console.info('type:', data.o.o,
-          'status:', data.o.X,
-          'type:', data.o.x,
-          'PNL:', data.o.rp
-        )
         return false
       }
     } else {
@@ -34,7 +29,7 @@ async function handleUserDataUpdate (data) {
 
 function setPosition (data) {
   const positionFiltered = data.a.P.filter(pos => {
-    const position = data.symbols.find(symb => symb === pos.s)
+    const position = data.tradesOn.find(trade => trade.symbol === pos.s)
     return !!position
   })
   position = positionFiltered[0] || { pa: '0' }
@@ -67,9 +62,9 @@ async function stopAndProfitMarketOrder (order) {
     symbol: order.symbol,
     side: order.S === SIDE.SELL ? POSITION_SIDE.LONG : POSITION_SIDE.SHORT,
     closePrice: order.L,
-    entryPrice: order.entryPrice,
-    stopPrice: order.stopMarketPrice,
-    profitPrice: order.takeProfitPrice,
+    entryPrice: order.trade.entryPrice,
+    stopPrice: order.trade.stopMarketPrice,
+    profitPrice: order.trade.takeProfitPrice,
     quantity: order.q,
     profit: order.rp,
     timestamp: order.T
