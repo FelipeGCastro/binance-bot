@@ -77,8 +77,15 @@ async function execute () {
     if (!symbol) return
     await changeLeverage(leverage, symbol)
 
-    allCandles.push(await api.candles(symbol, interval))
+    addAllCandles(symbol)
+    setWsListeners(symbol, symbolIndex)
+  })
+  async function addAllCandles (symbol) {
+    const candles = await api.candles(symbol, interval)
+    if (candles)allCandles.push(candles)
+  }
 
+  async function setWsListeners (symbol, symbolIndex) {
     let lastEventAt = 0
     // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
     ws.onKlineContinuos(symbol, interval, async (data) => {
@@ -87,7 +94,7 @@ async function execute () {
         await handleCloseCandle(data, symbolIndex)
       }
     })
-  })
+  }
 
   async function handleCloseCandle (data, symbolIndex) {
     await handleAddCandle(data, symbolIndex)
