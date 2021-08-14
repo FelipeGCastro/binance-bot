@@ -62,7 +62,7 @@ async function handleFilledOrder (order) {
 async function stopAndProfitMarketOrder (order) {
   console.log('Stop or Profit Order was triggered')
   telegram.sendMessage(`PNL: ${order.rp}`)
-  order.setTradesOn(false)
+  order.removeFromTradesOn(order.symbol)
   const data = {
     symbol: order.symbol,
     side: order.S === SIDE.SELL ? POSITION_SIDE.LONG : POSITION_SIDE.SHORT,

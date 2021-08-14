@@ -14,7 +14,7 @@ const SET_STRATEGY = {
 }
 
 let strategy = STRATEGIES.SHARK
-const symbols = [process.env.SYMBOL]
+const symbols = [process.env.SYMBOL, 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT']
 let botOn = false
 let leverage = 4
 let entryValue = 50
@@ -68,47 +68,52 @@ function setStopMarketPrice (price) { stopMarketPrice = price }
 function setTakeProfitPrice (price) { takeProfitPrice = price }
 function setEntryPrice (price) { entryPrice = price }
 
+let listeners = []
+let allCandles = []
+
 // START MAIN FUNCTION
 async function execute () {
   console.log('init')
-  const allCandles = []
 
-  symbols.forEach(async (symbol, symbolIndex) => {
+  symbols.forEach((symbol, symbolIndex) => {
     if (!symbol) return
-    await changeLeverage(leverage, symbol)
+    changeLeverage(leverage, symbol)
 
     addAllCandles(symbol)
-    setWsListeners(symbol, symbolIndex)
+    setWsListeners(symbol)
     console.log(symbol, symbolIndex, 'foreach')
   })
   async function addAllCandles (symbol) {
     const candles = await api.candles(symbol, interval)
-    if (candles)allCandles.push(candles)
+    if (candles) allCandles.push({ candles, symbol })
   }
 
-  async function setWsListeners (symbol, symbolIndex) {
+  async function setWsListeners (symbol) {
     let lastEventAt = 0
     // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
-    ws.onKlineContinuos(symbol, interval, (data) => {
+    const listener = await ws.onKlineContinuos(symbol, interval, async (data) => {
       if (data.k.x && data.E > lastEventAt) {
         lastEventAt = data.E
-        handleCloseCandle(data, symbolIndex)
+        await handleCloseCandle(data, symbol)
       }
     })
+    listeners.push({ listener, symbol })
   }
 
-  async function handleCloseCandle (data, symbolIndex) {
-    await handleAddCandle(data, symbolIndex)
-    const hasTradeOn = tradesOn.includes(symbols[symbolIndex])
+  async function handleCloseCandle (data, symbol) {
+    const candlesObj = allCandles.find(cand => cand.symbol === symbol)
+    if (!candlesObj) return
+    const newCandles = await handleAddCandle(data, candlesObj)
+    const hasTradeOn = tradesOn.includes(candlesObj.symbol)
     if (!hasTradeOn && listenKeyIsOn && botOn) {
-      const valid = await validateEntry(allCandles[symbolIndex], setLastIndicatorsData)
-      console.log('Fechou!', symbols[symbolIndex])
+      const valid = await validateEntry(newCandles, setLastIndicatorsData)
+      console.log('Fechou!', candlesObj.symbol)
       if (valid) {
         setStopMarketPrice(valid.stopPrice)
         setTakeProfitPrice(valid.targetPrice)
-        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol: symbols[symbolIndex] })
+        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol: candlesObj.symbol })
         if (ordered) {
-          handleOrdered(ordered, valid, symbolIndex)
+          handleOrdered(ordered, valid, candlesObj.symbol)
         }
         console.log('Entry is Valid')
       }
@@ -116,16 +121,8 @@ async function execute () {
     }
   }
 
-  function handleOrdered (ordered, valid, symbolIndex) {
-    const entreValidTime = new Date(valid.timeLastCandle)
-    setTradesOn(symbols[symbolIndex])
-    console.log(ordered, 'ordered')
-    setEntryPrice(ordered.avgPrice)
-    telegram.sendMessage(`Hora de entrar no ${symbols[symbolIndex]}PERP, com stopLoss: ${valid.stopPrice} e Side: ${valid.side}, ${entreValidTime}`)
-  }
-
-  function handleAddCandle (data, symbolIndex) {
-    const candles = allCandles[symbolIndex]
+  function handleAddCandle (data, candlesObj) {
+    const candles = candlesObj.candles
     const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
     if (newCandle[0] === candles[candles.length - 1][0]) {
       candles.pop()
@@ -133,9 +130,19 @@ async function execute () {
       candles.shift()
     }
     candles.push(newCandle)
-    allCandles.splice(symbolIndex, 1, candles)
+    const candlesFiltered = allCandles.filter(candlesObjItem => candlesObjItem.symbol !== candlesObj.symbol)
+    candlesFiltered.push({ candles, symbol: candlesObj.symbol })
+    allCandles = candlesFiltered
+    return candles
   }
 
+  function handleOrdered (ordered, valid, symbol) {
+    const entreValidTime = new Date(valid.timeLastCandle)
+    setTradesOn(symbol)
+    console.log(ordered, 'ordered')
+    setEntryPrice(ordered.avgPrice)
+    telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${valid.stopPrice} e Side: ${valid.side}, ${entreValidTime}`)
+  }
   await getListenKey()
   async function getListenKey () {
     const data = await api.listenKey()
@@ -173,6 +180,8 @@ function setSymbols (symb) {
   const hasSymbol = symbols.includes(symb)
   if (symbols.length < 5 && !hasSymbol) {
     symbols.push(symb)
+    resetListenersAndCandles()
+    execute()
     return true
   } else {
     return false
@@ -181,7 +190,10 @@ function setSymbols (symb) {
 function updateSymbols (remSymbol, newSymbol) {
   const index = symbols.findIndex(symbol => symbol === remSymbol)
   if (index === -1) return false
-  return symbols.splice(index, 1, newSymbol)
+  symbols.splice(index, 1, newSymbol)
+  resetListenersAndCandles()
+  execute()
+  return true
 }
 
 function handleChangeStrategy (stratName) {
@@ -194,14 +206,23 @@ function handleChangeStrategy (stratName) {
 function turnBotOn (bool) {
   if (bool) {
     if (!botOn) {
+      listeners = []
+      tradesOn = []
       setBotOn(bool)
       execute()
     }
   } else {
+    resetListenersAndCandles()
+    tradesOn = []
     setBotOn(bool)
   }
 }
 
+function resetListenersAndCandles () {
+  listeners.forEach(list => { list.listener.close(1000) })
+  listeners = []
+  allCandles = []
+}
 module.exports = {
   setPeriodInterval,
   setValidate,
