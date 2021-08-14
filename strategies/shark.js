@@ -57,7 +57,7 @@ function hasCrossStoch (candles, stochPeriod, setLastIndicatorsData) {
   const kUnder20 = lastK < 20 || beforeK < 20
   const dUnder20 = lastD < 20 || beforeD < 20
   setLastIndicatorsData(INDICATORS_OBJ.STOCH, [lastK, lastD])
-  console.log('k:', lastK, 'd:', lastD)
+  console.log('k:', lastK, 'd:', lastD, candles[candles.length - 2][1], candles[candles.length - 1][1])
   if (crossDown) {
     console.log('crossDown 1')
     if (!kOver80 && !dOver80) return false

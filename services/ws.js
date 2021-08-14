@@ -28,6 +28,7 @@ function setupWebSocket (eventHandler, path) {
     }
     eventHandler(event)
   })
+  return ws
 }
 
 function listenKey (key, eventHandler) {
