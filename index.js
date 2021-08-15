@@ -16,8 +16,8 @@ const SET_STRATEGY = {
 let strategy = STRATEGIES.SHARK
 const symbols = [process.env.SYMBOL, 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT']
 let botOn = false
-let leverage = 4
-let entryValue = 50
+let leverage = 15
+let entryValue = 350
 
 let validateEntry = SET_STRATEGY[strategy].validateEntry
 const maxEntryValue = entryValue + (0.3 * entryValue)
