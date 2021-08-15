@@ -46,7 +46,9 @@ async function handleFilledOrder (order) {
     if (order.o === ORDER_TYPE.MARKET) {
       if (order.ot === ORDER_TYPE.STOP_MARKET ||
         order.ot === ORDER_TYPE.TAKE_PROFIT_MARKET) {
-        return await stopAndProfitMarketOrder(order)
+        return await tpslOrderFilled(order)
+      } else {
+        hasStopOrProfitOrder(order)
       }
     } else {
       return false
@@ -54,7 +56,7 @@ async function handleFilledOrder (order) {
   }
 }
 
-async function stopAndProfitMarketOrder (order) {
+async function tpslOrderFilled (order) {
   console.log('Stop or Profit Order was triggered')
   telegram.sendMessage(`PNL: ${order.rp}`)
   order.removeFromTradesOn(order.symbol)
@@ -76,6 +78,7 @@ async function stopAndProfitMarketOrder (order) {
 
 async function hasStopOrProfitOrder (order) {
   const symbol = order.symbol
+  order.removeFromTradesOn(symbol)
   const openOrders = await api.getAllOpenOrders(symbol)
   let hasStopOrProfit
   if (openOrders[0]) {
@@ -86,8 +89,8 @@ async function hasStopOrProfitOrder (order) {
   }
 
   if (hasStopOrProfit && hasStopOrProfit[0]) {
-    await api.cancelAllOrders(symbol)
-    order.removeFromTradesOn(symbol)
+    const ordersCancelled = await api.cancelAllOrders(symbol)
+    if (!ordersCancelled) console.log('Problems to cancel orders')
   }
 
   return !!hasStopOrProfit[0]

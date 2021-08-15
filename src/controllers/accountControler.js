@@ -2,6 +2,7 @@ const express = require('express')
 const home = require('../../index')
 const STRATEGIES = require('../../tools/constants').STRATEGIES
 const api = require('../../services/api')
+const helpers = require('../../helpers/index')
 
 const accountRoutes = express.Router()
 
@@ -20,19 +21,20 @@ accountRoutes.get('/symbols', async (req, res) => {
   return res.send(allSymbols)
 })
 
-accountRoutes.post('/symbol', async (req, res) => {
-  const { symbol } = req.body
-  if (typeof symbol !== 'string') return res.status(400).send({ error: 'Bad type' })
-  if (!home.setSymbols(symbol)) return res.status(400).send({ error: 'Error to add Symbol' })
-  const accountdata = await home.getAccountData()
+accountRoutes.put('/symbols', async (req, res) => {
+  const { symbols } = req.body
 
-  return res.send(accountdata)
-})
-accountRoutes.put('/symbol', async (req, res) => {
-  const { symbol, removeSymbol } = req.body
-  if (typeof symbol !== 'string') return res.status(400).send({ error: 'Bad type' })
-  if (typeof removeSymbol !== 'string') return res.status(400).send({ error: 'Bad type' })
-  if (!home.updateSymbols(removeSymbol, symbol)) return res.status(400).send({ error: 'Cannot remove updatesymbol' })
+  if (!Array.isArray(symbols)) return res.status(400).send({ error: 'Bad type' })
+  if (symbols.length > 5) return res.status(400).send({ error: 'Max symbols is 5' })
+  const allSymbols = await helpers.getAllSymbols()
+  let notValid = false
+  if (allSymbols) {
+    symbols.forEach(symbol => {
+      if (!allSymbols.includes(symbol)) notValid = true
+    })
+  }
+  if (notValid) return res.status(400).send({ error: 'One or More symbol does not exist' })
+  if (!home.updateSymbols(symbols)) return res.status(400).send({ error: 'Cannot remove updatesymbol' })
   const accountdata = await home.getAccountData()
   return res.send(accountdata)
 })

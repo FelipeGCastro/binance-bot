@@ -18,10 +18,12 @@ async function getQtyRules (symbol) {
 async function getAllSymbols () {
   if (!exchangeInfo) {
     exchangeInfo = await api.exchangeInfo()
-    if (!exchangeInfo) return console.error('Error getting exchange info.')
+    if (!exchangeInfo) {
+      console.error('Error getting exchange info.')
+      return false
+    }
   }
   const allSymbols = exchangeInfo.symbols.map(data => data.symbol)
-
   return allSymbols
 }
 
