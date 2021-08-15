@@ -14,7 +14,7 @@ const SET_STRATEGY = {
 }
 
 let strategy = STRATEGIES.SHARK
-const symbols = [process.env.SYMBOL, 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT']
+let symbols = [process.env.SYMBOL, 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT']
 let botOn = false
 let leverage = 15
 let entryValue = 350
@@ -180,23 +180,12 @@ async function changeLeverage (value, symbol) {
   }
 }
 
-function setSymbols (symb) {
-  const hasSymbol = symbols.includes(symb)
-  if (symbols.length < 5 && !hasSymbol) {
-    symbols.push(symb)
-    resetListenersAndCandles()
-    execute()
-    return true
-  } else {
-    return false
-  }
-}
-function updateSymbols (remSymbol, newSymbol) {
-  const index = symbols.findIndex(symbol => symbol === remSymbol)
-  if (index === -1) return false
-  symbols.splice(index, 1, newSymbol)
+function updateSymbols (newSymbols) {
+  symbols = newSymbols
   resetListenersAndCandles()
-  execute()
+  if (botOn) {
+    execute()
+  }
   return true
 }
 
@@ -233,7 +222,6 @@ module.exports = {
   setLeverage,
   setBotOn,
   execute,
-  setSymbols,
   updateSymbols,
   setEntryValue,
   getAccountData,
