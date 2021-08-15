@@ -17,7 +17,7 @@ async function handleUserDataUpdate (data) {
       if (data.o.X === 'FILLED') {
         handleFilledOrder({ ...data.o, trade, symbol: trade.symbol })
       } else if (data.o.X === 'CANCELED') {
-        hasStopOrProfitOrder({ ...data.o, trade, symbol: trade.symbol })
+        console.log('Order Canceled', data.o.ot)
       } else {
         return false
       }
