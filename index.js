@@ -100,6 +100,7 @@ async function execute () {
       if (valid && valid.symbol === candlesObj.symbol) {
         const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol: candlesObj.symbol })
         if (ordered) {
+          console.log(ordered)
           handleOrdered(ordered, valid, candlesObj.symbol)
         }
         console.log('Entry is Valid')
@@ -128,7 +129,7 @@ async function execute () {
       symbol,
       stopMarketPrice: valid.stopPrice,
       takeProfitPrice: valid.targetPrice,
-      entryPrice: ordered.price,
+      entryPrice: ordered.avgPrice,
       stopOrderCreated: false,
       profitOrderCreated: false
     })
