@@ -6,7 +6,6 @@ const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
 const STRATEGIES = require('./tools/constants').STRATEGIES
-const INDICATORS_OBJ = require('./tools/constants').INDICATORS_OBJ
 
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
@@ -20,25 +19,19 @@ let leverage = 15
 let entryValue = 350
 
 let validateEntry = SET_STRATEGY[strategy].validateEntry
-const maxEntryValue = entryValue + (0.3 * entryValue)
+let maxEntryValue = entryValue + (0.3 * entryValue)
 let listenKeyIsOn = false
 let interval = '5m'
 
 let tradesOn = [] // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
-const lastIndicatorsData = {
-  [INDICATORS_OBJ.RSI]: null,
-  [INDICATORS_OBJ.EMA]: null,
-  [INDICATORS_OBJ.STOCH]: null,
-  [INDICATORS_OBJ.TIME]: null
-}
-function setLastIndicatorsData (key, value) {
-  lastIndicatorsData[key] = value
-}
 
 function setBotOn (bool) { botOn = bool }
 
 function setLeverage (value) { leverage = value }
-function setEntryValue (value) { entryValue = value }
+function setEntryValue (value) {
+  entryValue = value
+  maxEntryValue = entryValue + (0.3 * entryValue)
+}
 function getAccountData () {
   return {
     symbols,
@@ -47,9 +40,7 @@ function getAccountData () {
     entryValue,
     strategy,
     maxEntryValue,
-
-    tradesOn,
-    lastIndicatorsData
+    tradesOn
   }
 }
 function getTradesOn () { return tradesOn }
@@ -104,7 +95,7 @@ async function execute () {
     const newCandles = await handleAddCandle(data, candlesObj)
     const hasTradeOn = tradesOn.find(trade => trade.symbol === candlesObj.symbol)
     if (!hasTradeOn && listenKeyIsOn && botOn) {
-      const valid = await validateEntry(newCandles, setLastIndicatorsData, symbol)
+      const valid = await validateEntry(newCandles, symbol)
       console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
       if (valid && valid.symbol === candlesObj.symbol) {
         const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol: candlesObj.symbol })
@@ -113,7 +104,6 @@ async function execute () {
         }
         console.log('Entry is Valid')
       }
-      setLastIndicatorsData(INDICATORS_OBJ.TIME, data.k.t)
     }
   }
 
