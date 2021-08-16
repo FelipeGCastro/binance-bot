@@ -38,7 +38,8 @@ function setPosition (data) {
 async function handleFilledOrder (order) {
   if (position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
-      console.log('Saida 17 Order Market, open position', order)
+      console.log('Saida 17 Order Market Filled, open position', order.symbol)
+      order.updateTradesOn(order.trade.symbol, 'entryPrice', order.L)
       return await createTpandSLOrder(order)
     } else {
       return false
@@ -50,9 +51,10 @@ async function handleFilledOrder (order) {
         console.log('Saida 18 Order Type TPSL FILLED', order.ot)
         return await tpslOrderFilled(order)
       } else {
-        console.log('Saida 19 -Order MARKET Filled with no position open', order)
+        console.log('Saida 19 -Order MARKET Filled with NO position open NO TPSL', order)
         hasStopOrProfitOrder(order)
       }
+      order.removeFromTradesOn(order.symbol)
     } else {
       console.log('Saida 20 - TYPE of order no Market:', order.o)
       return false
@@ -63,7 +65,6 @@ async function handleFilledOrder (order) {
 async function tpslOrderFilled (order) {
   console.log('Stop or Profit Order was triggered')
   telegram.sendMessage(`PNL: ${order.rp}`)
-  order.removeFromTradesOn(order.symbol)
   const data = {
     symbol: order.symbol,
     side: order.S === SIDE.SELL ? POSITION_SIDE.LONG : POSITION_SIDE.SHORT,
@@ -75,6 +76,7 @@ async function tpslOrderFilled (order) {
     profit: order.rp,
     timestamp: order.T
   }
+  order.removeFromTradesOn(order.symbol)
   const trade = await Trade.create(data)
   if (!trade) console.log('Cannot create trade')
   hasStopOrProfitOrder(order)
@@ -82,7 +84,6 @@ async function tpslOrderFilled (order) {
 
 async function hasStopOrProfitOrder (order) {
   const symbol = order.symbol
-  order.removeFromTradesOn(symbol)
   const openOrders = await api.getAllOpenOrders(symbol)
   console.log('symbol:', symbol, 'Open Orders:', openOrders)
   let hasStopOrProfit

@@ -98,10 +98,17 @@ async function execute () {
       const valid = await validateEntry(newCandles, symbol)
       console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
       if (valid && valid.symbol === candlesObj.symbol) {
-        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol: candlesObj.symbol })
+        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol })
         if (ordered) {
-          console.log(ordered)
-          handleOrdered(ordered, valid, candlesObj.symbol)
+          setTradesOn({
+            symbol,
+            stopMarketPrice: valid.stopPrice,
+            takeProfitPrice: valid.targetPrice,
+            entryPrice: ordered.avgPrice,
+            stopOrderCreated: false,
+            profitOrderCreated: false
+          })
+          telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}`)
         }
         console.log('Entry is Valid')
       }
@@ -121,19 +128,6 @@ async function execute () {
     candlesFiltered.push({ candles, symbol: candlesObj.symbol })
     allCandles = candlesFiltered
     return candles
-  }
-
-  function handleOrdered (ordered, valid, symbol) {
-    // TRADES ON = { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
-    setTradesOn({
-      symbol,
-      stopMarketPrice: valid.stopPrice,
-      takeProfitPrice: valid.targetPrice,
-      entryPrice: ordered.avgPrice,
-      stopOrderCreated: false,
-      profitOrderCreated: false
-    })
-    telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}`)
   }
 
   await getListenKey()
