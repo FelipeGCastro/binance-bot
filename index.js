@@ -15,8 +15,8 @@ const SET_STRATEGY = {
 let strategy = STRATEGIES.SHARK
 let symbols = [process.env.SYMBOL, 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT']
 let botOn = false
-let leverage = 15
-let entryValue = 350
+let leverage = 2
+let entryValue = 80
 
 let validateEntry = SET_STRATEGY[strategy].validateEntry
 let maxEntryValue = entryValue + (0.3 * entryValue)
@@ -123,7 +123,6 @@ async function execute () {
   }
 
   function handleOrdered (ordered, valid, symbol) {
-    const entreValidTime = new Date(valid.timeLastCandle)
     // TRADES ON = { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
     setTradesOn({
       symbol,
@@ -133,7 +132,7 @@ async function execute () {
       stopOrderCreated: false,
       profitOrderCreated: false
     })
-    telegram.sendMessage(`Hora de entrar no ${symbol}PERP, com stopLoss: ${valid.stopPrice} e Side: ${valid.side}, ${entreValidTime}`)
+    telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}`)
   }
 
   await getListenKey()
