@@ -19,12 +19,14 @@ async function handleUserDataUpdate (data) {
       } else if (data.o.X === 'CANCELED') {
         console.log('Order Canceled', data.o.ot)
       } else {
+        console.log('Order No FILLED or NO CANCELED', data.o.ot)
         return false
       }
     } else {
+      console.log('Do not have this trade', data.o)
       return false
     }
-  }
+  } else console.log('What Type is ? - ', data.e)
 }
 
 function setPosition (data) {

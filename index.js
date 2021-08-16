@@ -147,11 +147,12 @@ async function execute () {
         await getListenKey()
       } else {
         let newData
+        console.log(data.e)
         if (data.o) {
           const dataOrder = { ...data.o, updateTradesOn, removeFromTradesOn, tradesOn }
           newData = { ...data, o: dataOrder }
         } else { newData = { ...data, tradesOn } }
-        operations.handleUserDataUpdate(newData)
+        await operations.handleUserDataUpdate(newData)
       }
     })
   }
