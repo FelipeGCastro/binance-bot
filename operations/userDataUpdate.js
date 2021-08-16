@@ -38,6 +38,7 @@ function setPosition (data) {
 async function handleFilledOrder (order) {
   if (position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
+      console.log('Saida 17 Order Market, open position', order)
       return await createTpandSLOrder(order)
     } else {
       return false
@@ -46,11 +47,14 @@ async function handleFilledOrder (order) {
     if (order.o === ORDER_TYPE.MARKET) {
       if (order.ot === ORDER_TYPE.STOP_MARKET ||
         order.ot === ORDER_TYPE.TAKE_PROFIT_MARKET) {
+        console.log('Saida 18 Order Type TPSL FILLED', order.ot)
         return await tpslOrderFilled(order)
       } else {
+        console.log('Saida 19 -Order MARKET Filled with no position open', order)
         hasStopOrProfitOrder(order)
       }
     } else {
+      console.log('Saida 20 - TYPE of order no Market:', order.o)
       return false
     }
   }
