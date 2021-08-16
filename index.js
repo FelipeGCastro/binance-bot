@@ -139,7 +139,7 @@ async function execute () {
       symbol,
       stopMarketPrice: valid.stopPrice,
       takeProfitPrice: valid.targetPrice,
-      entryPrice: ordered.avgPrice,
+      entryPrice: ordered.price,
       stopOrderCreated: false,
       profitOrderCreated: false
     })
