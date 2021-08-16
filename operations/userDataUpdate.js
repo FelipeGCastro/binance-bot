@@ -80,6 +80,7 @@ async function hasStopOrProfitOrder (order) {
   const symbol = order.symbol
   order.removeFromTradesOn(symbol)
   const openOrders = await api.getAllOpenOrders(symbol)
+  console.log('symbol:', symbol, 'Open Orders:', openOrders)
   let hasStopOrProfit
   if (openOrders[0]) {
     hasStopOrProfit = openOrders.filter(order => (order.type === 'STOP_MARKET' ||

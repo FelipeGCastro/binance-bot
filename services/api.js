@@ -100,7 +100,7 @@ async function exchangeInfo () {
   return publicCall('/fapi/v1/exchangeInfo')
 }
 
-async function getAllOpenOrders (symbol = symbolDefault) {
+async function getAllOpenOrders (symbol) {
   const data = { symbol }
   return privateCall('/fapi/v1/openOrders', data)
 }
