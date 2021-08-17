@@ -22,6 +22,8 @@ let validateEntry = SET_STRATEGY[strategy].validateEntry
 let maxEntryValue = entryValue + (0.3 * entryValue)
 let listenKeyIsOn = false
 let interval = '5m'
+let limitOrdersSameTime = 2
+let limitReached = false
 
 let tradesOn = [] // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
 
@@ -40,7 +42,8 @@ function getAccountData () {
     entryValue,
     strategy,
     maxEntryValue,
-    tradesOn
+    tradesOn,
+    limitOrdersSameTime
   }
 }
 function getTradesDelayed () {
@@ -48,6 +51,7 @@ function getTradesDelayed () {
     setTimeout(() => resolve(tradesOn), 2000)
   })
 }
+function setLimitOrdersSameTime (limite) { limitOrdersSameTime = limite }
 function setTradesOn (trade) { return tradesOn.push(trade) }
 function updateTradesOn (symbol, key, value) {
   const oldObject = tradesOn.find(trade => trade.symbol === symbol)
@@ -98,12 +102,14 @@ async function execute () {
     if (!candlesObj) return
     const newCandles = await handleAddCandle(data, candlesObj)
     const hasTradeOn = tradesOn.find(trade => trade.symbol === candlesObj.symbol)
-    if (!hasTradeOn && listenKeyIsOn && botOn) {
+
+    if (!hasTradeOn && !limitReached && listenKeyIsOn && botOn) {
       const valid = await validateEntry(newCandles, symbol)
       console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
       if (valid && valid.symbol === candlesObj.symbol) {
         const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol })
         if (ordered) {
+          limitReached = (tradesOn.length + 1) <= limitOrdersSameTime
           setTradesOn({
             symbol,
             stopMarketPrice: valid.stopPrice,
@@ -215,5 +221,6 @@ module.exports = {
   setEntryValue,
   getAccountData,
   handleChangeStrategy,
-  turnBotOn
+  turnBotOn,
+  setLimitOrdersSameTime
 }

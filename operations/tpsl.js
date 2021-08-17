@@ -19,12 +19,14 @@ async function createTpandSLOrder (order) {
     console.log('Error create stop market order')
     return false
   }
+  console.log('STOP_MARKET ORDER CREATED:', stopOrder.symbol, stopOrder.type)
   order.updateTradesOn(symbol, 'stopOrderCreated', true)
   if (!profitOrder) {
     telegram.sendMessage(`Problem ao criar Take Profit Order para ${symbol}`)
     console.log('Error create take profit order')
     return false
   }
+  console.log('TAKE_PROFIT_MARKET ORDER CREATED:', stopOrder.symbol, stopOrder.type)
   order.updateTradesOn(symbol, 'profitOrderCreated', true)
   return true
 }
