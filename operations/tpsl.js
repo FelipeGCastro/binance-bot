@@ -15,18 +15,19 @@ async function createTpandSLOrder (order) {
   const stopOrder = await api.newOrder(symbol, null, side, ORDER_TYPE.STOP_MARKET, true, stopMarketPrice)
   const profitOrder = await api.newOrder(symbol, null, side, ORDER_TYPE.TAKE_PROFIT_MARKET, true, takeProfitPrice)
   if (!stopOrder) {
+    order.updateTradesOn(symbol, 'stopOrderCreated', false)
     telegram.sendMessage(`Problem ao criar Stop Loss Order para ${symbol}`)
     console.log('Error create stop market order')
     return false
   }
-  console.log('STOP_MARKET ORDER CREATED:', stopOrder.symbol, stopOrder.type)
+  console.log('STOP_MARKET ORDER CREATED:', stopOrder.symbol, stopOrder.type, stopOrder.origType, side)
   order.updateTradesOn(symbol, 'stopOrderCreated', true)
   if (!profitOrder) {
     telegram.sendMessage(`Problem ao criar Take Profit Order para ${symbol}`)
     console.log('Error create take profit order')
     return false
   }
-  console.log('TAKE_PROFIT_MARKET ORDER CREATED:', stopOrder.symbol, stopOrder.type)
+  console.log('TAKE_PROFIT_MARKET ORDER CREATED:', stopOrder.symbol, stopOrder.type, stopOrder.origType, side)
   order.updateTradesOn(symbol, 'profitOrderCreated', true)
   return true
 }
