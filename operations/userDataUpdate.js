@@ -20,9 +20,10 @@ async function handleUserDataUpdate (data) {
   if (data.e === 'ACCOUNT_UPDATE') {
     handlePosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
-    const trade = data.o.tradesOn.find(trade => trade.symbol === data.o.s)
+    const tradesOn = await data.o.getTradesDelayed()
+    const trade = tradesOn.find(trade => trade.symbol === data.o.s)
     if (trade) {
-      if (data.o.X === 'FILLED') {
+      if (data.o.X === 'FILLED' || data.o.X === 'PARTIALLY_FILLED') {
         handleFilledOrder({ ...data.o, trade, symbol: trade.symbol })
       } else if (data.o.X === 'CANCELED') {
         console.log('Order Canceled', data.o.ot)
@@ -37,9 +38,10 @@ async function handleUserDataUpdate (data) {
   } else console.log('What Type is ? - ', data.e)
 }
 
-function handlePosition (data) {
+async function handlePosition (data) {
+  const tradesOn = await data.o.getTradesDelayed()
   const positionHasTradeOn = data.a.P.filter(pos => {
-    const position = data.tradesOn.find(trade => trade.symbol === pos.s)
+    const position = tradesOn.find(trade => trade.symbol === pos.s)
     return !!position
   })
   if (positionHasTradeOn[0]) {
