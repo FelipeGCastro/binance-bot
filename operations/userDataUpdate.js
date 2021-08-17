@@ -80,13 +80,14 @@ async function handleFilledOrder (order) {
 async function tpslOrderFilled (order) {
   console.log('Stop or Profit Order was triggered')
   telegram.sendMessage(`PNL: ${order.rp}`)
+  const isGain = order.rp > 0
   const data = {
     symbol: order.symbol,
     side: order.S === SIDE.SELL ? POSITION_SIDE.LONG : POSITION_SIDE.SHORT,
     closePrice: order.L,
     entryPrice: order.trade.entryPrice,
-    stopPrice: order.trade.stopMarketPrice,
-    profitPrice: order.trade.takeProfitPrice,
+    stopPrice: isGain ? order.trade.stopMarketPrice : order.L,
+    profitPrice: isGain ? order.L : order.trade.takeProfitPrice,
     quantity: order.q,
     profit: order.rp,
     timestamp: order.T
