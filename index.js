@@ -43,7 +43,11 @@ function getAccountData () {
     tradesOn
   }
 }
-function getTradesOn () { return tradesOn }
+function getTradesDelayed () {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(tradesOn), 2000)
+  })
+}
 function setTradesOn (trade) { return tradesOn.push(trade) }
 function updateTradesOn (symbol, key, value) {
   const oldObject = tradesOn.find(trade => trade.symbol === symbol)
@@ -149,9 +153,9 @@ async function execute () {
         let newData
         console.log(data.e)
         if (data.o) {
-          const dataOrder = { ...data.o, updateTradesOn, removeFromTradesOn, tradesOn }
+          const dataOrder = { ...data.o, updateTradesOn, removeFromTradesOn, getTradesDelayed }
           newData = { ...data, o: dataOrder }
-        } else { newData = { ...data, tradesOn } }
+        } else { newData = { ...data, getTradesDelayed } }
         await operations.handleUserDataUpdate(newData)
       }
     })
@@ -211,6 +215,5 @@ module.exports = {
   setEntryValue,
   getAccountData,
   handleChangeStrategy,
-  getTradesOn,
   turnBotOn
 }
