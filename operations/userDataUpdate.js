@@ -67,7 +67,6 @@ async function handleFilledOrder (order) {
         return await tpslOrderFilled(order)
       } else {
         console.log('Saida 19 -Order MARKET Filled with NO position open NO TPSL', order)
-        hasStopOrProfitOrder(order)
       }
       order.removeFromTradesOn(order.symbol)
     } else {
@@ -97,30 +96,10 @@ async function tpslOrderFilled (order) {
   order.removeFromTradesOn(order.symbol)
   const trade = await Trade.create(data)
   if (!trade) console.log('Cannot create trade')
-  hasStopOrProfitOrder(order)
-}
-
-async function hasStopOrProfitOrder (order) {
-  const symbol = order.symbol
-  const openOrders = await api.getAllOpenOrders(symbol)
-  console.log('symbol:', symbol, 'Open Orders:', openOrders)
-  let hasStopOrProfit
-  if (openOrders[0]) {
-    hasStopOrProfit = openOrders.filter(order => (order.type === 'STOP_MARKET' ||
-    order.type === 'TAKE_PROFIT_MARKET'))
-  } else {
-    return false
-  }
-
-  if (hasStopOrProfit && hasStopOrProfit[0]) {
-    const ordersCancelled = await api.cancelAllOrders(symbol)
-    if (!ordersCancelled) console.log('Problems to cancel orders')
-  }
-
-  return !!hasStopOrProfit[0]
+  const ordersCancelled = await api.cancelAllOrders(order.symbol)
+  if (!ordersCancelled) console.log('Problems to cancel orders')
 }
 
 module.exports = {
-  handleUserDataUpdate,
-  hasStopOrProfitOrder
+  handleUserDataUpdate
 }

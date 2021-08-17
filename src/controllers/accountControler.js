@@ -53,9 +53,8 @@ accountRoutes.put('/leverage', async (req, res) => {
 
   if (typeof leverage !== 'number') return res.status(400).send({ error: 'Bad type' })
 
-  home.setLeverage(leverage)
+  if (!home.changeLeverage(leverage)) return res.status(400).send({ error: 'Problems with change leverage' })
   console.log('changed leverage')
-
   const accountdata = await home.getAccountData()
   res.send(accountdata)
 })
