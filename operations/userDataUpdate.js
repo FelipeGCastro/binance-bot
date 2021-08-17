@@ -28,7 +28,7 @@ async function handleUserDataUpdate (data) {
       } else if (data.o.X === 'CANCELED') {
         console.log('Order Canceled', data.o.ot)
       } else {
-        console.log('Order No FILLED or NO CANCELED', data.o.ot)
+        console.log('Order No FILLED or NO CANCELED', data.o.X, data.o.ot)
         return false
       }
     } else {
