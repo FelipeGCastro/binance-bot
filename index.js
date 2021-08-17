@@ -60,7 +60,10 @@ function updateTradesOn (symbol, key, value) {
   removeFromTradesOn(newObject.symbol)
   setTradesOn(newObject)
 }
-function removeFromTradesOn (symb) { tradesOn = tradesOn.filter(trade => trade.symbol !== symb) }
+function removeFromTradesOn (symb) {
+  tradesOn = tradesOn.filter(trade => trade.symbol !== symb)
+  limitReached = tradesOn.length >= limitOrdersSameTime
+}
 
 function setValidate (func) { validateEntry = func }
 function setPeriodInterval (int) { interval = int }
@@ -103,7 +106,6 @@ async function execute () {
     if (!candlesObj) return
     const newCandles = await handleAddCandle(data, candlesObj)
     const hasTradeOn = tradesOn.find(trade => trade.symbol === candlesObj.symbol)
-    limitReached = tradesOn.length >= limitOrdersSameTime
     if (!hasTradeOn && !limitReached && listenKeyIsOn && botOn) {
       const valid = await validateEntry(newCandles, symbol)
       console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
