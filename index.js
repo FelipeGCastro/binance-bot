@@ -109,7 +109,7 @@ async function execute () {
       if (valid && valid.symbol === candlesObj.symbol) {
         const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol })
         if (ordered) {
-          limitReached = (tradesOn.length + 1) > limitOrdersSameTime
+          limitReached = (tradesOn.length + 1) >= limitOrdersSameTime
           setTradesOn({
             symbol,
             stopMarketPrice: valid.stopPrice,
