@@ -55,7 +55,7 @@ async function handleFilledOrder (order) {
     if (order.o === ORDER_TYPE.MARKET) {
       console.log('Saida 17 Order Market Filled, open position', order.symbol)
       order.updateTradesOn(order.trade.symbol, 'entryPrice', order.L)
-      return await createTpandSLOrder(order)
+      await createTpandSLOrder(order)
     } else {
       return false
     }
