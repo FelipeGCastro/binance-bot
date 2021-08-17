@@ -6,11 +6,19 @@ const SIDE = require('../tools/constants').SIDE
 const { POSITION_SIDE } = require('../tools/constants')
 const { createTpandSLOrder } = require('./tpsl')
 
-let position = { pa: '0' }
+let positions = []
+function setPosition (position) {
+  const newPositionsArray = positions.filter(pos => pos.s !== position.s)
+  newPositionsArray.push(position)
+  positions = newPositionsArray
+}
+function getPosition (symbol) {
+  return positions.find(pos => pos.s === symbol)
+}
 
 async function handleUserDataUpdate (data) {
   if (data.e === 'ACCOUNT_UPDATE') {
-    setPosition(data)
+    handlePosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
     const trade = data.o.tradesOn.find(trade => trade.symbol === data.o.s)
     if (trade) {
@@ -29,16 +37,19 @@ async function handleUserDataUpdate (data) {
   } else console.log('What Type is ? - ', data.e)
 }
 
-function setPosition (data) {
-  const positionFiltered = data.a.P.filter(pos => {
+function handlePosition (data) {
+  const positionHasTradeOn = data.a.P.filter(pos => {
     const position = data.tradesOn.find(trade => trade.symbol === pos.s)
     return !!position
   })
-  position = positionFiltered[0] || { pa: '0' }
+  if (positionHasTradeOn[0]) {
+    setPosition(positionHasTradeOn[0])
+  }
 }
 
 async function handleFilledOrder (order) {
-  if (position.pa !== '0') {
+  const position = getPosition(order.symbol)
+  if (position && position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
       console.log('Saida 17 Order Market Filled, open position', order.symbol)
       order.updateTradesOn(order.trade.symbol, 'entryPrice', order.L)
@@ -46,7 +57,7 @@ async function handleFilledOrder (order) {
     } else {
       return false
     }
-  } else {
+  } else if (position) {
     if (order.o === ORDER_TYPE.MARKET) {
       if (order.ot === ORDER_TYPE.STOP_MARKET ||
         order.ot === ORDER_TYPE.TAKE_PROFIT_MARKET) {
@@ -61,6 +72,8 @@ async function handleFilledOrder (order) {
       console.log('Saida 20 - TYPE of order no Market:', order.o)
       return false
     }
+  } else {
+    console.log('Do not have trade right now, so ignored')
   }
 }
 
