@@ -43,6 +43,7 @@ function getAccountData () {
     strategy,
     maxEntryValue,
     tradesOn,
+    listenKeyIsOn,
     limitOrdersSameTime
   }
 }
