@@ -72,10 +72,10 @@ let allCandles = []
 // START MAIN FUNCTION
 async function execute () {
   console.log('init')
+  await changeLeverage(leverage)
 
   symbols.forEach((symbol, symbolIndex) => {
     if (!symbol) return
-    changeLeverage(leverage, symbol)
 
     addAllCandles(symbol)
     setWsListeners(symbol)
@@ -148,17 +148,19 @@ async function execute () {
     if (data) {
       setWsListen(data.listenKey)
       listenKeyIsOn = true
+    } else {
+      telegram.sendMessage('Problemas ao buscar uma ListenKey')
     }
   }
 
   async function setWsListen (listenKey) {
-    ws.listenKey(listenKey, async (data) => {
+    const wsListenKey = ws.listenKey(listenKey, async (data) => {
       if (data.e === 'listenKeyExpired' && listenKeyIsOn) {
         listenKeyIsOn = false
+        wsListenKey.close()
         await getListenKey()
       } else {
         let newData
-        console.log(data.e)
         if (data.o) {
           const dataOrder = { ...data.o, updateTradesOn, removeFromTradesOn, getTradesDelayed }
           newData = { ...data, o: dataOrder }
@@ -169,11 +171,17 @@ async function execute () {
   }
 }
 
-async function changeLeverage (value, symbol) {
-  const changedLeverage = await api.changeLeverage(leverage, symbol)
-  if (changedLeverage) {
-    setLeverage(value)
-  }
+async function changeLeverage (value) {
+  symbols.forEach(async (symbol) => {
+    const changedLeverage = await api.changeLeverage(leverage, symbol)
+    if (!changedLeverage) {
+      console.log('Error when change Leverage')
+      return false
+    }
+    console.log('Leverage Changed Successfully: ', symbol)
+  })
+  setLeverage(value)
+  return true
 }
 
 function updateSymbols (newSymbols) {
@@ -215,7 +223,7 @@ function resetListenersAndCandles () {
 module.exports = {
   setPeriodInterval,
   setValidate,
-  setLeverage,
+  changeLeverage,
   setBotOn,
   execute,
   updateSymbols,
