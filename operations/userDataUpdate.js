@@ -39,7 +39,7 @@ async function handleUserDataUpdate (data) {
 }
 
 async function handlePosition (data) {
-  const tradesOn = await data.o.getTradesDelayed()
+  const tradesOn = await data.getTradesDelayed()
   const positionHasTradeOn = data.a.P.filter(pos => {
     const position = tradesOn.find(trade => trade.symbol === pos.s)
     return !!position
