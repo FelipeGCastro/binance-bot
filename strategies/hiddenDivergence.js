@@ -1,5 +1,5 @@
 const rsi = require('../indicators/rsi.js')
-const EMA = require('../indicators/ema.js')
+const { validateEma200And50 } = require('../indicators/ema.js')
 const tools = require('../tools/index')
 const CANDLE = require('../tools/constants').CANDLE
 const Highest = require('technicalindicators').Highest
@@ -13,22 +13,20 @@ const rsiPeriod = 14// 80 - 20
 const stochPeriod = 14 // 80 - 20
 const lookBackPeriod = 26
 const lastPivotRange = 6
-const EMA1Period = 200
-const EMA2Period = 50
 
 const getInterval = () => periodTime
 
 function validateEntry (candles, symbol) {
-  const trendingEma = validateEma(candles)
+  const trendingEma = validateEma200And50(candles)
   const crossStoch = hasCrossStoch(candles, stochPeriod)
   if (!crossStoch) {
     return false
   }
   if (trendingEma.position === POSITION.SHORT &&
-      trendingEma.value < candles[candles.length - 1][CANDLE.CLOSE]
+      trendingEma.ema50 < candles[candles.length - 1][CANDLE.CLOSE]
   ) return false
   if (trendingEma.position === POSITION.LONG &&
-      trendingEma.value > candles[candles.length - 1][CANDLE.CLOSE]
+      trendingEma.ema50 > candles[candles.length - 1][CANDLE.CLOSE]
   ) return false
 
   if (crossStoch === trendingEma.position) {
@@ -68,20 +66,6 @@ function handleTpslOrder (stopPrice, closePrice) {
   } else {
     return false
   }
-}
-
-function validateEma (candles) {
-  const ema200 = EMA.checkingEma(candles, EMA1Period)
-  const ema50 = EMA.checkingEma(candles, EMA2Period)
-  const data = { value: ema50, position: '' }
-  if (ema200 < ema50) {
-    console.log('LONG')
-    data.position = POSITION.LONG
-  } else {
-    console.log('SHORT')
-    data.position = POSITION.SHORT
-  }
-  return data
 }
 
 function validateDivergence (candles, side) {

@@ -1,6 +1,7 @@
 const rsi = require('../indicators/rsi.js')
 const tools = require('../tools/index')
 const stoch = require('../indicators/stoch.js')
+const { validateEma200And50 } = require('../indicators/ema.js')
 const CANDLE = require('../tools/constants').CANDLE
 const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
@@ -12,12 +13,14 @@ const stopPerc = 0.5
 const profitPerc = 0.5
 
 function validateEntry (candles, symbol) {
+  const trendingEma = validateEma200And50(candles)
   const lastCandle = candles[candles.length - 1]
   const crossStoch = hasCrossStoch(candles, symbol)
   const validatedRsi = validateRsi(candles)
   if (!crossStoch) return false
   if (!checkLastCandle(candles, crossStoch)) return false
   if (!validatedRsi) return false
+  if (crossStoch !== trendingEma.position) return false
   else {
     const stopAndTarget = handleTpslOrder(lastCandle[CANDLE.CLOSE], crossStoch)
     if (stopAndTarget) {
