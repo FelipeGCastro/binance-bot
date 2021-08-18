@@ -11,7 +11,7 @@ async function handleNewOrder (data) {
   const type = ORDER_TYPE.MARKET
   const symbol = data.symbol
   if (symbol && quantity && side && type) {
-    const ordered = await api.newOrder(symbol, quantity, side, type)
+    const ordered = await api.newOrder(data.account, symbol, quantity, side, type)
     if (ordered) {
       console.log('Ordered successfully')
       return ordered
