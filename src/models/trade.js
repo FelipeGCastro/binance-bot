@@ -5,6 +5,10 @@ const TradeSchema = new mongoose.Schema({
     type: String,
     require: true
   },
+  strategy: {
+    type: String,
+    required: true
+  },
   side: {
     type: String,
     required: true
