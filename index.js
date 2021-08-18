@@ -13,16 +13,16 @@ const SET_STRATEGY = {
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
 }
 
-let strategy = STRATEGIES.SHARK
-let symbols = [process.env.SYMBOL, 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT']
+let strategy = STRATEGIES.HIDDEN_DIVERGENCE
+let symbols = ['SANDUSDT', 'ADAUSDT', 'LUNAUSDT', 'DODOUSDT', 'DOGEUSDT']
 let botOn = false
 let leverage = 2
-let entryValue = 80
+let entryValue = 100
 
 let validateEntry = SET_STRATEGY[strategy].validateEntry
 let maxEntryValue = entryValue + (0.3 * entryValue)
 let listenKeyIsOn = false
-let interval = '5m'
+let interval = '1m'
 let limitOrdersSameTime = 2
 let limitReached = false
 
