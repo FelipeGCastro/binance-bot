@@ -5,79 +5,97 @@ const telegram = require('./services/telegram')
 const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
-const STRATEGIES = require('./tools/constants').STRATEGIES
-const SIDE = require('./tools/constants').SIDE
+const { STRATEGIES, SIDE, ACCOUNTS_TYPE } = require('./tools/constants')
 const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
+
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
 }
 
-let strategy = STRATEGIES.SHARK
-let symbols = [process.env.SYMBOL, 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT']
-let botOn = false
-let leverage = 2
-let entryValue = 80
-
-let validateEntry = SET_STRATEGY[strategy].validateEntry
-let maxEntryValue = entryValue + (0.3 * entryValue)
-let listenKeyIsOn = false
-let interval = '5m'
-let limitOrdersSameTime = 2
-let limitReached = false
-
-let tradesOn = [] // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
-
-function setBotOn (bool) { botOn = bool }
-
-function setLeverage (value) { leverage = value }
-function setEntryValue (value) {
-  entryValue = value
-  maxEntryValue = entryValue + (0.3 * entryValue)
-}
-function getAccountData () {
-  return {
-    symbols,
-    botOn,
-    leverage,
-    entryValue,
-    strategy,
-    maxEntryValue,
-    tradesOn,
-    listenKeyIsOn,
-    limitOrdersSameTime
+const ACCOUNTS = {
+  [ACCOUNTS_TYPE.PRIMARY]: {
+    strategy: STRATEGIES.SHARK,
+    symbols: ['ETHUSDT', 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT'],
+    botOn: false,
+    leverage: 2,
+    entryValue: 100,
+    validateEntry: SET_STRATEGY[STRATEGIES.SHARK].validateEntry,
+    maxEntryValue: 100,
+    listenKeyIsOn: false,
+    interval: '5m',
+    limitOrdersSameTime: 2,
+    limitReached: false,
+    tradesOn: [], // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
+    listeners: [],
+    allCandles: []
+  },
+  [ACCOUNTS_TYPE.SECONDARY]: {
+    strategy: STRATEGIES.HIDDEN_DIVERGENCE,
+    symbols: ['SANDUSDT', 'ADAUSDT', 'LUNAUSDT', 'DODOUSDT', 'DOGEUSDT'],
+    botOn: false,
+    leverage: 2,
+    entryValue: 100,
+    validateEntry: SET_STRATEGY[STRATEGIES.HIDDEN_DIVERGENCE].validateEntry,
+    maxEntryValue: 100,
+    listenKeyIsOn: false,
+    interval: '1m',
+    limitOrdersSameTime: 2,
+    limitReached: false,
+    tradesOn: [], // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
+    listeners: [],
+    allCandles: []
   }
 }
-function getTradesDelayed () {
+
+function setBotOn (account, bool) { ACCOUNTS[account].botOn = bool }
+function setLeverage (account, value) { ACCOUNTS[account].leverage = value }
+function setEntryValue (account, value) {
+  ACCOUNTS[account].entryValue = value
+  ACCOUNTS[account].maxEntryValue = ACCOUNTS[account].entryValue + (0.2 * ACCOUNTS[account].entryValue)
+}
+function getAccountData (account) {
+  return ACCOUNTS[account]
+}
+
+function getTradesDelayed (account) {
   return new Promise(resolve => {
-    setTimeout(() => resolve(tradesOn), 2000)
+    setTimeout(() => resolve(ACCOUNTS[account].tradesOn), 2000)
   })
 }
-function setLimitOrdersSameTime (limite) { limitOrdersSameTime = limite }
-function setTradesOn (trade) { return tradesOn.push(trade) }
-function updateTradesOn (symbol, key, value) {
-  const oldObject = tradesOn.find(trade => trade.symbol === symbol)
+function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrdersSameTime = limite }
+function setTradesOn (account, trade) { return ACCOUNTS[account].tradesOn.push(trade) }
+function updateTradesOn (account, symbol, key, value) {
+  const oldObject = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
   if (!oldObject) return
   const newObject = { ...oldObject, [key]: value }
-  removeFromTradesOn(newObject.symbol)
-  setTradesOn(newObject)
+  removeFromTradesOn(account, newObject.symbol)
+  setTradesOn(account, newObject)
 }
-function removeFromTradesOn (symb) {
-  tradesOn = tradesOn.filter(trade => trade.symbol !== symb)
-  limitReached = tradesOn.length >= limitOrdersSameTime
+function removeFromTradesOn (account, symb) {
+  ACCOUNTS[account].tradesOn = ACCOUNTS[account].tradesOn.filter(trade => trade.symbol !== symb)
+  ACCOUNTS[account].limitReached = ACCOUNTS[account].tradesOn.length >= ACCOUNTS[account].limitOrdersSameTime
 }
+function setLimitReached (account, value) { ACCOUNTS[account].limitReached = value }
+function setValidate (account, func) { ACCOUNTS[account].validateEntry = func }
+function setPeriodInterval (account, int) { ACCOUNTS[account].interval = int }
+function setStrategy (account, value) { ACCOUNTS[account].strategy = value }
+function updateAllCandles (account, arrayWithValues) { ACCOUNTS[account].allCandles = arrayWithValues }
+function updateListenKeyIsOn (account, value) { ACCOUNTS[account].listenKeyIsOn = value }
 
-function setValidate (func) { validateEntry = func }
-function setPeriodInterval (int) { interval = int }
-function setStrategy (value) { strategy = value }
-
-let listeners = []
-let allCandles = []
+// let listeners = []
+// let allCandles = []
 
 // START MAIN FUNCTION
-async function execute () {
+async function execute (account) {
+  const {
+    leverage, symbols, interval, allCandles, listeners, tradesOn,
+    limitReached, listenKeyIsOn, botOn, validateEntry, entryValue, maxEntryValue, limitOrdersSameTime
+  } = ACCOUNTS[account]
+
   console.log('init')
-  await changeLeverage(leverage)
+  const isLeverageChanged = await changeLeverage(account, leverage)
+  if (isLeverageChanged) return false
 
   symbols.forEach((symbol, symbolIndex) => {
     if (!symbol) return
@@ -112,10 +130,10 @@ async function execute () {
       const valid = await validateEntry(newCandles, symbol)
       console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
       if (valid && valid.symbol === candlesObj.symbol) {
-        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol })
+        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol, account })
         if (ordered) {
-          limitReached = (tradesOn.length + 1) >= limitOrdersSameTime
-          setTradesOn({
+          setLimitReached(account, (tradesOn.length + 1) >= limitOrdersSameTime)
+          setTradesOn(account, {
             symbol,
             stopMarketPrice: valid.stopPrice,
             takeProfitPrice: valid.targetPrice,
@@ -145,17 +163,17 @@ async function execute () {
     candles.push(newCandle)
     const candlesFiltered = allCandles.filter(candlesObjItem => candlesObjItem.symbol !== candlesObj.symbol)
     candlesFiltered.push({ candles, symbol: candlesObj.symbol })
-    allCandles = candlesFiltered
+    updateAllCandles(account, candlesFiltered)
     return candles
   }
 
   await getListenKey()
 
   async function getListenKey () {
-    const data = await api.listenKey()
+    const data = await api.listenKey(account)
     if (data) {
       setWsListen(data.listenKey)
-      listenKeyIsOn = true
+      updateListenKeyIsOn(account, true)
     } else {
       telegram.sendMessage('Problemas ao buscar uma ListenKey')
     }
@@ -164,85 +182,85 @@ async function execute () {
   async function setWsListen (listenKey) {
     const wsListenKey = ws.listenKey(listenKey, async (data) => {
       if (data.e === 'listenKeyExpired' && listenKeyIsOn) {
-        listenKeyIsOn = false
+        updateListenKeyIsOn(account, false)
         wsListenKey.close()
         await getListenKey()
       } else {
         let newData
         if (data.o) {
-          const dataOrder = { ...data.o, updateTradesOn, removeFromTradesOn, getTradesDelayed }
+          const dataOrder = { ...data.o, account, updateTradesOn, removeFromTradesOn, getTradesDelayed }
           newData = { ...data, o: dataOrder }
-        } else { newData = { ...data, getTradesDelayed } }
+        } else { newData = { ...data, account, getTradesDelayed } }
         await operations.handleUserDataUpdate(newData)
       }
     })
   }
+
+  function verifyAfterFewSeconds () {
+    setTimeout(() => {
+      tradesOn.forEach(trade => {
+        const tpslSide = trade.side && trade.side === SIDE.SELL ? SIDE.BUY : SIDE.SELL
+        if (!trade.symbol && !trade.stopMarketPrice && !trade.takeProfitPrice) return
+        handleVerifyAndCreateTpSl(trade.symbol, tpslSide, trade.stopMarketPrice, trade.takeProfitPrice, updateTradesOn, account)
+      })
+    }, 12000)
+  }
 }
 
-function verifyAfterFewSeconds () {
-  setTimeout(() => {
-    tradesOn.forEach(trade => {
-      const tpslSide = trade.side && trade.side === SIDE.SELL ? SIDE.BUY : SIDE.SELL
-      if (!trade.symbol && !trade.stopMarketPrice && !trade.takeProfitPrice) return
-      handleVerifyAndCreateTpSl(trade.symbol, tpslSide, trade.stopMarketPrice, trade.takeProfitPrice, updateTradesOn)
-    })
-  }, 12000)
-}
-
-async function changeLeverage (value) {
-  symbols.forEach(async (symbol) => {
-    const changedLeverage = await api.changeLeverage(leverage, symbol)
+async function changeLeverage (account, value) {
+  ACCOUNTS[account].symbols.forEach(async (symbol) => {
+    const changedLeverage = await api.changeLeverage(account, ACCOUNTS[account].leverage, symbol)
     if (!changedLeverage) {
       console.log('Error when change Leverage')
       return false
     }
     console.log('Leverage Changed Successfully: ', symbol)
   })
-  setLeverage(value)
+  setLeverage(account, value)
   return true
 }
 
-function updateSymbols (newSymbols) {
-  symbols = newSymbols
-  resetListenersAndCandles()
-  if (botOn) {
-    execute()
+function updateSymbols (account, newSymbols) {
+  ACCOUNTS[account].symbols = newSymbols
+  resetListenersAndCandles(account)
+  if (ACCOUNTS[account].botOn) {
+    const isBotOn = execute(account)
+    if (!isBotOn) return false
   }
   return true
 }
 
-function handleChangeStrategy (stratName) {
-  const strategy = SET_STRATEGY[stratName] || hiddenDivergence
-  setPeriodInterval(strategy.getInterval())
-  setValidate(strategy.validateEntry)
-  setStrategy(stratName)
+function handleChangeStrategy (account, stratName) {
+  if (!SET_STRATEGY[stratName]) return false
+  const strategy = SET_STRATEGY[stratName]
+  setPeriodInterval(account, strategy.getInterval())
+  setValidate(account, strategy.validateEntry)
+  setStrategy(account, stratName)
   return true
 }
-function turnBotOn (bool) {
+function turnBotOn (account, bool) {
   if (bool) {
-    if (!botOn) {
-      listeners = []
-      tradesOn = []
-      setBotOn(bool)
-      execute()
+    if (!ACCOUNTS[account].botOn) {
+      ACCOUNTS[account].listeners = []
+      ACCOUNTS[account].tradesOn = []
+      setBotOn(account, bool)
+      const isBotOn = execute(account)
+      if (!isBotOn) return false
     }
   } else {
-    resetListenersAndCandles()
-    tradesOn = []
-    setBotOn(bool)
+    resetListenersAndCandles(account)
+    ACCOUNTS[account].tradesOn = []
+    setBotOn(account, bool)
   }
 }
 
-function resetListenersAndCandles () {
-  listeners.forEach(list => { list.listener.close(1000) })
-  listeners = []
-  allCandles = []
+function resetListenersAndCandles (account) {
+  ACCOUNTS[account].listeners.forEach(list => { list.listener.close(1000) })
+  ACCOUNTS[account].listeners = []
+  ACCOUNTS[account].allCandles = []
 }
 module.exports = {
-  setPeriodInterval,
-  setValidate,
   changeLeverage,
-  setBotOn,
   execute,
   updateSymbols,
   setEntryValue,

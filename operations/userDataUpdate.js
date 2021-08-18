@@ -20,7 +20,7 @@ async function handleUserDataUpdate (data) {
   if (data.e === 'ACCOUNT_UPDATE') {
     handlePosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
-    const tradesOn = await data.o.getTradesDelayed()
+    const tradesOn = await data.o.getTradesDelayed(data.o.account)
     const trade = tradesOn.find(trade => trade.symbol === data.o.s)
     if (trade) {
       if (data.o.X === 'FILLED' || data.o.X === 'PARTIALLY_FILLED') {
@@ -37,7 +37,7 @@ async function handleUserDataUpdate (data) {
 }
 
 async function handlePosition (data) {
-  const tradesOn = await data.getTradesDelayed()
+  const tradesOn = await data.getTradesDelayed(data.account)
   const positionHasTradeOn = data.a.P.filter(pos => {
     const position = tradesOn.find(trade => trade.symbol === pos.s)
     return !!position
@@ -52,7 +52,7 @@ async function handleFilledOrder (order) {
   if (position && position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
       console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol) // order.i, order.trade.orderId
-      order.updateTradesOn(order.trade.symbol, 'entryPrice', order.L)
+      order.updateTradesOn(order.account, order.trade.symbol, 'entryPrice', order.L)
       if (order.X === 'FILLED') await createTpandSLOrder(order)
     } else {
       return false
@@ -66,7 +66,7 @@ async function handleFilledOrder (order) {
       } else {
         console.log('Saida 19 -Order MARKET Filled with NO position open NO TPSL', order)
       }
-      order.removeFromTradesOn(order.symbol)
+      order.removeFromTradesOn(order.account, order.symbol)
     } else {
       console.log('Saida 20 - TYPE of order no Market:', order.o)
       return false
@@ -92,10 +92,10 @@ async function tpslOrderFilled (order) {
     timestamp: order.T,
     strategy: order.trade.strategy
   }
-  order.removeFromTradesOn(order.symbol)
+  order.removeFromTradesOn(order.account, order.symbol)
   const trade = await Trade.create(data)
   if (!trade) console.log('Cannot create trade')
-  const ordersCancelled = await api.cancelAllOrders(order.symbol)
+  const ordersCancelled = await api.cancelAllOrders(order.account, order.symbol)
   if (!ordersCancelled) console.log('Problems to cancel orders')
 }
 

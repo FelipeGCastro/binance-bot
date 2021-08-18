@@ -1,4 +1,8 @@
 
+const ACCOUNTS_TYPE = {
+  PRIMARY: 'primary',
+  SECONDARY: 'secondary'
+}
 const STRATEGIES = {
   SHARK: 'sharkStrategy',
   HIDDEN_DIVERGENCE: 'hiddenDivergence'
@@ -47,5 +51,6 @@ module.exports = {
   ORDER_TYPE,
   SIDE,
   POSITION_SIDE,
-  INDICATORS_OBJ
+  INDICATORS_OBJ,
+  ACCOUNTS_TYPE
 }

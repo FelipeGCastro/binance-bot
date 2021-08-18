@@ -16,11 +16,11 @@ async function createTpandSLOrder (order) {
     return false
   }
 
-  await handleVerifyAndCreateTpSl(symbol, side, stopMarketPrice, takeProfitPrice, order.updateTradesOn)
+  await handleVerifyAndCreateTpSl(symbol, side, stopMarketPrice, takeProfitPrice, order.updateTradesOn, order.account)
 }
 
-async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takeProfitPrice, updateTradesOn) {
-  const openOrders = await api.getAllOpenOrders(symbol)
+async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takeProfitPrice, updateTradesOn, account) {
+  const openOrders = await api.getAllOpenOrders(account, symbol)
 
   if (openOrders[0]) {
     const hasStopLossOrder = openOrders.find(order => order.type === 'STOP_MARKET')
@@ -35,14 +35,14 @@ async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takePro
   }
 
   async function createTpOrSlOrder (type, price) {
-    const ordered = await api.newOrder(symbol, null, side, type, true, price)
+    const ordered = await api.newOrder(account, symbol, null, side, type, true, price)
     if (!ordered) {
-      updateTradesOn(symbol, 'stopOrderCreated', false)
+      updateTradesOn(account, symbol, 'stopOrderCreated', false)
       telegram.sendMessage(`Problem ao criar ${type} Order para ${symbol}`)
       console.log(`Error creating ${type} order`)
       return false
     } else {
-      updateTradesOn(symbol, type === ORDER_TYPE.TAKE_PROFIT_MARKET ? 'profitOrderCreated' : 'stopOrderCreated', true)
+      updateTradesOn(account, symbol, type === ORDER_TYPE.TAKE_PROFIT_MARKET ? 'profitOrderCreated' : 'stopOrderCreated', true)
       return true
     }
   }
