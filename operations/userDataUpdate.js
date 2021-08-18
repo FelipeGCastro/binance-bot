@@ -56,9 +56,11 @@ async function handleFilledOrder (order) {
       console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol)
       if (order.i === order.trade.orderId) console.log('Same Order ID')
       console.log(order.i, order.trade.orderId)
-      if (order.X === 'FILLED') console.log('Debug, only now to create tpsl')
       order.updateTradesOn(order.trade.symbol, 'entryPrice', order.L)
-      await createTpandSLOrder(order)
+      if (order.X === 'FILLED') {
+        console.log('Debug, only now to create tpsl')
+        await createTpandSLOrder(order)
+      }
     } else {
       return false
     }
