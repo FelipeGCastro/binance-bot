@@ -16,6 +16,10 @@ async function createTpandSLOrder (order) {
     return false
   }
 
+  await handleVerifyAndCreateTpSl(symbol, side, stopMarketPrice, takeProfitPrice, order.updateTradesOn)
+}
+
+async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takeProfitPrice, updateTradesOn) {
   const openOrders = await api.getAllOpenOrders(symbol)
 
   if (openOrders[0]) {
@@ -33,17 +37,18 @@ async function createTpandSLOrder (order) {
   async function createTpOrSlOrder (type, price) {
     const ordered = await api.newOrder(symbol, null, side, type, true, price)
     if (!ordered) {
-      order.updateTradesOn(symbol, 'stopOrderCreated', false)
+      updateTradesOn(symbol, 'stopOrderCreated', false)
       telegram.sendMessage(`Problem ao criar ${type} Order para ${symbol}`)
       console.log(`Error creating ${type} order`)
       return false
     } else {
-      order.updateTradesOn(symbol, type === ORDER_TYPE.TAKE_PROFIT_MARKET ? 'profitOrderCreated' : 'stopOrderCreated', true)
+      updateTradesOn(symbol, type === ORDER_TYPE.TAKE_PROFIT_MARKET ? 'profitOrderCreated' : 'stopOrderCreated', true)
       return true
     }
   }
 }
 
 module.exports = {
-  createTpandSLOrder
+  createTpandSLOrder,
+  handleVerifyAndCreateTpSl
 }

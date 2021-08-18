@@ -6,7 +6,8 @@ const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
 const STRATEGIES = require('./tools/constants').STRATEGIES
-
+const SIDE = require('./tools/constants').SIDE
+const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
@@ -56,6 +57,7 @@ function setLimitOrdersSameTime (limite) { limitOrdersSameTime = limite }
 function setTradesOn (trade) { return tradesOn.push(trade) }
 function updateTradesOn (symbol, key, value) {
   const oldObject = tradesOn.find(trade => trade.symbol === symbol)
+  if (!oldObject) return
   const newObject = { ...oldObject, [key]: value }
   removeFromTradesOn(newObject.symbol)
   setTradesOn(newObject)
@@ -119,9 +121,12 @@ async function execute () {
             takeProfitPrice: valid.targetPrice,
             entryPrice: ordered.avgPrice,
             stopOrderCreated: false,
-            profitOrderCreated: false
+            profitOrderCreated: false,
+            side: ordered.side,
+            orderId: ordered.orderId
           })
           telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}`)
+          verifyAfterFewSeconds()
         }
         console.log('Entry is Valid')
       }
@@ -171,6 +176,16 @@ async function execute () {
       }
     })
   }
+}
+
+function verifyAfterFewSeconds () {
+  setTimeout(() => {
+    tradesOn.forEach(trade => {
+      const tpslSide = trade.side && trade.side === SIDE.SELL ? SIDE.BUY : SIDE.SELL
+      if (!trade.symbol && !trade.stopMarketPrice && !trade.takeProfitPrice) return
+      handleVerifyAndCreateTpSl(trade.symbol, tpslSide, trade.stopMarketPrice, trade.takeProfitPrice, updateTradesOn)
+    })
+  }, 12000)
 }
 
 async function changeLeverage (value) {

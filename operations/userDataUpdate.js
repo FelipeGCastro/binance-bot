@@ -24,7 +24,7 @@ async function handleUserDataUpdate (data) {
     const trade = tradesOn.find(trade => trade.symbol === data.o.s)
     if (trade) {
       if (data.o.X === 'FILLED' || data.o.X === 'PARTIALLY_FILLED') {
-        handleFilledOrder({ ...data.o, trade, symbol: trade.symbol })
+        await handleFilledOrder({ ...data.o, trade, symbol: trade.symbol })
       } else if (data.o.X === 'CANCELED') {
         console.log('Order Canceled', data.o.ot)
       } else {
@@ -32,7 +32,7 @@ async function handleUserDataUpdate (data) {
         return false
       }
     } else {
-      console.log('Do not have this trade', data.o)
+      console.log('Do not have this trade')
       return false
     }
   } else console.log('What Type is ? - ', data.e)
@@ -53,7 +53,10 @@ async function handleFilledOrder (order) {
   const position = getPosition(order.symbol)
   if (position && position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
-      console.log('Saida 17 Order Market Filled, open position', order.symbol)
+      console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol)
+      if (order.i === order.trade.orderId) console.log('Same Order ID')
+      console.log(order.i, order.trade.orderId)
+      if (order.X === 'FILLED') console.log('Debug, only now to create tpsl')
       order.updateTradesOn(order.trade.symbol, 'entryPrice', order.L)
       await createTpandSLOrder(order)
     } else {
