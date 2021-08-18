@@ -89,7 +89,8 @@ async function tpslOrderFilled (order) {
     profitPrice: isGain ? order.L : order.trade.takeProfitPrice,
     quantity: order.q,
     profit: order.rp,
-    timestamp: order.T
+    timestamp: order.T,
+    strategy: order.trade.strategy
   }
   order.removeFromTradesOn(order.symbol)
   const trade = await Trade.create(data)

@@ -123,7 +123,8 @@ async function execute () {
             stopOrderCreated: false,
             profitOrderCreated: false,
             side: ordered.side,
-            orderId: ordered.orderId
+            orderId: ordered.orderId,
+            strategy: valid.strategy
           })
           telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}`)
           verifyAfterFewSeconds()
