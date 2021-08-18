@@ -28,11 +28,9 @@ async function handleUserDataUpdate (data) {
       } else if (data.o.X === 'CANCELED') {
         console.log('Order Canceled', data.o.ot)
       } else {
-        console.log('Order No FILLED or NO CANCELED', data.o.X, data.o.ot)
         return false
       }
     } else {
-      console.log('Do not have this trade')
       return false
     }
   } else console.log('What Type is ? - ', data.e)
@@ -53,14 +51,9 @@ async function handleFilledOrder (order) {
   const position = getPosition(order.symbol)
   if (position && position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
-      console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol)
-      if (order.i === order.trade.orderId) console.log('Same Order ID')
-      console.log(order.i, order.trade.orderId)
+      console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol) // order.i, order.trade.orderId
       order.updateTradesOn(order.trade.symbol, 'entryPrice', order.L)
-      if (order.X === 'FILLED') {
-        console.log('Debug, only now to create tpsl')
-        await createTpandSLOrder(order)
-      }
+      if (order.X === 'FILLED') await createTpandSLOrder(order)
     } else {
       return false
     }
