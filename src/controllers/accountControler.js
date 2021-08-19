@@ -12,12 +12,12 @@ accountRoutes.get('/:account', async (req, res) => {
   return res.send(accountdata)
 })
 
-accountRoutes.get('/strategies', async (req, res) => {
+accountRoutes.get('/:account/strategies', async (req, res) => {
   console.log('requested strategies')
   return res.json(STRATEGIES)
 })
 
-accountRoutes.get('/symbols', async (req, res) => {
+accountRoutes.get('/:account/symbols', async (req, res) => {
   const exchangeInfo = await api.exchangeInfo()
   const allSymbols = exchangeInfo.symbols.map(data => data.symbol)
   return res.send(allSymbols)
