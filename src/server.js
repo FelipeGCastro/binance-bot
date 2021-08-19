@@ -22,7 +22,7 @@ io.on('connection', (socket) => {
 
 app.listen(process.env.PORT || 3333, () => console.log('Server is running'))
 
-function accountDataUpdate (account, data) {
+const accountDataUpdate = (account, data) => {
   io.emit(`${account}Account`, data)
 }
 
