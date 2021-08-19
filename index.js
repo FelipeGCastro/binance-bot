@@ -288,6 +288,8 @@ function resetListenersAndCandles (account) {
   ACCOUNTS[account].listeners = []
   ACCOUNTS[account].allCandles = []
 }
+updateAccount(ACCOUNTS_TYPE.PRIMARY, getAccountData())
+updateAccount(ACCOUNTS_TYPE.SECONDARY, getAccountData())
 module.exports = {
   changeLeverage,
   execute,
