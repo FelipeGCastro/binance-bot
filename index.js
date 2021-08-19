@@ -150,7 +150,7 @@ async function execute (account) {
             orderId: ordered.orderId,
             strategy: valid.strategy
           })
-          telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}`)
+          telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${ACCOUNTS[account].strategy}`)
           verifyAfterFewSeconds()
         }
         console.log('Entry is Valid')
