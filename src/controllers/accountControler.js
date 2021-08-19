@@ -26,7 +26,7 @@ accountRoutes.get('/:account/symbols', async (req, res) => {
 accountRoutes.put('/:account/symbols', async (req, res) => {
   const { account } = req.params
   const { symbols } = req.body
-  if (account !== ACCOUNTS_TYPE.PRIMARY || account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
+  if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
   if (!Array.isArray(symbols)) return res.status(400).send({ error: 'Bad type' })
   if (symbols.length > 5) return res.status(400).send({ error: 'Max symbols is 5' })
   const allSymbols = await helpers.getAllSymbols()
@@ -57,7 +57,7 @@ accountRoutes.put('/:account/boton', async (req, res) => {
 accountRoutes.put('/:account/leverage', async (req, res) => {
   const { account } = req.params
   const { leverage } = req.body
-  if (account !== ACCOUNTS_TYPE.PRIMARY || account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
+  if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
   if (typeof leverage !== 'number') return res.status(400).send({ error: 'Bad type' })
 
   if (!home.changeLeverage(account, leverage)) return res.status(400).send({ error: 'Problems with change leverage' })
@@ -69,7 +69,7 @@ accountRoutes.put('/:account/leverage', async (req, res) => {
 accountRoutes.put('/:account/entryValue', async (req, res) => {
   const { account } = req.params
   const { entryValue } = req.body
-  if (account !== ACCOUNTS_TYPE.PRIMARY || account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
+  if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
   if (typeof entryValue !== 'number') return res.status(400).send({ error: 'Bad type' })
   home.setEntryValue(account, entryValue)
   console.log('changed entryValue')
@@ -81,7 +81,7 @@ accountRoutes.put('/:account/entryValue', async (req, res) => {
 accountRoutes.put('/:account/strategy', async (req, res) => {
   const { account } = req.params
   const { strategy } = req.body
-  if (account !== ACCOUNTS_TYPE.PRIMARY || account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
+  if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
   if (strategy === STRATEGIES.HIDDEN_DIVERGENCE ||
     strategy === STRATEGIES.SHARK
   ) {
