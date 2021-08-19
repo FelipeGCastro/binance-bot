@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node -r dotenv/config src/server",
-    "dev": "node --inspect -r dotenv/config src/server"
+    "dev": "node --inspect -r dotenv/config src/server index.js"
   },
   "keywords": [],
   "author": "",

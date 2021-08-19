@@ -17,16 +17,8 @@ app.use('/account', account).use(authMiddleware)
 app.use('/trade', tradeRoutes).use(authMiddleware)
 
 io.on('connection', (socket) => {
-  console.log(`New conection: ${socket.id}`)
+  console.log('New Conection:', socket.id)
+  require('../services/socket').setIo(io)
 })
 
-app.listen(process.env.PORT || 3333, () => console.log('Server is running'))
-
-const accountDataUpdate = (account, data) => {
-  io.emit(`${account}Account`, data)
-}
-
-module.exports = {
-  app,
-  accountDataUpdate
-}
+httpServer.listen(process.env.PORT || 3333, () => console.log('Server is running'))
