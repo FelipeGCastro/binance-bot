@@ -88,51 +88,57 @@ function updateListenKeyIsOn (account, value) { ACCOUNTS[account].listenKeyIsOn 
 
 // START MAIN FUNCTION
 async function execute (account) {
-  const {
-    leverage, symbols, interval, allCandles, listeners, tradesOn,
-    limitReached, listenKeyIsOn, botOn, validateEntry, entryValue, maxEntryValue, limitOrdersSameTime
-  } = ACCOUNTS[account]
-
   console.log('init')
-  const isLeverageChanged = await changeLeverage(account, leverage)
-  if (isLeverageChanged) return false
+  const isLeverageChanged = await changeLeverage(account, ACCOUNTS[account].leverage)
+  if (!isLeverageChanged) return false
 
-  symbols.forEach((symbol, symbolIndex) => {
+  ACCOUNTS[account].symbols.forEach((symbol) => {
     if (!symbol) return
 
     addAllCandles(symbol)
     setWsListeners(symbol)
-    console.log(symbol, symbolIndex, 'foreach')
   })
-  async function addAllCandles (symbol) {
-    const candles = await api.candles(symbol, interval)
-    if (candles) allCandles.push({ candles, symbol })
-  }
 
+  async function addAllCandles (symbol) {
+    console.log(symbol, 'addAllCandles')
+    const candles = await api.candles(symbol, ACCOUNTS[account].interval)
+    if (candles) ACCOUNTS[account].allCandles.push({ candles, symbol })
+  }
+  console.log(ACCOUNTS[account].allCandles, 'allCandles')
   async function setWsListeners (symbol) {
     let lastEventAt = 0
     // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
-    const listener = await ws.onKlineContinuos(symbol, interval, async (data) => {
+    const listener = await ws.onKlineContinuos(symbol, ACCOUNTS[account].interval, async (data) => {
       if (data.k.x && data.E > lastEventAt) {
         lastEventAt = data.E
         await handleCloseCandle(data, symbol)
       }
     })
-    listeners.push({ listener, symbol })
+    ACCOUNTS[account].listeners.push({ listener, symbol })
   }
 
   async function handleCloseCandle (data, symbol) {
-    const candlesObj = allCandles.find(cand => cand.symbol === symbol)
+    const candlesObj = ACCOUNTS[account].allCandles.find(cand => cand.symbol === symbol)
     if (!candlesObj) return
     const newCandles = await handleAddCandle(data, candlesObj)
-    const hasTradeOn = tradesOn.find(trade => trade.symbol === candlesObj.symbol)
-    if (!hasTradeOn && !limitReached && listenKeyIsOn && botOn) {
-      const valid = await validateEntry(newCandles, symbol)
+    const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
+    if (!hasTradeOn &&
+      !ACCOUNTS[account].limitReached &&
+      ACCOUNTS[account].listenKeyIsOn &&
+      ACCOUNTS[account].botOn) {
+      const valid = await ACCOUNTS[account].validateEntry(newCandles, symbol)
       console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
+
       if (valid && valid.symbol === candlesObj.symbol) {
-        const ordered = await newOrder.handleNewOrder({ ...valid, entryValue, maxEntryValue, symbol, account })
+        const ordered = await newOrder.handleNewOrder({
+          ...valid,
+          entryValue: ACCOUNTS[account].entryValue,
+          maxEntryValue: ACCOUNTS[account].maxEntryValue,
+          symbol,
+          account
+        })
         if (ordered) {
-          setLimitReached(account, (tradesOn.length + 1) >= limitOrdersSameTime)
+          setLimitReached(account, (ACCOUNTS[account].tradesOn.length + 1) >= ACCOUNTS[account].limitOrdersSameTime)
           setTradesOn(account, {
             symbol,
             stopMarketPrice: valid.stopPrice,
@@ -161,7 +167,7 @@ async function execute (account) {
       candles.shift()
     }
     candles.push(newCandle)
-    const candlesFiltered = allCandles.filter(candlesObjItem => candlesObjItem.symbol !== candlesObj.symbol)
+    const candlesFiltered = ACCOUNTS[account].allCandles.filter(candlesObjItem => candlesObjItem.symbol !== candlesObj.symbol)
     candlesFiltered.push({ candles, symbol: candlesObj.symbol })
     updateAllCandles(account, candlesFiltered)
     return candles
@@ -176,12 +182,13 @@ async function execute (account) {
       updateListenKeyIsOn(account, true)
     } else {
       telegram.sendMessage('Problemas ao buscar uma ListenKey')
+      console.log('Problemas ao buscar uma ListenKey')
     }
   }
 
   async function setWsListen (listenKey) {
     const wsListenKey = ws.listenKey(listenKey, async (data) => {
-      if (data.e === 'listenKeyExpired' && listenKeyIsOn) {
+      if (data.e === 'listenKeyExpired' && ACCOUNTS[account].listenKeyIsOn) {
         updateListenKeyIsOn(account, false)
         wsListenKey.close()
         await getListenKey()
@@ -198,7 +205,7 @@ async function execute (account) {
 
   function verifyAfterFewSeconds () {
     setTimeout(() => {
-      tradesOn.forEach(trade => {
+      ACCOUNTS[account].tradesOn.forEach(trade => {
         const tpslSide = trade.side && trade.side === SIDE.SELL ? SIDE.BUY : SIDE.SELL
         if (!trade.symbol && !trade.stopMarketPrice && !trade.takeProfitPrice) return
         handleVerifyAndCreateTpSl(trade.symbol, tpslSide, trade.stopMarketPrice, trade.takeProfitPrice, updateTradesOn, account)
