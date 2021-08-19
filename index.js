@@ -55,7 +55,7 @@ function setEntryValue (account, value) {
   ACCOUNTS[account].maxEntryValue = ACCOUNTS[account].entryValue + (0.2 * ACCOUNTS[account].entryValue)
 }
 function getAccountData (account) {
-  return ACCOUNTS[account]
+  return { ...ACCOUNTS[account], listeners: [], allCandles: [] }
 }
 
 function getTradesDelayed (account) {
@@ -150,7 +150,7 @@ async function execute (account) {
             orderId: ordered.orderId,
             strategy: valid.strategy
           })
-          telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${ACCOUNTS[account].strategy}`)
+          telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${ACCOUNTS[account].strategy}, account: ${account}`)
           verifyAfterFewSeconds()
         }
         console.log('Entry is Valid')
