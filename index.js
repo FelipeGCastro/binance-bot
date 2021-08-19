@@ -173,7 +173,7 @@ async function execute (account) {
     return candles
   }
 
-  await getListenKey()
+  getListenKey()
 
   async function getListenKey () {
     const data = await api.listenKey(account)
@@ -181,8 +181,17 @@ async function execute (account) {
       setWsListen(data.listenKey)
       updateListenKeyIsOn(account, true)
     } else {
-      telegram.sendMessage('Problemas ao buscar uma ListenKey')
-      console.log('Problemas ao buscar uma ListenKey')
+      console.log('Error getting listenKey, try again e 10 seconds')
+      setTimeout(async () => {
+        const data = await api.listenKey(account)
+        if (data) {
+          setWsListen(data.listenKey)
+          updateListenKeyIsOn(account, true)
+        } else {
+          telegram.sendMessage('Problemas ao buscar uma ListenKey')
+          console.log('Problemas ao buscar uma ListenKey')
+        }
+      }, 10000)
     }
   }
 
