@@ -9,12 +9,12 @@ const accountRoutes = express.Router()
 accountRoutes.get('/:account', async (req, res) => {
   const { account } = req.params
   const accountdata = await home.getAccountData(account)
-  res.send(accountdata)
+  return res.send(accountdata)
 })
 
 accountRoutes.get('/strategies', async (req, res) => {
   console.log('requested strategies')
-  res.send(STRATEGIES)
+  return res.send(STRATEGIES)
 })
 
 accountRoutes.get('/symbols', async (req, res) => {
@@ -51,7 +51,7 @@ accountRoutes.put('/:account/boton', async (req, res) => {
   home.turnBotOn(account, botOn)
   console.log('bot its tooggled')
   const accountdata = await home.getAccountData(account)
-  res.send(accountdata)
+  return res.send(accountdata)
 })
 
 accountRoutes.put('/:account/leverage', async (req, res) => {
@@ -63,7 +63,7 @@ accountRoutes.put('/:account/leverage', async (req, res) => {
   if (!home.changeLeverage(account, leverage)) return res.status(400).send({ error: 'Problems with change leverage' })
   console.log('changed leverage')
   const accountdata = await home.getAccountData(account)
-  res.send(accountdata)
+  return res.send(accountdata)
 })
 
 accountRoutes.put('/:account/entryValue', async (req, res) => {
@@ -75,7 +75,7 @@ accountRoutes.put('/:account/entryValue', async (req, res) => {
   console.log('changed entryValue')
 
   const accountdata = await home.getAccountData(account)
-  res.send(accountdata)
+  return res.send(accountdata)
 })
 
 accountRoutes.put('/:account/strategy', async (req, res) => {
@@ -92,7 +92,7 @@ accountRoutes.put('/:account/strategy', async (req, res) => {
   } else return res.status(400).send({ error: 'Bad request' })
 
   const accountdata = await home.getAccountData(account)
-  res.send(accountdata)
+  return res.send(accountdata)
 })
 
 module.exports = accountRoutes
