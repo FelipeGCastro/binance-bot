@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node -r dotenv/config -r src/server index",
+    "start": "node -r dotenv/config src/server",
     "dev": "node --inspect -r dotenv/config src/server"
   },
   "keywords": [],
