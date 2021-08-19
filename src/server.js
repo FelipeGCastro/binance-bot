@@ -20,11 +20,11 @@ io.on('connection', (socket) => {
   console.log(`New conection: ${socket.id}`)
 })
 
+app.listen(process.env.PORT || 3333, () => console.log('Server is running'))
+
 function accountDataUpdate (account, data) {
   io.emit(`${account}Account`, data)
 }
-
-app.listen(process.env.PORT || 3333, () => console.log('Server is running'))
 
 module.exports = {
   app,
