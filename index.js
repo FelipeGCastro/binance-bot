@@ -7,7 +7,7 @@ const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
 const { STRATEGIES, SIDE, ACCOUNTS_TYPE } = require('./tools/constants')
 const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
-const { accountDataUpdate } = require('./src/server.js')
+const { updateAccountData } = require('./services/socket.js')
 
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
@@ -56,6 +56,7 @@ function setEntryValue (account, value) {
   ACCOUNTS[account].maxEntryValue = ACCOUNTS[account].entryValue + (0.2 * ACCOUNTS[account].entryValue)
 }
 function getAccountData (account) {
+  updateAccountData(account, ACCOUNTS[account])
   return { ...ACCOUNTS[account], listeners: [], allCandles: [] }
 }
 
@@ -66,7 +67,7 @@ function getTradesDelayed (account) {
 }
 function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrdersSameTime = limite }
 function setTradesOn (account, trade) {
-  updateAccount(account)
+  updateAccountData(account, ACCOUNTS[account])
   return ACCOUNTS[account].tradesOn.push(trade)
 }
 function updateTradesOn (account, symbol, key, value) {
@@ -75,7 +76,7 @@ function updateTradesOn (account, symbol, key, value) {
   const newObject = { ...oldObject, [key]: value }
   removeFromTradesOn(account, newObject.symbol)
   setTradesOn(account, newObject)
-  updateAccount(account)
+  updateAccountData(account, ACCOUNTS[account])
 }
 function removeFromTradesOn (account, symb) {
   ACCOUNTS[account].tradesOn = ACCOUNTS[account].tradesOn.filter(trade => trade.symbol !== symb)
@@ -87,7 +88,7 @@ function setPeriodInterval (account, int) { ACCOUNTS[account].interval = int }
 function setStrategy (account, value) { ACCOUNTS[account].strategy = value }
 function updateAllCandles (account, arrayWithValues) { ACCOUNTS[account].allCandles = arrayWithValues }
 function updateListenKeyIsOn (account, value) {
-  updateAccount(account)
+  updateAccountData(account, ACCOUNTS[account])
   ACCOUNTS[account].listenKeyIsOn = value
 }
 
@@ -127,8 +128,11 @@ async function execute (account) {
 
   async function handleCloseCandle (data, symbol) {
     const candlesObj = ACCOUNTS[account].allCandles.find(cand => cand.symbol === symbol)
+
     if (!candlesObj) return
+
     const newCandles = await handleAddCandle(data, candlesObj)
+
     const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
     if (!hasTradeOn &&
       !ACCOUNTS[account].limitReached &&
@@ -254,11 +258,6 @@ function updateSymbols (account, newSymbols) {
   return true
 }
 
-function updateAccount (account) {
-  if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) return false
-  accountDataUpdate(account, getAccountData(account))
-}
-
 function handleChangeStrategy (account, stratName) {
   if (!SET_STRATEGY[stratName]) return false
   const strategy = SET_STRATEGY[stratName]
@@ -288,8 +287,8 @@ function resetListenersAndCandles (account) {
   ACCOUNTS[account].listeners = []
   ACCOUNTS[account].allCandles = []
 }
-updateAccount(ACCOUNTS_TYPE.PRIMARY, getAccountData())
-updateAccount(ACCOUNTS_TYPE.SECONDARY, getAccountData())
+updateAccountData(ACCOUNTS_TYPE.PRIMARY, ACCOUNTS[ACCOUNTS_TYPE.PRIMARY])
+updateAccountData(ACCOUNTS_TYPE.SECONDARY, ACCOUNTS[ACCOUNTS_TYPE.SECONDARY])
 module.exports = {
   changeLeverage,
   execute,
