@@ -7,6 +7,7 @@ const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
 const { STRATEGIES, SIDE, ACCOUNTS_TYPE } = require('./tools/constants')
 const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
+const { accountDataUpdate } = require('./src/server.js')
 
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
@@ -64,13 +65,17 @@ function getTradesDelayed (account) {
   })
 }
 function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrdersSameTime = limite }
-function setTradesOn (account, trade) { return ACCOUNTS[account].tradesOn.push(trade) }
+function setTradesOn (account, trade) {
+  updateAccount(account)
+  return ACCOUNTS[account].tradesOn.push(trade)
+}
 function updateTradesOn (account, symbol, key, value) {
   const oldObject = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
   if (!oldObject) return
   const newObject = { ...oldObject, [key]: value }
   removeFromTradesOn(account, newObject.symbol)
   setTradesOn(account, newObject)
+  updateAccount(account)
 }
 function removeFromTradesOn (account, symb) {
   ACCOUNTS[account].tradesOn = ACCOUNTS[account].tradesOn.filter(trade => trade.symbol !== symb)
@@ -81,7 +86,10 @@ function setValidate (account, func) { ACCOUNTS[account].validateEntry = func }
 function setPeriodInterval (account, int) { ACCOUNTS[account].interval = int }
 function setStrategy (account, value) { ACCOUNTS[account].strategy = value }
 function updateAllCandles (account, arrayWithValues) { ACCOUNTS[account].allCandles = arrayWithValues }
-function updateListenKeyIsOn (account, value) { ACCOUNTS[account].listenKeyIsOn = value }
+function updateListenKeyIsOn (account, value) {
+  updateAccount(account)
+  ACCOUNTS[account].listenKeyIsOn = value
+}
 
 // let listeners = []
 // let allCandles = []
@@ -244,6 +252,11 @@ function updateSymbols (account, newSymbols) {
     if (!isBotOn) return false
   }
   return true
+}
+
+function updateAccount (account) {
+  if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) return false
+  accountDataUpdate(account, getAccountData(account))
 }
 
 function handleChangeStrategy (account, stratName) {
