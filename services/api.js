@@ -5,8 +5,8 @@ const { ACCOUNTS_TYPE } = require('../tools/constants')
 
 const apikeyPrimary = process.env.API_KEY
 const apiSecretPrimary = process.env.SECRET_KEY
-const apikeySecondary = process.env.API_KEY
-const apiSecretSecondary = process.env.SECRET_KEY
+const apikeySecondary = process.env.API_KEY_SECOND
+const apiSecretSecondary = process.env.SECRET_KEY_SECOND
 const apiUrl = process.env.API_URL
 
 async function privateCall (account, path, data = {}, method = 'GET') {
