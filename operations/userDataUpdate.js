@@ -90,7 +90,8 @@ async function tpslOrderFilled (order) {
     quantity: order.q,
     profit: order.rp,
     timestamp: order.T,
-    strategy: order.trade.strategy
+    strategy: order.trade.strategy,
+    account: order.account
   }
   order.removeFromTradesOn(order.account, order.symbol)
   const trade = await Trade.create(data)
