@@ -14,7 +14,7 @@ accountRoutes.get('/:account', async (req, res) => {
 
 accountRoutes.get('/strategies', async (req, res) => {
   console.log('requested strategies')
-  return res.send(STRATEGIES)
+  return res.json(STRATEGIES)
 })
 
 accountRoutes.get('/symbols', async (req, res) => {
