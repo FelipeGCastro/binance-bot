@@ -210,7 +210,7 @@ async function execute (account) {
         if (!trade.symbol && !trade.stopMarketPrice && !trade.takeProfitPrice) return
         handleVerifyAndCreateTpSl(trade.symbol, tpslSide, trade.stopMarketPrice, trade.takeProfitPrice, updateTradesOn, account)
       })
-    }, 12000)
+    }, 15000)
   }
 }
 
