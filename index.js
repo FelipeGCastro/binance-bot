@@ -17,7 +17,7 @@ const SET_STRATEGY = {
 const ACCOUNTS = {
   [ACCOUNTS_TYPE.PRIMARY]: {
     strategy: STRATEGIES.SHARK,
-    symbols: ['ETHUSDT', 'ADAUSDT', 'MATICUSDT', 'XRPUSDT', 'DOGEUSDT'],
+    symbols: ['ADAUSDT', 'MATICUSDT', 'XRPUSDT'],
     botOn: false,
     leverage: 2,
     entryValue: 100,
@@ -33,7 +33,7 @@ const ACCOUNTS = {
   },
   [ACCOUNTS_TYPE.SECONDARY]: {
     strategy: STRATEGIES.HIDDEN_DIVERGENCE,
-    symbols: ['SANDUSDT', 'ADAUSDT', 'LUNAUSDT', 'DODOUSDT', 'DOGEUSDT'],
+    symbols: ['SANDUSDT', 'LUNAUSDT', 'DODOUSDT'],
     botOn: false,
     leverage: 2,
     entryValue: 100,
