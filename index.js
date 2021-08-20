@@ -288,7 +288,7 @@ function turnBotOn (account, bool) {
   } else {
     resetListenersAndCandles(account)
     ACCOUNTS[account].tradesOn = []
-    ACCOUNTS[account].listenKeyIsOn = false
+    updateListenKeyIsOn(account, false)
     setBotOn(account, bool)
   }
 }
