@@ -295,7 +295,7 @@ function turnBotOn (account, bool) {
 
 function resetListenersAndCandles (account) {
   listeners[account].candles.forEach(list => { list.listener.close(1000) })
-  if (listeners[account].userData) listeners[account].userData.forEach(list => { list.close(1000) })
+  if (listeners[account].userData) listeners[account].userData.close(1000)
   listeners[account].candles = []
   ACCOUNTS[account].allCandles = []
 }
