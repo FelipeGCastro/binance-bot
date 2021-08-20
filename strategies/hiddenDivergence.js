@@ -32,7 +32,7 @@ function validateEntry (candles, symbol) {
   if (crossStoch === trendingEma.position) {
     const divergence = validateDivergence(candles, crossStoch)
     if (divergence) {
-      const stopAndTarget = handleTpslOrder(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)
+      const stopAndTarget = getStopAndTargetPrice(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)
       if (stopAndTarget) {
         return {
           strategy: STRATEGIES.HIDDEN_DIVERGENCE,
@@ -54,12 +54,12 @@ function validateEntry (candles, symbol) {
   }
 }
 
-function handleTpslOrder (stopPrice, closePrice) {
-  let targetPrice = ((closePrice - stopPrice) * 2) + Number(closePrice)
-  const percentage = tools.getPercentage(closePrice, stopPrice)
+function getStopAndTargetPrice (stopPrice, entryPrice) {
+  let targetPrice = ((entryPrice - stopPrice) * 2) + Number(entryPrice)
+  const percentage = tools.getPercentage(entryPrice, stopPrice)
   if (percentage > 1) return false
 
-  targetPrice = tools.ParseFloatByFormat(targetPrice, closePrice)
+  targetPrice = tools.ParseFloatByFormat(targetPrice, entryPrice)
   stopPrice = tools.ParseFloatByFormat(stopPrice, stopPrice)
   if (targetPrice && stopPrice) {
     return { targetPrice, stopPrice }
@@ -238,5 +238,6 @@ function validateDivergence (candles, side) {
 
 module.exports = {
   getInterval,
-  validateEntry
+  validateEntry,
+  getStopAndTargetPrice
 }

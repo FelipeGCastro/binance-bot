@@ -22,6 +22,7 @@ const ACCOUNTS = {
     leverage: 2,
     entryValue: 100,
     validateEntry: SET_STRATEGY[STRATEGIES.SHARK].validateEntry,
+    getStopAndTargetPrice: SET_STRATEGY[STRATEGIES.SHARK].getStopAndTargetPrice,
     maxEntryValue: 100,
     listenKeyIsOn: false,
     interval: '5m',
@@ -38,6 +39,7 @@ const ACCOUNTS = {
     leverage: 2,
     entryValue: 100,
     validateEntry: SET_STRATEGY[STRATEGIES.HIDDEN_DIVERGENCE].validateEntry,
+    getStopAndTargetPrice: SET_STRATEGY[STRATEGIES.HIDDEN_DIVERGENCE].getStopAndTargetPrice,
     maxEntryValue: 100,
     listenKeyIsOn: false,
     interval: '1m',
@@ -48,6 +50,8 @@ const ACCOUNTS = {
     allCandles: []
   }
 }
+
+function setGetStopAndTargetPrice (account, value) { ACCOUNTS[account].getStopAndTargetPrice = value }
 
 function setBotOn (account, bool) { ACCOUNTS[account].botOn = bool }
 function setLeverage (account, value) { ACCOUNTS[account].leverage = value }
@@ -68,11 +72,10 @@ function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrder
 function setTradesOn (account, trade) {
   ACCOUNTS[account].tradesOn.push(trade)
 
-  updateAccountData(account, {
-    ...ACCOUNTS[account],
-    listeners: [],
-    allCandles: []
-  })
+  updateOnlyNecessary(account)
+}
+function updateOnlyNecessary (account) {
+  updateAccountData(account, { ...ACCOUNTS[account], listeners: [], allCandles: [], validateEntry: null, getStopAndTargetPrice: null })
 }
 function updateTradesOn (account, symbol, key, value) {
   const oldObject = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
@@ -84,7 +87,7 @@ function updateTradesOn (account, symbol, key, value) {
 function removeFromTradesOn (account, symb) {
   ACCOUNTS[account].tradesOn = ACCOUNTS[account].tradesOn.filter(trade => trade.symbol !== symb)
   ACCOUNTS[account].limitReached = ACCOUNTS[account].tradesOn.length >= ACCOUNTS[account].limitOrdersSameTime
-  updateAccountData(account, { ...ACCOUNTS[account], listeners: [], allCandles: [] })
+  updateOnlyNecessary(account)
 }
 function setLimitReached (account, value) { ACCOUNTS[account].limitReached = value }
 function setValidate (account, func) { ACCOUNTS[account].validateEntry = func }
@@ -93,7 +96,7 @@ function setStrategy (account, value) { ACCOUNTS[account].strategy = value }
 function updateAllCandles (account, arrayWithValues) { ACCOUNTS[account].allCandles = arrayWithValues }
 function updateListenKeyIsOn (account, value) {
   ACCOUNTS[account].listenKeyIsOn = value
-  updateAccountData(account, { ...ACCOUNTS[account], listenKeyIsOn: value, listeners: [], allCandles: [] })
+  updateOnlyNecessary(account)
 }
 
 const listeners = {
@@ -230,13 +233,28 @@ async function execute (account) {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = { ...data.o, account, updateTradesOn, removeFromTradesOn, getTradesDelayed }
+          const dataOrder = {
+            ...data.o,
+            getStopAndTargetPrice: handleGetStopAndTarget,
+            account,
+            updateTradesOn,
+            removeFromTradesOn,
+            getTradesDelayed
+          }
           newData = { ...data, o: dataOrder }
         } else { newData = { ...data, account, getTradesDelayed } }
         await operations.handleUserDataUpdate(newData)
       }
     })
     listeners[account].userData = wsListenKey
+  }
+
+  function handleGetStopAndTarget (account, entryPrice, stopPrice, side) {
+    if (ACCOUNTS[account].strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
+      return ACCOUNTS[account].getStopAndTargetPrice(stopPrice, entryPrice)
+    } else if (ACCOUNTS[account].strategy === STRATEGIES.SHARK) {
+      return ACCOUNTS[account].getStopAndTargetPrice(entryPrice, side)
+    } else return false
   }
 
   function verifyAfterFewSeconds () {
@@ -278,6 +296,7 @@ function handleChangeStrategy (account, stratName) {
   const strategy = SET_STRATEGY[stratName]
   setPeriodInterval(account, strategy.getInterval())
   setValidate(account, strategy.validateEntry)
+  setGetStopAndTargetPrice(account, strategy.getStopAndTargetPrice)
   setStrategy(account, stratName)
   return true
 }

@@ -22,7 +22,7 @@ function validateEntry (candles, symbol) {
   if (!validatedRsi) return false
   if (crossStoch !== trendingEma.position) return false
   else {
-    const stopAndTarget = handleTpslOrder(lastCandle[CANDLE.CLOSE], crossStoch)
+    const stopAndTarget = getStopAndTargetPrice(lastCandle[CANDLE.CLOSE], crossStoch)
     if (stopAndTarget) {
       return {
         strategy: STRATEGIES.SHARK,
@@ -75,17 +75,17 @@ function getInterval () {
   return periodTime
 }
 
-function handleTpslOrder (closePrice, side) {
+function getStopAndTargetPrice (entryPrice, side) {
   const isSell = side === POSITION.SHORT
   let stopPrice = isSell
-    ? Number(closePrice) + (closePrice * (stopPerc / 100))
-    : Number(closePrice) - (closePrice * (stopPerc / 100))
+    ? Number(entryPrice) + (entryPrice * (stopPerc / 100))
+    : Number(entryPrice) - (entryPrice * (stopPerc / 100))
   let targetPrice = isSell
-    ? Number(closePrice) - (closePrice * (profitPerc / 100))
-    : Number(closePrice) + (closePrice * (profitPerc / 100))
+    ? Number(entryPrice) - (entryPrice * (profitPerc / 100))
+    : Number(entryPrice) + (entryPrice * (profitPerc / 100))
 
-  targetPrice = tools.ParseFloatByFormat(targetPrice, closePrice)
-  stopPrice = tools.ParseFloatByFormat(stopPrice, closePrice)
+  targetPrice = tools.ParseFloatByFormat(targetPrice, entryPrice)
+  stopPrice = tools.ParseFloatByFormat(stopPrice, entryPrice)
   if (targetPrice && stopPrice) {
     return { targetPrice, stopPrice }
   } else {
@@ -106,5 +106,6 @@ function validateRsi (candles) {
 
 module.exports = {
   getInterval,
-  validateEntry
+  validateEntry,
+  getStopAndTargetPrice
 }
