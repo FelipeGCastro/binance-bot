@@ -91,7 +91,16 @@ function updateListenKeyIsOn (account, value) {
   ACCOUNTS[account].listenKeyIsOn = value
 }
 
-// let listeners = []
+const listeners = {
+  [ACCOUNTS_TYPE.PRIMARY]: {
+    candles: [],
+    userData: null
+  },
+  [ACCOUNTS_TYPE.PRIMARY]: {
+    candles: [],
+    userData: null
+  }
+}
 // let allCandles = []
 
 // START MAIN FUNCTION
@@ -122,7 +131,7 @@ async function execute (account) {
         await handleCloseCandle(data, symbol)
       }
     })
-    ACCOUNTS[account].listeners.push({ listener, symbol })
+    listeners[account].candles.push({ listener, symbol })
   }
 
   async function handleCloseCandle (data, symbol) {
@@ -193,14 +202,15 @@ async function execute (account) {
       updateListenKeyIsOn(account, true)
     } else {
       console.log('Error getting listenKey, try again e 10 seconds')
-      setTimeout(async () => {
+      const keyInterval = setInterval(async () => {
         const data = await api.listenKey(account)
         if (data) {
           setWsListen(data.listenKey)
           updateListenKeyIsOn(account, true)
+          clearInterval(keyInterval)
         } else {
-          telegram.sendMessage('Problemas ao buscar uma ListenKey')
-          console.log('Problemas ao buscar uma ListenKey')
+          telegram.sendMessage('Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos')
+          console.log('Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos')
         }
       }, 10000)
     }
@@ -221,6 +231,7 @@ async function execute (account) {
         await operations.handleUserDataUpdate(newData)
       }
     })
+    listeners[account].userData = wsListenKey
   }
 
   function verifyAfterFewSeconds () {
@@ -268,7 +279,7 @@ function handleChangeStrategy (account, stratName) {
 function turnBotOn (account, bool) {
   if (bool) {
     if (!ACCOUNTS[account].botOn) {
-      ACCOUNTS[account].listeners = []
+      listeners[account].candles = []
       ACCOUNTS[account].tradesOn = []
       setBotOn(account, bool)
       const isBotOn = execute(account)
@@ -277,13 +288,15 @@ function turnBotOn (account, bool) {
   } else {
     resetListenersAndCandles(account)
     ACCOUNTS[account].tradesOn = []
+    ACCOUNTS[account].listenKeyIsOn = false
     setBotOn(account, bool)
   }
 }
 
 function resetListenersAndCandles (account) {
-  ACCOUNTS[account].listeners.forEach(list => { list.listener.close(1000) })
-  ACCOUNTS[account].listeners = []
+  listeners[account].candles.forEach(list => { list.listener.close(1000) })
+  if (listeners[account].userData) listeners[account].userData.forEach(list => { list.close(1000) })
+  listeners[account].candles = []
   ACCOUNTS[account].allCandles = []
 }
 
