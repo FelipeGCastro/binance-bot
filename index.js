@@ -66,7 +66,14 @@ function getTradesDelayed (account) {
 }
 function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrdersSameTime = limite }
 function setTradesOn (account, trade) {
-  updateAccountData(account, { ...ACCOUNTS[account], listeners: [], allCandles: [] })
+  const arrayCopy = ACCOUNTS[account].tradesOn
+  arrayCopy.push(trade)
+  updateAccountData(account, {
+    ...ACCOUNTS[account],
+    tradesOn: arrayCopy,
+    listeners: [],
+    allCandles: []
+  })
   return ACCOUNTS[account].tradesOn.push(trade)
 }
 function updateTradesOn (account, symbol, key, value) {
@@ -75,7 +82,6 @@ function updateTradesOn (account, symbol, key, value) {
   const newObject = { ...oldObject, [key]: value }
   removeFromTradesOn(account, newObject.symbol)
   setTradesOn(account, newObject)
-  updateAccountData(account, { ...ACCOUNTS[account], listeners: [], allCandles: [] })
 }
 function removeFromTradesOn (account, symb) {
   ACCOUNTS[account].tradesOn = ACCOUNTS[account].tradesOn.filter(trade => trade.symbol !== symb)
@@ -87,8 +93,8 @@ function setPeriodInterval (account, int) { ACCOUNTS[account].interval = int }
 function setStrategy (account, value) { ACCOUNTS[account].strategy = value }
 function updateAllCandles (account, arrayWithValues) { ACCOUNTS[account].allCandles = arrayWithValues }
 function updateListenKeyIsOn (account, value) {
-  updateAccountData(account, { ...ACCOUNTS[account], listeners: [], allCandles: [] })
   ACCOUNTS[account].listenKeyIsOn = value
+  updateAccountData(account, { ...ACCOUNTS[account], listenKeyIsOn: value, listeners: [], allCandles: [] })
 }
 
 const listeners = {
