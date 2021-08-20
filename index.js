@@ -34,7 +34,7 @@ const ACCOUNTS = {
   },
   [ACCOUNTS_TYPE.SECONDARY]: {
     strategy: STRATEGIES.HIDDEN_DIVERGENCE,
-    symbols: ['SANDUSDT', 'LUNAUSDT', 'DODOUSDT'],
+    symbols: ['SANDUSDT'],
     botOn: false,
     leverage: 2,
     entryValue: 100,
