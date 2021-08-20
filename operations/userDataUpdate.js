@@ -52,8 +52,18 @@ async function handleFilledOrder (order) {
   if (position && position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
       console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol) // order.i, order.trade.orderId
-      order.updateTradesOn(order.account, order.trade.symbol, 'entryPrice', order.L)
-      if (order.X === 'FILLED') await createTpandSLOrder(order)
+
+      if (order.X === 'FILLED') {
+        // account, entryPrice, stopPrice, side
+        const result = order.getStopAndTargetPrice(order.account, order.L, order.trade.stopMarketPrice, order.trade.side)
+        console.log(result, 'New Stop and Take profit Price')
+        if (result) {
+          order.trade.stopMarketPrice = result.stopPrice
+          order.trade.takeProfitPrice = result.targetPrice
+        }
+        order.updateTradesOn(order.account, order.trade.symbol, 'entryPrice', order.L)
+        await createTpandSLOrder(order)
+      }
     } else {
       return false
     }
