@@ -86,6 +86,7 @@ function updateTradesOn (account, symbol, key, value) {
 function removeFromTradesOn (account, symb) {
   ACCOUNTS[account].tradesOn = ACCOUNTS[account].tradesOn.filter(trade => trade.symbol !== symb)
   ACCOUNTS[account].limitReached = ACCOUNTS[account].tradesOn.length >= ACCOUNTS[account].limitOrdersSameTime
+  updateAccountData(account, { ...ACCOUNTS[account], listeners: [], allCandles: [] })
 }
 function setLimitReached (account, value) { ACCOUNTS[account].limitReached = value }
 function setValidate (account, func) { ACCOUNTS[account].validateEntry = func }
