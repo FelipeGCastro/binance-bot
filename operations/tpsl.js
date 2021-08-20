@@ -37,7 +37,7 @@ async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takePro
   async function createTpOrSlOrder (type, price) {
     const ordered = await api.newOrder(account, symbol, null, side, type, true, price)
     if (!ordered) {
-      updateTradesOn(account, symbol, 'stopOrderCreated', false)
+      updateTradesOn(account, symbol, type === ORDER_TYPE.TAKE_PROFIT_MARKET ? 'profitOrderCreated' : 'stopOrderCreated', false)
       telegram.sendMessage(`Problem ao criar ${type} Order para ${symbol}`)
       console.log(`Error creating ${type} order`)
       return false

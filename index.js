@@ -66,21 +66,19 @@ function getTradesDelayed (account) {
 }
 function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrdersSameTime = limite }
 function setTradesOn (account, trade) {
-  const arrayCopy = ACCOUNTS[account].tradesOn
-  arrayCopy.push(trade)
+  ACCOUNTS[account].tradesOn.push(trade)
+
   updateAccountData(account, {
     ...ACCOUNTS[account],
-    tradesOn: arrayCopy,
     listeners: [],
     allCandles: []
   })
-  return ACCOUNTS[account].tradesOn.push(trade)
 }
 function updateTradesOn (account, symbol, key, value) {
   const oldObject = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
   if (!oldObject) return
+  removeFromTradesOn(account, symbol)
   const newObject = { ...oldObject, [key]: value }
-  removeFromTradesOn(account, newObject.symbol)
   setTradesOn(account, newObject)
 }
 function removeFromTradesOn (account, symb) {
