@@ -102,7 +102,7 @@ const listeners = {
     candles: [],
     userData: null
   },
-  [ACCOUNTS_TYPE.PRIMARY]: {
+  [ACCOUNTS_TYPE.SECONDARY]: {
     candles: [],
     userData: null
   }
