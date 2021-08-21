@@ -76,7 +76,10 @@ async function handleFilledOrder (order) {
         console.log('Saida 18 Order Type TPSL FILLED', order.ot)
         return await tpslOrderFilled(order)
       } else {
-        console.log('Saida 19 -Order MARKET Filled with NO position open NO TPSL')
+        if (order.X === 'FILLED') {
+          console.log('Saida 19 -Order MARKET Filled with NO position open NO TPSL')
+          tpslOrderFilled(order)
+        }
       }
       order.removeFromTradesOn(order.account, order.symbol)
     } else {
