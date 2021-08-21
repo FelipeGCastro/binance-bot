@@ -8,6 +8,34 @@ const STRATEGIES = {
   HIDDEN_DIVERGENCE: 'hiddenDivergence'
 }
 
+// tradesOn = {
+// stopMarketPrice,
+// takeProfitPrice,
+// entryPrice,
+// symbol,
+// breakevenTriggerPrice,
+// riseStopTriggerPrice
+// breakevenCreated
+// riseStopCreated
+// stopOrderCreated,
+// profitOrderCreated
+// }
+
+const TRADES_ON = {
+  STOP_PRICE: 'stopMarketPrice',
+  PROFIT_PRICE: 'takeProfitPrice',
+  ENTRY_PRICE: 'entryPrice',
+  SYMBOL: 'symbol',
+  BREAKEVEN_PRICE: 'breakevenTriggerPrice',
+  RISE_STOP_PRICE: 'riseStopTriggerPrice',
+  BREAKEVEN_CREATED: 'breakevenCreated',
+  RISE_STOP_CREATED: 'riseStopCreated',
+  STOP_CREATED: 'stopOrderCreated',
+  PROFIT_CREATED: 'profitOrderCreated',
+  SIDE: 'side',
+  STRATEGY: 'strategy'
+}
+
 const ORDER_TYPE = {
   LIMIT: 'LIMIT',
   MARKET: 'MARKET',
@@ -52,5 +80,6 @@ module.exports = {
   SIDE,
   POSITION_SIDE,
   INDICATORS_OBJ,
-  ACCOUNTS_TYPE
+  ACCOUNTS_TYPE,
+  TRADES_ON
 }
