@@ -45,11 +45,20 @@ const ACCOUNTS = {
     interval: '1m',
     limitOrdersSameTime: 2,
     limitReached: false,
-    tradesOn: [], // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
+    tradesOn: [],
     listeners: [],
     allCandles: []
   }
 }
+// tradesOn = { stopMarketPrice,
+// takeProfitPrice,
+// entryPrice,
+// symbol,
+// breakevenTriggerPrice,
+// riseStopTriggerPrice
+// stopOrderCreated,
+// profitOrderCreated
+// }
 
 function setGetStopAndTargetPrice (account, value) { ACCOUNTS[account].getStopAndTargetPrice = value }
 
@@ -176,7 +185,9 @@ async function execute (account) {
             profitOrderCreated: false,
             side: ordered.side,
             orderId: ordered.orderId,
-            strategy: valid.strategy
+            strategy: valid.strategy,
+            breakevenTriggerPrice: null,
+            riseStopTriggerPrice: null
           })
           telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${ACCOUNTS[account].strategy}, account: ${account}`)
           verifyAfterFewSeconds()

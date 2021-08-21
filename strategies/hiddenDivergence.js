@@ -53,16 +53,21 @@ function validateEntry (candles, symbol) {
     return false
   }
 }
-
+// breakevenTriggerPrice
+// riseStopTriggerPrice
 function getStopAndTargetPrice (stopPrice, entryPrice) {
   let targetPrice = ((entryPrice - stopPrice) * 2) + Number(entryPrice)
+  let breakevenTriggerPrice = ((entryPrice - stopPrice) * 1.5) + Number(entryPrice)
+  let riseStopTriggerPrice = ((entryPrice - stopPrice) * 1.8) + Number(entryPrice)
   const percentage = tools.getPercentage(entryPrice, stopPrice)
   if (percentage > 1) return false
 
   targetPrice = tools.ParseFloatByFormat(targetPrice, entryPrice)
   stopPrice = tools.ParseFloatByFormat(stopPrice, stopPrice)
+  breakevenTriggerPrice = tools.ParseFloatByFormat(breakevenTriggerPrice, stopPrice)
+  riseStopTriggerPrice = tools.ParseFloatByFormat(riseStopTriggerPrice, stopPrice)
   if (targetPrice && stopPrice) {
-    return { targetPrice, stopPrice }
+    return { targetPrice, stopPrice, breakevenTriggerPrice, riseStopTriggerPrice }
   } else {
     return false
   }
