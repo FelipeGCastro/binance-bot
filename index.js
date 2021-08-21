@@ -24,7 +24,7 @@ const ACCOUNTS = {
     entryValue: 100,
     validateEntry: SET_STRATEGY[STRATEGIES.SHARK].validateEntry,
     getStopAndTargetPrice: SET_STRATEGY[STRATEGIES.SHARK].getStopAndTargetPrice,
-    maxEntryValue: 100,
+    maxEntryValue: 110,
     listenKeyIsOn: false,
     interval: '5m',
     limitOrdersSameTime: 2,
@@ -41,7 +41,7 @@ const ACCOUNTS = {
     entryValue: 100,
     validateEntry: SET_STRATEGY[STRATEGIES.HIDDEN_DIVERGENCE].validateEntry,
     getStopAndTargetPrice: SET_STRATEGY[STRATEGIES.HIDDEN_DIVERGENCE].getStopAndTargetPrice,
-    maxEntryValue: 100,
+    maxEntryValue: 110,
     listenKeyIsOn: false,
     interval: '1m',
     limitOrdersSameTime: 2,
@@ -139,8 +139,16 @@ async function execute (account) {
         lastEventAt = data.E
         await handleCloseCandle(data, symbol)
       }
+      analysingCandle(data, symbol)
     })
     listeners[account].candles.push({ listener, symbol })
+  }
+
+  async function analysingCandle (data, symbol) {
+    const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
+    if (hasTradeOn && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
+      await verifyRiseStop(account, data, hasTradeOn, updateTradesOn)
+    }
   }
 
   async function handleCloseCandle (data, symbol) {
@@ -148,7 +156,6 @@ async function execute (account) {
 
     if (!candlesObj) return
     const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
-    if (hasTradeOn && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) verifyRiseStop(account, data, hasTradeOn, updateTradesOn)
     const newCandles = await handleAddCandle(data, candlesObj)
 
     if (!hasTradeOn &&
