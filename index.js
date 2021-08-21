@@ -51,14 +51,6 @@ const ACCOUNTS = {
   }
 }
 
-function setGetStopAndTargetPrice (account, value) { ACCOUNTS[account].getStopAndTargetPrice = value }
-
-function setBotOn (account, bool) { ACCOUNTS[account].botOn = bool }
-function setLeverage (account, value) { ACCOUNTS[account].leverage = value }
-function setEntryValue (account, value) {
-  ACCOUNTS[account].entryValue = value
-  ACCOUNTS[account].maxEntryValue = ACCOUNTS[account].entryValue + (0.2 * ACCOUNTS[account].entryValue)
-}
 function getAccountData (account) {
   return { ...ACCOUNTS[account], listeners: [], allCandles: [] }
 }
@@ -68,7 +60,7 @@ function getTradesDelayed (account) {
     setTimeout(() => resolve(ACCOUNTS[account].tradesOn), 2000)
   })
 }
-function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrdersSameTime = limite }
+
 function setTradesOn (account, trade) {
   ACCOUNTS[account].tradesOn.push(trade)
 
@@ -89,11 +81,23 @@ function removeFromTradesOn (account, symb) {
   ACCOUNTS[account].limitReached = ACCOUNTS[account].tradesOn.length >= ACCOUNTS[account].limitOrdersSameTime
   updateOnlyNecessary(account)
 }
+// SETTTERS
+
+function setGetStopAndTargetPrice (account, value) { ACCOUNTS[account].getStopAndTargetPrice = value }
+function setBotOn (account, bool) { ACCOUNTS[account].botOn = bool }
+function setLeverage (account, value) { ACCOUNTS[account].leverage = value }
+function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrdersSameTime = limite }
 function setLimitReached (account, value) { ACCOUNTS[account].limitReached = value }
 function setValidate (account, func) { ACCOUNTS[account].validateEntry = func }
 function setPeriodInterval (account, int) { ACCOUNTS[account].interval = int }
 function setStrategy (account, value) { ACCOUNTS[account].strategy = value }
 function updateAllCandles (account, arrayWithValues) { ACCOUNTS[account].allCandles = arrayWithValues }
+
+function setEntryValue (account, value) {
+  ACCOUNTS[account].entryValue = value
+  ACCOUNTS[account].maxEntryValue = ACCOUNTS[account].entryValue + (0.2 * ACCOUNTS[account].entryValue)
+}
+
 function updateListenKeyIsOn (account, value) {
   ACCOUNTS[account].listenKeyIsOn = value
   updateOnlyNecessary(account)
@@ -129,7 +133,7 @@ async function execute (account) {
     const candles = await api.candles(symbol, ACCOUNTS[account].interval)
     if (candles) ACCOUNTS[account].allCandles.push({ candles, symbol })
   }
-  console.log(ACCOUNTS[account].allCandles, 'allCandles')
+
   async function setWsListeners (symbol) {
     let lastEventAt = 0
     // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
