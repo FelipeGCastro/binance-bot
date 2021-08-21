@@ -5,6 +5,7 @@ const { validateEma200And50 } = require('../indicators/ema.js')
 const CANDLE = require('../tools/constants').CANDLE
 const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
+const { SIDE } = require('../tools/constants')
 
 const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
@@ -78,7 +79,7 @@ function getInterval () {
 }
 
 function getStopAndTargetPrice (entryPrice, side) {
-  const isSell = side === POSITION.SHORT
+  const isSell = side === POSITION.SHORT || side === SIDE.SELL
   let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice
   if (isSell) {
     stopPrice = Number(entryPrice) + (entryPrice * (stopPerc / 100))
