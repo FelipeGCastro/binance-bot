@@ -3,7 +3,7 @@ const Trade = require('../src/models/trade')
 const telegram = require('../services/telegram')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 const SIDE = require('../tools/constants').SIDE
-const { POSITION_SIDE } = require('../tools/constants')
+const { POSITION_SIDE, TRADES_ON } = require('../tools/constants')
 const { createTpandSLOrder } = require('./tpsl')
 
 let positions = []
@@ -51,7 +51,7 @@ async function handleFilledOrder (order) {
   const position = getPosition(order.symbol)
   if (position && position.pa !== '0') {
     if (order.o === ORDER_TYPE.MARKET) {
-      console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol) // order.i, order.trade.orderId
+      console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol)
 
       if (order.X === 'FILLED') {
         // account, entryPrice, stopPrice, side
@@ -60,8 +60,10 @@ async function handleFilledOrder (order) {
         if (result) {
           order.trade.stopMarketPrice = result.stopPrice
           order.trade.takeProfitPrice = result.targetPrice
+          order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.BREAKEVEN_PRICE, result.breakevenTriggerPrice)
+          order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.RISE_STOP_PRICE, result.riseStopTriggerPrice)
         }
-        order.updateTradesOn(order.account, order.trade.symbol, 'entryPrice', order.L)
+        order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.ENTRY_PRICE, order.L)
         await createTpandSLOrder(order)
       }
     } else {

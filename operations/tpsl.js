@@ -1,7 +1,7 @@
 const api = require('../services/api')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 const telegram = require('../services/telegram')
-const SIDE = require('../tools/constants').SIDE
+const { SIDE, TRADES_ON } = require('../tools/constants')
 
 async function createTpandSLOrder (order) {
   const { stopMarketPrice, takeProfitPrice, symbol } = order.trade
@@ -36,13 +36,14 @@ async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takePro
 
   async function createTpOrSlOrder (type, price) {
     const ordered = await api.newOrder(account, symbol, null, side, type, true, price)
+    const tradesOnKey = type === ORDER_TYPE.TAKE_PROFIT_MARKET ? TRADES_ON.PROFIT_CREATED : TRADES_ON.STOP_CREATED
     if (!ordered) {
-      updateTradesOn(account, symbol, type === ORDER_TYPE.TAKE_PROFIT_MARKET ? 'profitOrderCreated' : 'stopOrderCreated', false)
+      updateTradesOn(account, symbol, tradesOnKey, false)
       telegram.sendMessage(`Problem ao criar ${type} Order para ${symbol}`)
       console.log(`Error creating ${type} order`)
       return false
     } else {
-      updateTradesOn(account, symbol, type === ORDER_TYPE.TAKE_PROFIT_MARKET ? 'profitOrderCreated' : 'stopOrderCreated', true)
+      updateTradesOn(account, symbol, tradesOnKey, true)
       return true
     }
   }
