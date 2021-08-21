@@ -8,6 +8,7 @@ const newOrder = require('./operations/newOrder')
 const { STRATEGIES, SIDE, ACCOUNTS_TYPE } = require('./tools/constants')
 const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
 const { updateAccountData } = require('./services/socket.js')
+const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
@@ -155,10 +156,10 @@ async function execute (account) {
     const candlesObj = ACCOUNTS[account].allCandles.find(cand => cand.symbol === symbol)
 
     if (!candlesObj) return
-
+    const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
+    if (hasTradeOn && hasTradeOn.breakevenTriggerPrice) verifyRiseStop(account, data, hasTradeOn, updateTradesOn)
     const newCandles = await handleAddCandle(data, candlesObj)
 
-    const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
     if (!hasTradeOn &&
       !ACCOUNTS[account].limitReached &&
       ACCOUNTS[account].listenKeyIsOn &&

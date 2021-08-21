@@ -38,7 +38,7 @@ async function privateCall (account, path, data = {}, method = 'GET') {
   }
 }
 
-async function newOrder (account, symbol, quantity, side = 'BUY', type = 'MARKET', closePosition = false, stopPrice = false) {
+async function newOrder (account, symbol, quantity, side = 'BUY', type = 'MARKET', closePosition = false, stopPrice = null) {
   const data = {
     symbol,
     side,
@@ -60,7 +60,7 @@ async function cancelOrder (account, symbol, orderId, origClientOrderId) {
   if (orderId) data.orderId = orderId
   if (origClientOrderId) data.origClientOrderId = origClientOrderId
   if (data.orderId || data.origClientOrderId) {
-    return privateCall(account, '/fapi/v1/order', { symbol }, 'DELETE')
+    return privateCall(account, '/fapi/v1/order', data, 'DELETE')
   } else {
     console.error('orderId or origClientOrderId is Require!')
     return false
