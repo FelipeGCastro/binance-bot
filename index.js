@@ -5,9 +5,10 @@ const telegram = require('./services/telegram')
 const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
-const { STRATEGIES, SIDE, ACCOUNTS_TYPE } = require('./tools/constants')
+const { STRATEGIES, SIDE, ACCOUNTS_TYPE, TRADES_ON } = require('./tools/constants')
 const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
 const { updateAccountData } = require('./services/socket.js')
+const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
@@ -45,7 +46,7 @@ const ACCOUNTS = {
     interval: '1m',
     limitOrdersSameTime: 2,
     limitReached: false,
-    tradesOn: [], // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
+    tradesOn: [],
     listeners: [],
     allCandles: []
   }
@@ -146,10 +147,10 @@ async function execute (account) {
     const candlesObj = ACCOUNTS[account].allCandles.find(cand => cand.symbol === symbol)
 
     if (!candlesObj) return
-
+    const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
+    if (hasTradeOn && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) verifyRiseStop(account, data, hasTradeOn, updateTradesOn)
     const newCandles = await handleAddCandle(data, candlesObj)
 
-    const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
     if (!hasTradeOn &&
       !ACCOUNTS[account].limitReached &&
       ACCOUNTS[account].listenKeyIsOn &&
@@ -168,15 +169,12 @@ async function execute (account) {
         if (ordered) {
           setLimitReached(account, (ACCOUNTS[account].tradesOn.length + 1) >= ACCOUNTS[account].limitOrdersSameTime)
           setTradesOn(account, {
-            symbol,
-            stopMarketPrice: valid.stopPrice,
-            takeProfitPrice: valid.targetPrice,
-            entryPrice: ordered.avgPrice,
-            stopOrderCreated: false,
-            profitOrderCreated: false,
-            side: ordered.side,
-            orderId: ordered.orderId,
-            strategy: valid.strategy
+            [TRADES_ON.SYMBOL]: symbol,
+            [TRADES_ON.STOP_PRICE]: valid.stopPrice,
+            [TRADES_ON.PROFIT_PRICE]: valid.targetPrice,
+            [TRADES_ON.ENTRY_PRICE]: ordered.avgPrice,
+            [TRADES_ON.SIDE]: ordered.side,
+            [TRADES_ON.STRATEGY]: valid.strategy
           })
           telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${ACCOUNTS[account].strategy}, account: ${account}`)
           verifyAfterFewSeconds()

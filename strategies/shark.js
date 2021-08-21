@@ -10,7 +10,9 @@ const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
-const profitPerc = 0.5
+const profitPerc = 1
+const breakEvenPerc = 0.5
+const riseStopPerc = 0.8
 
 function validateEntry (candles, symbol) {
   const trendingEma = validateEma200And50(candles)
@@ -77,17 +79,25 @@ function getInterval () {
 
 function getStopAndTargetPrice (entryPrice, side) {
   const isSell = side === POSITION.SHORT
-  let stopPrice = isSell
-    ? Number(entryPrice) + (entryPrice * (stopPerc / 100))
-    : Number(entryPrice) - (entryPrice * (stopPerc / 100))
-  let targetPrice = isSell
-    ? Number(entryPrice) - (entryPrice * (profitPerc / 100))
-    : Number(entryPrice) + (entryPrice * (profitPerc / 100))
+  let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice
+  if (isSell) {
+    stopPrice = Number(entryPrice) + (entryPrice * (stopPerc / 100))
+    targetPrice = Number(entryPrice) - (entryPrice * (profitPerc / 100))
+    breakevenTriggerPrice = Number(entryPrice) - (entryPrice * (breakEvenPerc / 100))
+    riseStopTriggerPrice = Number(entryPrice) - (entryPrice * (riseStopPerc / 100))
+  } else {
+    stopPrice = Number(entryPrice) - (entryPrice * (stopPerc / 100))
+    targetPrice = Number(entryPrice) + (entryPrice * (profitPerc / 100))
+    breakevenTriggerPrice = Number(entryPrice) + (entryPrice * (breakEvenPerc / 100))
+    riseStopTriggerPrice = Number(entryPrice) + (entryPrice * (riseStopPerc / 100))
+  }
 
   targetPrice = tools.ParseFloatByFormat(targetPrice, entryPrice)
   stopPrice = tools.ParseFloatByFormat(stopPrice, entryPrice)
+  breakevenTriggerPrice = tools.ParseFloatByFormat(breakevenTriggerPrice, entryPrice)
+  riseStopTriggerPrice = tools.ParseFloatByFormat(riseStopTriggerPrice, entryPrice)
   if (targetPrice && stopPrice) {
-    return { targetPrice, stopPrice }
+    return { targetPrice, stopPrice, breakevenTriggerPrice, riseStopTriggerPrice }
   } else {
     return false
   }
