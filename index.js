@@ -131,7 +131,7 @@ async function execute (account) {
   }
   console.log(ACCOUNTS[account].allCandles, 'allCandles')
 
-  ACCOUNTS[account].allCandles[0].forEach(async (data) => {
+  ACCOUNTS[account].allCandles[0].forEach(async (data) => { // corrigir os candles novos que precisam ser testados
     await handleCloseCandle(data)
     // analysingCandle(data, symbol)
   })
@@ -144,35 +144,23 @@ async function execute (account) {
   // }
 
   async function handleCloseCandle (data, symbol) {
-    const valid = await ACCOUNTS[account].validateEntry(newCandles, symbol)
-    if (valid && valid.symbol === candlesObj.symbol) {
-      const ordered = await newOrder.handleNewOrder({
-        ...valid,
-        entryValue: ACCOUNTS[account].entryValue,
-        maxEntryValue: ACCOUNTS[account].maxEntryValue,
-        symbol,
-        account
+    const newCandles = handleAddCandle(data)
+    const valid = await ACCOUNTS[account].validateEntry(ACCOUNTS[account].allCandles[0]) // corrigir os candles que virão
+    if (valid) {
+      setLimitReached(account, (ACCOUNTS[account].tradesOn.length + 1) >= ACCOUNTS[account].limitOrdersSameTime)
+      setTradesOn(account, {
+        [TRADES_ON.SYMBOL]: symbol,
+        [TRADES_ON.STOP_PRICE]: valid.stopPrice,
+        [TRADES_ON.PROFIT_PRICE]: valid.targetPrice,
+        [TRADES_ON.ENTRY_PRICE]: valid.closePrice,
+        [TRADES_ON.SIDE]: valid.side === 'SHORT' ? 'SELL' : 'BUY',
+        [TRADES_ON.STRATEGY]: valid.strategy
       })
-      if (ordered) {
-        setLimitReached(account, (ACCOUNTS[account].tradesOn.length + 1) >= ACCOUNTS[account].limitOrdersSameTime)
-        setTradesOn(account, {
-          [TRADES_ON.SYMBOL]: symbol,
-          [TRADES_ON.STOP_PRICE]: valid.stopPrice,
-          [TRADES_ON.PROFIT_PRICE]: valid.targetPrice,
-          [TRADES_ON.ENTRY_PRICE]: ordered.avgPrice,
-          [TRADES_ON.SIDE]: ordered.side,
-          [TRADES_ON.STRATEGY]: valid.strategy
-        })
-        telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${ACCOUNTS[account].strategy}, account: ${account}`)
-        verifyAfterFewSeconds()
-      }
-      console.log('Entry is Valid')
     }
+    console.log('Entry is Valid')
   }
 
-  function handleAddCandle (data, candlesObj) {
-    const candles = candlesObj.candles
-    const newCandle = [data.k.t, data.k.o, data.k.h, data.k.l, data.k.c, data.k.v, data.k.T, data.k.q, data.k.n, data.k.V, data.k.Q]
+  function handleAddCandle (data) {
     if (newCandle[0] === candles[candles.length - 1][0]) {
       candles.pop()
     } else {

@@ -15,10 +15,10 @@ const profitPerc = 1
 const breakEvenPerc = 0.5
 const riseStopPerc = 0.8
 
-function validateEntry (candles, symbol) {
+function validateEntry (candles) {
   const trendingEma = validateEma200And50(candles)
   const lastCandle = candles[candles.length - 1]
-  const crossStoch = hasCrossStoch(candles, symbol)
+  const crossStoch = hasCrossStoch(candles)
   const validatedRsi = validateRsi(candles)
   if (!crossStoch) return false
   if (!checkLastCandle(candles, crossStoch)) return false
@@ -33,8 +33,7 @@ function validateEntry (candles, symbol) {
         side: crossStoch,
         stopPrice: stopAndTarget.stopPrice,
         targetPrice: stopAndTarget.targetPrice,
-        closePrice: lastCandle[CANDLE.CLOSE],
-        symbol
+        closePrice: lastCandle[CANDLE.CLOSE]
       }
     } else {
       return false
@@ -49,7 +48,7 @@ function checkLastCandle (candles, position) {
   if (position === POSITION.LONG && !isBlueCandle) return false
   return true
 }
-function hasCrossStoch (candles, symbol) {
+function hasCrossStoch (candles) {
   const stochArray = stoch.checkingStoch(candles, stochPeriod)
   const lastTwoStoch = tools.getLasts(stochArray, 2)
   const lastK = lastTwoStoch[1].k
