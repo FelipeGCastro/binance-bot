@@ -122,7 +122,6 @@ async function execute (account) {
     if (!symbol) return
 
     addAllCandles(symbol)
-    setWsListeners(symbol)
   })
 
   async function addAllCandles (symbol) {
@@ -131,63 +130,43 @@ async function execute (account) {
     if (candles) ACCOUNTS[account].allCandles.push({ candles, symbol })
   }
   console.log(ACCOUNTS[account].allCandles, 'allCandles')
-  async function setWsListeners (symbol) {
-    let lastEventAt = 0
-    // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
-    const listener = await ws.onKlineContinuos(symbol, ACCOUNTS[account].interval, async (data) => {
-      if (data.k.x && data.E > lastEventAt) {
-        lastEventAt = data.E
-        await handleCloseCandle(data, symbol)
-      }
-      analysingCandle(data, symbol)
-    })
-    listeners[account].candles.push({ listener, symbol })
-  }
 
-  async function analysingCandle (data, symbol) {
-    const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
-    if (hasTradeOn && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
-      await verifyRiseStop(account, data, hasTradeOn, updateTradesOn)
-    }
-  }
+  ACCOUNTS[account].allCandles[0].forEach(async (data) => {
+    await handleCloseCandle(data)
+    // analysingCandle(data, symbol)
+  })
+
+  // async function analysingCandle (data, symbol) {
+  //   const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
+  //   if (hasTradeOn && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
+  //     await verifyRiseStop(account, data, hasTradeOn, updateTradesOn)
+  //   }
+  // }
 
   async function handleCloseCandle (data, symbol) {
-    const candlesObj = ACCOUNTS[account].allCandles.find(cand => cand.symbol === symbol)
-
-    if (!candlesObj) return
-    const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
-    const newCandles = await handleAddCandle(data, candlesObj)
-
-    if (!hasTradeOn &&
-      !ACCOUNTS[account].limitReached &&
-      ACCOUNTS[account].listenKeyIsOn &&
-      ACCOUNTS[account].botOn) {
-      const valid = await ACCOUNTS[account].validateEntry(newCandles, symbol)
-      console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
-
-      if (valid && valid.symbol === candlesObj.symbol) {
-        const ordered = await newOrder.handleNewOrder({
-          ...valid,
-          entryValue: ACCOUNTS[account].entryValue,
-          maxEntryValue: ACCOUNTS[account].maxEntryValue,
-          symbol,
-          account
+    const valid = await ACCOUNTS[account].validateEntry(newCandles, symbol)
+    if (valid && valid.symbol === candlesObj.symbol) {
+      const ordered = await newOrder.handleNewOrder({
+        ...valid,
+        entryValue: ACCOUNTS[account].entryValue,
+        maxEntryValue: ACCOUNTS[account].maxEntryValue,
+        symbol,
+        account
+      })
+      if (ordered) {
+        setLimitReached(account, (ACCOUNTS[account].tradesOn.length + 1) >= ACCOUNTS[account].limitOrdersSameTime)
+        setTradesOn(account, {
+          [TRADES_ON.SYMBOL]: symbol,
+          [TRADES_ON.STOP_PRICE]: valid.stopPrice,
+          [TRADES_ON.PROFIT_PRICE]: valid.targetPrice,
+          [TRADES_ON.ENTRY_PRICE]: ordered.avgPrice,
+          [TRADES_ON.SIDE]: ordered.side,
+          [TRADES_ON.STRATEGY]: valid.strategy
         })
-        if (ordered) {
-          setLimitReached(account, (ACCOUNTS[account].tradesOn.length + 1) >= ACCOUNTS[account].limitOrdersSameTime)
-          setTradesOn(account, {
-            [TRADES_ON.SYMBOL]: symbol,
-            [TRADES_ON.STOP_PRICE]: valid.stopPrice,
-            [TRADES_ON.PROFIT_PRICE]: valid.targetPrice,
-            [TRADES_ON.ENTRY_PRICE]: ordered.avgPrice,
-            [TRADES_ON.SIDE]: ordered.side,
-            [TRADES_ON.STRATEGY]: valid.strategy
-          })
-          telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${ACCOUNTS[account].strategy}, account: ${account}`)
-          verifyAfterFewSeconds()
-        }
-        console.log('Entry is Valid')
+        telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${ACCOUNTS[account].strategy}, account: ${account}`)
+        verifyAfterFewSeconds()
       }
+      console.log('Entry is Valid')
     }
   }
 
