@@ -11,7 +11,7 @@ const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
-const profitPerc = 1
+const profitPerc = 0.1
 const breakEvenPerc = 0.5
 const riseStopPerc = 0.8
 
@@ -33,7 +33,9 @@ function validateEntry (candles) {
         side: crossStoch,
         stopPrice: stopAndTarget.stopPrice,
         targetPrice: stopAndTarget.targetPrice,
-        closePrice: lastCandle[CANDLE.CLOSE]
+        closePrice: lastCandle[CANDLE.CLOSE],
+        breakevenTriggerPrice: stopAndTarget.breakevenTriggerPrice,
+        riseStopTriggerPrice: stopAndTarget.riseStopTriggerPrice
       }
     } else {
       return false
