@@ -11,7 +11,7 @@ const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
-const profitPerc = 1
+const profitPerc = 0.5
 const breakEvenPerc = 0.5
 const riseStopPerc = 0.8
 
