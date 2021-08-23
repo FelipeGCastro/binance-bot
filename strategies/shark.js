@@ -11,9 +11,10 @@ const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
-const profitPerc = 1
+const profitPerc = 0.5
 const breakEvenPerc = 0.5
 const riseStopPerc = 0.8
+const breakevenIsOn = false
 
 function validateEntry (candles, symbol) {
   const trendingEma = validateEma200And50(candles)
@@ -98,7 +99,12 @@ function getStopAndTargetPrice (entryPrice, side) {
   breakevenTriggerPrice = tools.ParseFloatByFormat(breakevenTriggerPrice, entryPrice)
   riseStopTriggerPrice = tools.ParseFloatByFormat(riseStopTriggerPrice, entryPrice)
   if (targetPrice && stopPrice) {
-    return { targetPrice, stopPrice, breakevenTriggerPrice, riseStopTriggerPrice }
+    const data = { targetPrice, stopPrice }
+    if (breakevenIsOn) {
+      data.breakevenTriggerPrice = breakevenTriggerPrice
+      data.riseStopTriggerPrice = riseStopTriggerPrice
+    }
+    return data
   } else {
     return false
   }
