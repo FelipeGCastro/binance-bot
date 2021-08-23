@@ -11,7 +11,7 @@ const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
-const profitPerc = 0.1
+const profitPerc = 1
 const breakEvenPerc = 0.5
 const riseStopPerc = 0.8
 
@@ -63,7 +63,7 @@ function hasCrossStoch (candles) {
   const dOver80 = lastD > 80 || beforeD > 80
   const kUnder20 = lastK < 20 || beforeK < 20
   const dUnder20 = lastD < 20 || beforeD < 20
-  console.log('k:', lastK, 'd:', lastD)
+  // console.log('k:', lastK, 'd:', lastD)
   if (crossDown) {
     if (!kOver80 && !dOver80) return false
     return crossDown

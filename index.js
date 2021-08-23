@@ -2,10 +2,14 @@ const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
 const { STRATEGIES, TRADES_ON, CANDLE } = require('./tools/constants')
 // const { verifyRiseStop } = require('./operations/changeStopLoss.js')
-const MATIC = require('./temp/MATIC.js')
-const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
-// const SAND1M = require('./temp/SAND1M')
 const { sendMessage } = require('./services/telegram')
+const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
+const ETH5M = require('./temp/ETH5M')
+// const ADA5M = require('./temp/ADA5M')
+// const BTC5M = require('./temp/BTC5M')
+// const SAND1M = require('./temp/SAND1M')
+// const MATIC5M = require('./temp/MATIC5M.js')
+// const DOGE5M = require('./temp/DOGE5M')
 // const MATIC1M = require('./temp/MATIC1M.js')
 // const ADA1M = require('./temp/ADA1M.js')
 
@@ -24,8 +28,8 @@ const winTrades = []
 const losesTrades = []
 const breakevenTrades = []
 
-const allCandles = getFirsts(MATIC, 300)
-const lastsCandles = getLasts(MATIC, 1200)
+const allCandles = getFirsts(ETH5M, 300)
+const lastsCandles = getLasts(ETH5M, 1200)
 
 function sumPercentage (data, typePercentage) {
   let finalPercentage = 0
