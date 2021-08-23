@@ -147,7 +147,7 @@ async function execute (account) {
 
   async function analysingCandle (data, symbol) {
     const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
-    if (hasTradeOn && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
+    if (hasTradeOn && hasTradeOn[TRADES_ON.BREAKEVEN_PRICE] && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
       await verifyRiseStop(account, data, hasTradeOn, updateTradesOn)
     }
   }

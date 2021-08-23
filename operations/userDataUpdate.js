@@ -60,8 +60,10 @@ async function handleFilledOrder (order) {
         if (result) {
           order.trade.stopMarketPrice = result.stopPrice
           order.trade.takeProfitPrice = result.targetPrice
-          order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.BREAKEVEN_PRICE, result.breakevenTriggerPrice)
-          order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.RISE_STOP_PRICE, result.riseStopTriggerPrice)
+          if (result.breakevenTriggerPrice) {
+            order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.BREAKEVEN_PRICE, result.breakevenTriggerPrice)
+            order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.RISE_STOP_PRICE, result.riseStopTriggerPrice)
+          }
         }
         order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.ENTRY_PRICE, order.L)
         await createTpandSLOrder(order)
