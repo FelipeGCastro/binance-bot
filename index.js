@@ -19,7 +19,7 @@ const ACCOUNTS = {
   [ACCOUNTS_TYPE.PRIMARY]: {
     strategy: STRATEGIES.SHARK,
     symbols: ['ADAUSDT', 'MATICUSDT', 'XRPUSDT'],
-    botOn: false,
+    botOn: true,
     leverage: 2,
     entryValue: 100,
     validateEntry: SET_STRATEGY[STRATEGIES.SHARK].validateEntry,
@@ -36,7 +36,7 @@ const ACCOUNTS = {
   [ACCOUNTS_TYPE.SECONDARY]: {
     strategy: STRATEGIES.HIDDEN_DIVERGENCE,
     symbols: ['SANDUSDT'],
-    botOn: false,
+    botOn: true,
     leverage: 2,
     entryValue: 100,
     validateEntry: SET_STRATEGY[STRATEGIES.HIDDEN_DIVERGENCE].validateEntry,
@@ -115,6 +115,7 @@ const listeners = {
 // START MAIN FUNCTION
 async function execute (account) {
   console.log('init')
+  telegram.sendMessage('Bot Foi Iniciado ou Reiniciado')
   const isLeverageChanged = await changeLeverage(account, ACCOUNTS[account].leverage)
   if (!isLeverageChanged) return false
 
@@ -328,6 +329,8 @@ function resetListenersAndCandles (account) {
   listeners[account].candles = []
   ACCOUNTS[account].allCandles = []
 }
+
+execute()
 
 module.exports = {
   changeLeverage,
