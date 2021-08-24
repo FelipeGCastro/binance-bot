@@ -5,7 +5,8 @@ const ACCOUNTS_TYPE = {
 }
 const STRATEGIES = {
   SHARK: 'sharkStrategy',
-  HIDDEN_DIVERGENCE: 'hiddenDivergence'
+  HIDDEN_DIVERGENCE: 'hiddenDivergence',
+  SHARK_DIVERGENCE: 'sharkWithDivergence'
 }
 
 // tradesOn = {
