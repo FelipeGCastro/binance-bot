@@ -15,10 +15,8 @@ function hasCrossStoch (candles, stochPeriod, setLastIndicatorsData = () => {}) 
   const crossUp = lastK >= lastD && beforeK < beforeD ? POSITION.LONG : false
   setLastIndicatorsData(INDICATORS_OBJ.STOCH, [lastK, lastD])
   if (crossDown) {
-    console.log('crossDown')
     return crossDown
   } else if (crossUp) {
-    console.log('crossUp')
     return crossUp
   } else {
     return false

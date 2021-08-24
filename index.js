@@ -4,14 +4,18 @@ const { STRATEGIES, TRADES_ON, CANDLE } = require('./tools/constants')
 // const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const { sendMessage } = require('./services/telegram')
 const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
-const ETH5M = require('./temp/ETH5M')
-const ADA5M = require('./temp/ADA5M')
-const BTC5M = require('./temp/BTC5M')
-// const SAND1M = require('./temp/SAND1M')
-const MATIC5M = require('./temp/MATIC5M.js')
-const DOGE5M = require('./temp/DOGE5M')
-// const MATIC1M = require('./temp/MATIC1M.js')
-// const ADA1M = require('./temp/ADA1M.js')
+
+const ETH5M = require('./temp/5M/part7/ETH5M')
+const ADA5M = require('./temp/5M/part7/ADA5M')
+const MATIC5M = require('./temp/5M/part7/MATIC5M.js')
+const DOGE5M = require('./temp/5M/part7/DOGE5M')
+const DENT5M = require('./temp/5M/part7/DENT5M')
+
+// const SAND1M = require('./temp/1M/part6/SAND1M')
+// const MATIC1M = require('./temp/1M/part6/MATIC1M.js')
+// const ADA1M = require('./temp/1M/part6/ADA1M.js')
+// const XRP1M = require('./temp/1M/part6/XRP1M.js')
+// const ETH1M = require('./temp/1M/part6/ETH1M.js')
 
 const symbolsData = {
   ETH5M: {
@@ -25,14 +29,6 @@ const symbolsData = {
   ADA5M: {
     name: 'ADA5M',
     data: ADA5M,
-    winTrades: [],
-    losesTrades: [],
-    breakevenTrades: [],
-    tradesOn: false
-  },
-  BTC5M: {
-    name: 'BTC5M',
-    data: BTC5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
@@ -53,24 +49,73 @@ const symbolsData = {
     losesTrades: [],
     breakevenTrades: [],
     tradesOn: false
+  },
+  DENT5M: {
+    name: 'DENT5M',
+    data: DENT5M,
+    winTrades: [],
+    losesTrades: [],
+    breakevenTrades: [],
+    tradesOn: false
   }
 }
+// const symbolsData = {
+//   SAND1M: {
+//     name: 'SAND1M',
+//     data: SAND1M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   },
+//   MATIC1M: {
+//     name: 'MATIC1M',
+//     data: MATIC1M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   },
+//   ADA1M: {
+//     name: 'ADA1M',
+//     data: ADA1M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   },
+//   XRP1M: {
+//     name: 'XRP1M',
+//     data: XRP1M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   },
+//   ETH1M: {
+//     name: 'ETH1M',
+//     data: ETH1M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   }
+// }
 
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
 }
-console.log(SET_STRATEGY)
+
 let botOn = false
 
-const BREAKEVEN_ON = false
+const strategy = STRATEGIES.HIDDEN_DIVERGENCE
+
+const BREAKEVEN_ON = true
 
 function setBotOn (bool) { botOn = bool }
 
 function setTradesOn (symbol, value) { symbolsData[symbol].tradesOn = value }
-
-// const allCandles = getFirsts(ETH5M, 300)
-// const lastsCandles = getLasts(ETH5M, 1200)
 
 function sumPercentage (data, typePercentage) {
   let finalPercentage = 0
@@ -96,6 +141,12 @@ function getAccountData () {
 async function execute () {
   const dataArray = Object.keys(symbolsData)
   for (const key of dataArray) {
+    if (symbolsData[key].data.length !== 1500) {
+      console.log(key, 'não tem 1500 candles')
+      return false
+    }
+    console.log('quantidade de candles:', symbolsData[key].data.length)
+
     const allCandles = getFirsts(symbolsData[key].data, 300)
     const lastsCandles = getLasts(symbolsData[key].data, 1200)
     const totalValue = lastsCandles.length
@@ -108,13 +159,10 @@ async function execute () {
       } else {
         setTradesOn(key, false)
         console.log('FINISH')
-        sendMessage(`Finish
-          symbol: ${key},
-          wins: ${symbolsData[key].winTrades.length},
-          loses: ${symbolsData[key].losesTrades.length},
+        sendMessage(`symbol: ${key},
+          wins: ${symbolsData[key].winTrades.length}, loses: ${symbolsData[key].losesTrades.length},
           breakeven: ${symbolsData[key].breakevenTrades.length},
-          win %: ${sumPercentage(symbolsData[key].winTrades, 'winPercentage')},
-          loss %: ${sumPercentage(symbolsData[key].losesTrades, 'lossPercentage')}
+          win %: ${sumPercentage(symbolsData[key].winTrades, 'winPercentage')}, loss %: ${sumPercentage(symbolsData[key].losesTrades, 'lossPercentage')}
           `) // winPercentage  lossPercentage
         clearInterval(mainInterval)
       }
@@ -122,7 +170,7 @@ async function execute () {
 
     async function handleCloseCandle (data) {
       const newCandles = handleAddCandle(data)
-      const valid = await sharkStrategy.validateEntry(newCandles)
+      const valid = await SET_STRATEGY[strategy].validateEntry(newCandles)
       if (valid) {
         setTradesOn(key, {
           timestamp: new Date(data[CANDLE.OPEN_TIME]),
