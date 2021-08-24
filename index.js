@@ -5,102 +5,102 @@ const { STRATEGIES, TRADES_ON, CANDLE } = require('./tools/constants')
 const { sendMessage } = require('./services/telegram')
 const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
 
-const ETH5M = require('./temp/5M/part7/ETH5M')
-const ADA5M = require('./temp/5M/part7/ADA5M')
-const MATIC5M = require('./temp/5M/part7/MATIC5M.js')
-const DOGE5M = require('./temp/5M/part7/DOGE5M')
-const DENT5M = require('./temp/5M/part7/DENT5M')
+// const ETH5M = require('./temp/5M/part7/ETH5M')
+// const ADA5M = require('./temp/5M/part7/ADA5M')
+// const MATIC5M = require('./temp/5M/part7/MATIC5M.js')
+// const DOGE5M = require('./temp/5M/part7/DOGE5M')
+// const DENT5M = require('./temp/5M/part7/DENT5M')
 
-// const SAND1M = require('./temp/1M/part6/SAND1M')
-// const MATIC1M = require('./temp/1M/part6/MATIC1M.js')
-// const ADA1M = require('./temp/1M/part6/ADA1M.js')
-// const XRP1M = require('./temp/1M/part6/XRP1M.js')
-// const ETH1M = require('./temp/1M/part6/ETH1M.js')
+const SAND1M = require('./temp/1M/part7/SAND1M')
+const MATIC1M = require('./temp/1M/part7/MATIC1M.js')
+const ADA1M = require('./temp/1M/part7/ADA1M.js')
+const XRP1M = require('./temp/1M/part7/XRP1M.js')
+const ETH1M = require('./temp/1M/part7/ETH1M.js')
 
-const symbolsData = {
-  ETH5M: {
-    name: 'ETH5M',
-    data: ETH5M,
-    winTrades: [],
-    losesTrades: [],
-    breakevenTrades: [],
-    tradesOn: false
-  },
-  ADA5M: {
-    name: 'ADA5M',
-    data: ADA5M,
-    winTrades: [],
-    losesTrades: [],
-    breakevenTrades: [],
-    tradesOn: false
-  },
-  MATIC5M: {
-    name: 'MATIC5M',
-    data: MATIC5M,
-    winTrades: [],
-    losesTrades: [],
-    breakevenTrades: [],
-    tradesOn: false
-  },
-  DOGE5M: {
-    name: 'DOGE5M',
-    data: DOGE5M,
-    winTrades: [],
-    losesTrades: [],
-    breakevenTrades: [],
-    tradesOn: false
-  },
-  DENT5M: {
-    name: 'DENT5M',
-    data: DENT5M,
-    winTrades: [],
-    losesTrades: [],
-    breakevenTrades: [],
-    tradesOn: false
-  }
-}
 // const symbolsData = {
-//   SAND1M: {
-//     name: 'SAND1M',
-//     data: SAND1M,
+//   ETH5M: {
+//     name: 'ETH5M',
+//     data: ETH5M,
 //     winTrades: [],
 //     losesTrades: [],
 //     breakevenTrades: [],
 //     tradesOn: false
 //   },
-//   MATIC1M: {
-//     name: 'MATIC1M',
-//     data: MATIC1M,
+//   ADA5M: {
+//     name: 'ADA5M',
+//     data: ADA5M,
 //     winTrades: [],
 //     losesTrades: [],
 //     breakevenTrades: [],
 //     tradesOn: false
 //   },
-//   ADA1M: {
-//     name: 'ADA1M',
-//     data: ADA1M,
+//   MATIC5M: {
+//     name: 'MATIC5M',
+//     data: MATIC5M,
 //     winTrades: [],
 //     losesTrades: [],
 //     breakevenTrades: [],
 //     tradesOn: false
 //   },
-//   XRP1M: {
-//     name: 'XRP1M',
-//     data: XRP1M,
+//   DOGE5M: {
+//     name: 'DOGE5M',
+//     data: DOGE5M,
 //     winTrades: [],
 //     losesTrades: [],
 //     breakevenTrades: [],
 //     tradesOn: false
 //   },
-//   ETH1M: {
-//     name: 'ETH1M',
-//     data: ETH1M,
+//   DENT5M: {
+//     name: 'DENT5M',
+//     data: DENT5M,
 //     winTrades: [],
 //     losesTrades: [],
 //     breakevenTrades: [],
 //     tradesOn: false
 //   }
 // }
+const symbolsData = {
+  SAND1M: {
+    name: 'SAND1M',
+    data: SAND1M,
+    winTrades: [],
+    losesTrades: [],
+    breakevenTrades: [],
+    tradesOn: false
+  },
+  MATIC1M: {
+    name: 'MATIC1M',
+    data: MATIC1M,
+    winTrades: [],
+    losesTrades: [],
+    breakevenTrades: [],
+    tradesOn: false
+  },
+  ADA1M: {
+    name: 'ADA1M',
+    data: ADA1M,
+    winTrades: [],
+    losesTrades: [],
+    breakevenTrades: [],
+    tradesOn: false
+  },
+  XRP1M: {
+    name: 'XRP1M',
+    data: XRP1M,
+    winTrades: [],
+    losesTrades: [],
+    breakevenTrades: [],
+    tradesOn: false
+  },
+  ETH1M: {
+    name: 'ETH1M',
+    data: ETH1M,
+    winTrades: [],
+    losesTrades: [],
+    breakevenTrades: [],
+    tradesOn: false
+  }
+}
 
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
