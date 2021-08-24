@@ -1,22 +1,26 @@
+
 const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
 const sharkDivergence = require('./strategies/sharkWithDivergence')
+const sharkWithBB = require('./strategies/sharkWithBB')
+const sharkDivergenceBB = require('./strategies/sharkDivergenceBB')
+
 const { STRATEGIES, TRADES_ON, CANDLE } = require('./tools/constants')
 // const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const { sendMessage } = require('./services/telegram')
 const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
 
-const ETH5M = require('./temp/5M/part4/ETH5M')
-const ADA5M = require('./temp/5M/part4/ADA5M')
-const MATIC5M = require('./temp/5M/part4/MATIC5M.js')
-const DOGE5M = require('./temp/5M/part4/DOGE5M')
-const DENT5M = require('./temp/5M/part4/DENT5M')
+const ETH5M = require('./temp/5M/part8/ETH5M')
+const ADA5M = require('./temp/5M/part8/ADA5M')
+const MATIC5M = require('./temp/5M/part8/MATIC5M.js')
+const DOGE5M = require('./temp/5M/part8/DOGE5M')
+const DENT5M = require('./temp/5M/part8/DENT5M')
 
-// const SAND1M = require('./temp/1M/part7/SAND1M')
-// const MATIC1M = require('./temp/1M/part7/MATIC1M.js')
-// const ADA1M = require('./temp/1M/part7/ADA1M.js')
-// const XRP1M = require('./temp/1M/part7/XRP1M.js')
-// const ETH1M = require('./temp/1M/part7/ETH1M.js')
+// const SAND1M = require('./temp/1M/part3/SAND1M')
+// const MATIC1M = require('./temp/1M/part3/MATIC1M')
+// const ADA1M = require('./temp/1M/part3/ADA1M')
+// const XRP1M = require('./temp/1M/part3/XRP1M')
+// const ETH1M = require('./temp/1M/part3/ETH1M')
 
 const symbolsData = {
   ETH5M: {
@@ -60,6 +64,7 @@ const symbolsData = {
     tradesOn: false
   }
 }
+
 // const symbolsData = {
 //   SAND1M: {
 //     name: 'SAND1M',
@@ -106,12 +111,14 @@ const symbolsData = {
 const SET_STRATEGY = {
   [STRATEGIES.SHARK]: sharkStrategy,
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence,
-  [STRATEGIES.SHARK_DIVERGENCE]: sharkDivergence
+  [STRATEGIES.SHARK_DIVERGENCE]: sharkDivergence,
+  [STRATEGIES.SHARK_BB]: sharkWithBB,
+  [STRATEGIES.SHARK_DIVERGENCE_BB]: sharkDivergenceBB
 }
 
 let botOn = false
 
-const strategy = STRATEGIES.SHARK_DIVERGENCE
+const strategy = STRATEGIES.SHARK_DIVERGENCE_BB
 
 const BREAKEVEN_ON = false
 
@@ -168,7 +175,7 @@ async function execute () {
           `) // winPercentage  lossPercentage
         clearInterval(mainInterval)
       }
-    }, 200)
+    }, 100)
 
     async function handleCloseCandle (data) {
       const newCandles = handleAddCandle(data)
