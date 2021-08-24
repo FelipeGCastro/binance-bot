@@ -330,9 +330,6 @@ function resetListenersAndCandles (account) {
   ACCOUNTS[account].allCandles = []
 }
 
-execute(ACCOUNTS_TYPE.PRIMARY)
-execute(ACCOUNTS_TYPE.SECONDARY)
-
 module.exports = {
   changeLeverage,
   execute,
