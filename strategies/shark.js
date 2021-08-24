@@ -6,6 +6,8 @@ const CANDLE = require('../tools/constants').CANDLE
 const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
 const { SIDE } = require('../tools/constants')
+const Highest = require('technicalindicators').Highest
+const Lowest = require('technicalindicators').Lowest
 
 const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
@@ -25,13 +27,15 @@ function validateEntry (candles) {
   if (!validatedRsi) return false
   if (crossStoch !== trendingEma.position) return false
   else {
+    const lastThreeCandles = tools.getLasts(candles, 3)
     const stopAndTarget = getStopAndTargetPrice(lastCandle[CANDLE.CLOSE], crossStoch)
+    const stopPrice = getStopLossFlex(lastThreeCandles, stopAndTarget.stopPrice, crossStoch)
     if (stopAndTarget) {
       return {
         strategy: STRATEGIES.SHARK,
         timeLastCandle: lastCandle[CANDLE.OPEN_TIME],
         side: crossStoch,
-        stopPrice: stopAndTarget.stopPrice,
+        stopPrice,
         targetPrice: stopAndTarget.targetPrice,
         closePrice: lastCandle[CANDLE.CLOSE],
         breakevenTriggerPrice: stopAndTarget.breakevenTriggerPrice,
@@ -41,6 +45,20 @@ function validateEntry (candles) {
       return false
     }
   }
+}
+
+function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide) {
+  if (positionSide === POSITION.SHORT) {
+    const highPricesOnly = tools.extractData(lastThreeCandles, CANDLE.HIGH)
+    const highestPrice = Highest.calculate({ values: highPricesOnly, period: 3 })[0]
+    if (highestPrice < stopLossDefault) return highestPrice
+    else return stopLossDefault
+  } else if (positionSide === POSITION.LONG) {
+    const lowPricesOnly = tools.extractData(lastThreeCandles, CANDLE.LOW)
+    const lowestPrice = Lowest.calculate({ values: lowPricesOnly, period: 3 })[0]
+    if (lowestPrice > stopLossDefault) return lowestPrice
+    else return stopLossDefault
+  } else return false
 }
 
 function checkLastCandle (candles, position) {

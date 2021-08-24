@@ -8,7 +8,8 @@ const STRATEGIES = {
   HIDDEN_DIVERGENCE: 'hiddenDivergence',
   SHARK_DIVERGENCE: 'sharkWithDivergence',
   SHARK_BB: 'sharkWithBB',
-  SHARK_DIVERGENCE_BB: 'sharkWithBBAndDivergence'
+  SHARK_DIVERGENCE_BB: 'sharkWithBBAndDivergence',
+  DIVERGENCE_BB: 'divergenceWithBB'
 }
 
 // tradesOn = {

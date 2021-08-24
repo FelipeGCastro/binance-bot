@@ -4,6 +4,7 @@ const sharkStrategy = require('./strategies/shark')
 const sharkDivergence = require('./strategies/sharkWithDivergence')
 const sharkWithBB = require('./strategies/sharkWithBB')
 const sharkDivergenceBB = require('./strategies/sharkDivergenceBB')
+const divergenceWithBB = require('./strategies/divergenceWithBB')
 
 const { STRATEGIES, TRADES_ON, CANDLE } = require('./tools/constants')
 // const { verifyRiseStop } = require('./operations/changeStopLoss.js')
@@ -113,14 +114,15 @@ const SET_STRATEGY = {
   [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence,
   [STRATEGIES.SHARK_DIVERGENCE]: sharkDivergence,
   [STRATEGIES.SHARK_BB]: sharkWithBB,
-  [STRATEGIES.SHARK_DIVERGENCE_BB]: sharkDivergenceBB
+  [STRATEGIES.SHARK_DIVERGENCE_BB]: sharkDivergenceBB,
+  [STRATEGIES.DIVERGENCE_BB]: divergenceWithBB
 }
 
 let botOn = false
 
-const strategy = STRATEGIES.SHARK_DIVERGENCE_BB
+const strategy = STRATEGIES.DIVERGENCE_BB
 
-const BREAKEVEN_ON = false
+const BREAKEVEN_ON = true
 
 function setBotOn (bool) { botOn = bool }
 
