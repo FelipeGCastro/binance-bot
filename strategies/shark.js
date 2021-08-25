@@ -29,7 +29,7 @@ function validateEntry (candles) {
   else {
     const lastThreeCandles = tools.getLasts(candles, 3)
     const stopAndTarget = getStopAndTargetPrice(lastCandle[CANDLE.CLOSE], crossStoch)
-    const stopPrice = getStopLossFlex(lastThreeCandles, stopAndTarget.stopPrice, crossStoch)
+    const stopPrice = getStopLossFlex(lastThreeCandles, stopAndTarget.stopPrice, crossStoch, lastCandle[CANDLE.CLOSE])
     if (stopAndTarget) {
       return {
         strategy: STRATEGIES.SHARK,
@@ -47,17 +47,24 @@ function validateEntry (candles) {
   }
 }
 
-function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide) {
+function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide, closePrice) {
+  let stopPrice25
   if (positionSide === POSITION.SHORT) {
-    const highPricesOnly = tools.extractData(lastThreeCandles, CANDLE.HIGH)
+    stopPrice25 = Number(closePrice) + (closePrice * (0.25 / 100))
+    const highPricesOnly = tools.extractData(lastThreeCandles, 'HIGH')
     const highestPrice = Highest.calculate({ values: highPricesOnly, period: 3 })[0]
-    if (highestPrice < stopLossDefault) return highestPrice
-    else return stopLossDefault
+    if (highestPrice < stopLossDefault) {
+      if (highestPrice < stopPrice25) return stopPrice25
+      else return highestPrice
+    } else return stopLossDefault
   } else if (positionSide === POSITION.LONG) {
-    const lowPricesOnly = tools.extractData(lastThreeCandles, CANDLE.LOW)
+    stopPrice25 = Number(closePrice) - (closePrice * (0.25 / 100))
+    const lowPricesOnly = tools.extractData(lastThreeCandles, 'LOW')
     const lowestPrice = Lowest.calculate({ values: lowPricesOnly, period: 3 })[0]
-    if (lowestPrice > stopLossDefault) return lowestPrice
-    else return stopLossDefault
+    if (lowestPrice > stopLossDefault) {
+      if (lowestPrice > stopPrice25) return stopPrice25
+      else return lowestPrice
+    } else return stopLossDefault
   } else return false
 }
 

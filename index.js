@@ -11,11 +11,11 @@ const { STRATEGIES, TRADES_ON, CANDLE } = require('./tools/constants')
 const { sendMessage } = require('./services/telegram')
 const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
 
-const ETH5M = require('./temp/5M/part8/ETH5M')
-const ADA5M = require('./temp/5M/part8/ADA5M')
-const MATIC5M = require('./temp/5M/part8/MATIC5M.js')
-const DOGE5M = require('./temp/5M/part8/DOGE5M')
-const DENT5M = require('./temp/5M/part8/DENT5M')
+// const ETH5M = require('./temp/5M/part1/ETH5M')
+const ADA5M = require('./temp/5M/part2/ADA5M')
+const MATIC5M = require('./temp/5M/part2/MATIC5M.js')
+const DOGE5M = require('./temp/5M/part2/DOGE5M')
+const DENT5M = require('./temp/5M/part2/DENT5M')
 
 // const SAND1M = require('./temp/1M/part3/SAND1M')
 // const MATIC1M = require('./temp/1M/part3/MATIC1M')
@@ -24,14 +24,14 @@ const DENT5M = require('./temp/5M/part8/DENT5M')
 // const ETH1M = require('./temp/1M/part3/ETH1M')
 
 const symbolsData = {
-  ETH5M: {
-    name: 'ETH5M',
-    data: ETH5M,
-    winTrades: [],
-    losesTrades: [],
-    breakevenTrades: [],
-    tradesOn: false
-  },
+  // ETH5M: {
+  //   name: 'ETH5M',
+  //   data: ETH5M,
+  //   winTrades: [],
+  //   losesTrades: [],
+  //   breakevenTrades: [],
+  //   tradesOn: false
+  // },
   ADA5M: {
     name: 'ADA5M',
     data: ADA5M,
@@ -120,9 +120,9 @@ const SET_STRATEGY = {
 
 let botOn = false
 
-const strategy = STRATEGIES.DIVERGENCE_BB
+const strategy = STRATEGIES.SHARK
 
-const BREAKEVEN_ON = true
+const BREAKEVEN_ON = false
 
 function setBotOn (bool) { botOn = bool }
 
