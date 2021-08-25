@@ -1,10 +1,45 @@
 const express = require('express')
+const Account = require('../models/account')
 const home = require('../../index')
-const { STRATEGIES, ACCOUNTS_TYPE } = require('../../tools/constants')
+const { STRATEGIES, ACCOUNTS_TYPE, ACCOUNT_PROP } = require('../../tools/constants')
 const api = require('../../services/api')
 const helpers = require('../../helpers/index')
 
 const accountRoutes = express.Router()
+
+async function checkAccounts () {
+  const Accounts = await Account.find({})
+  if (!Accounts) {
+    const primaryAccount = await Account.create({
+      type: ACCOUNTS_TYPE.PRIMARY,
+      strategy: STRATEGIES.SHARK,
+      symbols: ['ADAUSDT', 'DOGEUSDT', 'AKROUSDT', 'XRPUSDT'],
+      botOn: false,
+      leverage: 5,
+      entryValue: 100,
+      maxEntryValue: 120,
+      limitOrdersSameTime: 4,
+      limitReached: false,
+      listenKeyIsOn: false,
+      tradesOn: []
+    })
+    const secondaryAccount = await Account.create({
+      type: ACCOUNTS_TYPE.SECONDARY,
+      strategy: STRATEGIES.SHARK,
+      symbols: ['ADAUSDT', 'DOGEUSDT', 'LINAUSDT', 'C98USDT'],
+      botOn: false,
+      leverage: 5,
+      entryValue: 100,
+      maxEntryValue: 120,
+      limitOrdersSameTime: 4,
+      limitReached: false,
+      listenKeyIsOn: false,
+      tradesOn: []
+    })
+    console.log(primaryAccount, secondaryAccount)
+  }
+}
+checkAccounts()
 
 accountRoutes.get('/:account', async (req, res) => {
   const { account } = req.params
@@ -71,7 +106,7 @@ accountRoutes.put('/:account/entryValue', async (req, res) => {
   const { entryValue } = req.body
   if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
   if (typeof entryValue !== 'number') return res.status(400).send({ error: 'Bad type' })
-  home.setEntryValue(account, entryValue)
+  home.setEntryValue(account, ACCOUNT_PROP.ENTRY_VALUE, entryValue)
   console.log('changed entryValue')
 
   const accountdata = await home.getAccountData(account)

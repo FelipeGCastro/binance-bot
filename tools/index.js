@@ -86,7 +86,7 @@ function ParseFloatByFormat (str, formatDecimals) {
   str = str.toString()
   const formatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: false })
 
-  return Number(formatter.format(Number(str)))
+  return formatter.format(Number(str))
 }
 
 function getLasts (data, amount) {

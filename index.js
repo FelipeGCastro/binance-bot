@@ -5,7 +5,7 @@ const telegram = require('./services/telegram')
 const hiddenDivergence = require('./strategies/hiddenDivergence')
 const sharkStrategy = require('./strategies/shark')
 const newOrder = require('./operations/newOrder')
-const { STRATEGIES, SIDE, ACCOUNTS_TYPE, TRADES_ON } = require('./tools/constants')
+const { STRATEGIES, SIDE, ACCOUNTS_TYPE, TRADES_ON, ACCOUNT_PROP } = require('./tools/constants')
 const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
 const { updateAccountData } = require('./services/socket.js')
 const { verifyRiseStop } = require('./operations/changeStopLoss.js')
@@ -17,67 +17,48 @@ const SET_STRATEGY = {
 
 const ACCOUNTS = {
   [ACCOUNTS_TYPE.PRIMARY]: {
-    strategy: STRATEGIES.SHARK,
-    symbols: ['ADAUSDT', 'MATICUSDT', 'XRPUSDT'],
-    botOn: true,
-    leverage: 2,
-    entryValue: 100,
-    validateEntry: SET_STRATEGY[STRATEGIES.SHARK].validateEntry,
-    getStopAndTargetPrice: SET_STRATEGY[STRATEGIES.SHARK].getStopAndTargetPrice,
-    maxEntryValue: 110,
-    listenKeyIsOn: false,
-    interval: '5m',
-    limitOrdersSameTime: 2,
-    limitReached: false,
-    tradesOn: [], // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
-    listeners: [],
-    allCandles: []
+    [ACCOUNT_PROP.STRATEGY]: STRATEGIES.SHARK,
+    [ACCOUNT_PROP.SYMBOLS]: ['ADAUSDT', 'DOGEUSDT', 'AKROUSDT', 'XRPUSDT'],
+    [ACCOUNT_PROP.BOT_ON]: true,
+    [ACCOUNT_PROP.LEVERAGE]: 2,
+    [ACCOUNT_PROP.ENTRY_VALUE]: 100,
+    [ACCOUNT_PROP.MAX_ENTRY_VALUE]: 110,
+    [ACCOUNT_PROP.LIMIT_ORDERS]: 4,
+    [ACCOUNT_PROP.LIMIT_REACHED]: false,
+    [ACCOUNT_PROP.LISTEN_KEY_IS_ON]: false,
+    [ACCOUNT_PROP.TRADES_ON]: [] // { stopMarketPrice, takeProfitPrice, entryPrice, symbol, stopOrderCreated, profitOrderCreated }
   },
   [ACCOUNTS_TYPE.SECONDARY]: {
-    strategy: STRATEGIES.HIDDEN_DIVERGENCE,
-    symbols: ['SANDUSDT'],
-    botOn: true,
-    leverage: 2,
-    entryValue: 100,
-    validateEntry: SET_STRATEGY[STRATEGIES.HIDDEN_DIVERGENCE].validateEntry,
-    getStopAndTargetPrice: SET_STRATEGY[STRATEGIES.HIDDEN_DIVERGENCE].getStopAndTargetPrice,
-    maxEntryValue: 110,
-    listenKeyIsOn: false,
-    interval: '1m',
-    limitOrdersSameTime: 2,
-    limitReached: false,
-    tradesOn: [],
-    listeners: [],
-    allCandles: []
+    [ACCOUNT_PROP.STRATEGY]: STRATEGIES.HIDDEN_DIVERGENCE,
+    [ACCOUNT_PROP.SYMBOLS]: ['SANDUSDT'],
+    [ACCOUNT_PROP.BOT_ON]: true,
+    [ACCOUNT_PROP.LEVERAGE]: 2,
+    [ACCOUNT_PROP.ENTRY_VALUE]: 100,
+    [ACCOUNT_PROP.MAX_ENTRY_VALUE]: 110,
+    [ACCOUNT_PROP.LIMIT_ORDERS]: 4,
+    [ACCOUNT_PROP.LIMIT_REACHED]: false,
+    [ACCOUNT_PROP.LISTEN_KEY_IS_ON]: false,
+    [ACCOUNT_PROP.TRADES_ON]: []
   }
 }
 
-function setGetStopAndTargetPrice (account, value) { ACCOUNTS[account].getStopAndTargetPrice = value }
+function setAccountData (account, key, value) {
+  ACCOUNTS[account][key] = value
+}
 
-function setBotOn (account, bool) { ACCOUNTS[account].botOn = bool }
-function setLeverage (account, value) { ACCOUNTS[account].leverage = value }
-function setEntryValue (account, value) {
-  ACCOUNTS[account].entryValue = value
-  ACCOUNTS[account].maxEntryValue = ACCOUNTS[account].entryValue + (0.2 * ACCOUNTS[account].entryValue)
-}
-function getAccountData (account) {
-  return { ...ACCOUNTS[account], listeners: [], allCandles: [] }
-}
+function getAccountData (account) { return ACCOUNTS[account] }
 
 function getTradesDelayed (account) {
   return new Promise(resolve => {
     setTimeout(() => resolve(ACCOUNTS[account].tradesOn), 2000)
   })
 }
-function setLimitOrdersSameTime (account, limite) { ACCOUNTS[account].limitOrdersSameTime = limite }
+
 function setTradesOn (account, trade) {
   ACCOUNTS[account].tradesOn.push(trade)
+  updateAccountData(account, ACCOUNTS[account])
+}
 
-  updateOnlyNecessary(account)
-}
-function updateOnlyNecessary (account) {
-  updateAccountData(account, { ...ACCOUNTS[account], listeners: [], allCandles: [], validateEntry: null, getStopAndTargetPrice: null })
-}
 function updateTradesOn (account, symbol, key, value) {
   const oldObject = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === symbol)
   if (!oldObject) return
@@ -85,31 +66,37 @@ function updateTradesOn (account, symbol, key, value) {
   const newObject = { ...oldObject, [key]: value }
   setTradesOn(account, newObject)
 }
+
 function removeFromTradesOn (account, symb) {
   ACCOUNTS[account].tradesOn = ACCOUNTS[account].tradesOn.filter(trade => trade.symbol !== symb)
   ACCOUNTS[account].limitReached = ACCOUNTS[account].tradesOn.length >= ACCOUNTS[account].limitOrdersSameTime
-  updateOnlyNecessary(account)
-}
-function setLimitReached (account, value) { ACCOUNTS[account].limitReached = value }
-function setValidate (account, func) { ACCOUNTS[account].validateEntry = func }
-function setPeriodInterval (account, int) { ACCOUNTS[account].interval = int }
-function setStrategy (account, value) { ACCOUNTS[account].strategy = value }
-function updateAllCandles (account, arrayWithValues) { ACCOUNTS[account].allCandles = arrayWithValues }
-function updateListenKeyIsOn (account, value) {
-  ACCOUNTS[account].listenKeyIsOn = value
-  updateOnlyNecessary(account)
+  updateAccountData(account, ACCOUNTS[account])
 }
 
-const listeners = {
+function updateListenKeyIsOn (account, value) {
+  ACCOUNTS[account].listenKeyIsOn = value
+  updateAccountData(account, ACCOUNTS[account])
+}
+
+const state = {
   [ACCOUNTS_TYPE.PRIMARY]: {
-    candles: [],
-    userData: null
+    candlesListeners: [],
+    userDataListeners: null,
+    validateEntry: SET_STRATEGY[ACCOUNTS[ACCOUNTS_TYPE.PRIMARY].strategy].validateEntry,
+    getStopAndTargetPrice: SET_STRATEGY[ACCOUNTS[ACCOUNTS_TYPE.PRIMARY].strategy].getStopAndTargetPrice,
+    interval: SET_STRATEGY[ACCOUNTS[ACCOUNTS_TYPE.PRIMARY].strategy].getInterval(),
+    allCandles: []
   },
   [ACCOUNTS_TYPE.SECONDARY]: {
-    candles: [],
-    userData: null
+    candlesListeners: [],
+    userDataListeners: null,
+    validateEntry: SET_STRATEGY[ACCOUNTS[ACCOUNTS_TYPE.SECONDARY].strategy].validateEntry,
+    getStopAndTargetPrice: SET_STRATEGY[ACCOUNTS[ACCOUNTS_TYPE.SECONDARY].strategy].getStopAndTargetPrice,
+    interval: SET_STRATEGY[ACCOUNTS[ACCOUNTS_TYPE.SECONDARY].strategy].getInterval(),
+    allCandles: []
   }
 }
+function updateAllCandles (account, arrayWithValues) { state[account].allCandles = arrayWithValues }
 // let allCandles = []
 
 // START MAIN FUNCTION
@@ -128,21 +115,21 @@ async function execute (account) {
 
   async function addAllCandles (symbol) {
     console.log(symbol, 'addAllCandles')
-    const candles = await api.candles(symbol, ACCOUNTS[account].interval)
-    if (candles) ACCOUNTS[account].allCandles.push({ candles, symbol })
+    const candles = await api.candles(symbol, state[account].interval)
+    if (candles) state[account].allCandles.push({ candles, symbol })
   }
-  console.log(ACCOUNTS[account].allCandles, 'allCandles')
+
   async function setWsListeners (symbol) {
     let lastEventAt = 0
     // LISTEN CANDLES AND UPDTATE CANDLES WHEN CANDLE CLOSE
-    const listener = await ws.onKlineContinuos(symbol, ACCOUNTS[account].interval, async (data) => {
+    const listener = await ws.onKlineContinuos(symbol, state[account].interval, async (data) => {
       if (data.k.x && data.E > lastEventAt) {
         lastEventAt = data.E
         await handleCloseCandle(data, symbol)
       }
       analysingCandle(data, symbol)
     })
-    listeners[account].candles.push({ listener, symbol })
+    state[account].candlesListeners.push({ listener, symbol })
   }
 
   async function analysingCandle (data, symbol) {
@@ -153,7 +140,7 @@ async function execute (account) {
   }
 
   async function handleCloseCandle (data, symbol) {
-    const candlesObj = ACCOUNTS[account].allCandles.find(cand => cand.symbol === symbol)
+    const candlesObj = state[account].allCandles.find(cand => cand.symbol === symbol)
 
     if (!candlesObj) return
     const hasTradeOn = ACCOUNTS[account].tradesOn.find(trade => trade.symbol === candlesObj.symbol)
@@ -163,7 +150,7 @@ async function execute (account) {
       !ACCOUNTS[account].limitReached &&
       ACCOUNTS[account].listenKeyIsOn &&
       ACCOUNTS[account].botOn) {
-      const valid = await ACCOUNTS[account].validateEntry(newCandles, symbol)
+      const valid = await state[account].validateEntry(newCandles, symbol)
       console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
 
       if (valid && valid.symbol === candlesObj.symbol) {
@@ -175,7 +162,7 @@ async function execute (account) {
           account
         })
         if (ordered) {
-          setLimitReached(account, (ACCOUNTS[account].tradesOn.length + 1) >= ACCOUNTS[account].limitOrdersSameTime)
+          setAccountData(account, ACCOUNT_PROP.LIMIT_REACHED, (ACCOUNTS[account].tradesOn.length + 1) >= ACCOUNTS[account].limitOrdersSameTime)
           setTradesOn(account, {
             [TRADES_ON.SYMBOL]: symbol,
             [TRADES_ON.STOP_PRICE]: valid.stopPrice,
@@ -201,7 +188,7 @@ async function execute (account) {
       candles.shift()
     }
     candles.push(newCandle)
-    const candlesFiltered = ACCOUNTS[account].allCandles.filter(candlesObjItem => candlesObjItem.symbol !== candlesObj.symbol)
+    const candlesFiltered = state[account].allCandles.filter(candlesObjItem => candlesObjItem.symbol !== candlesObj.symbol)
     candlesFiltered.push({ candles, symbol: candlesObj.symbol })
     updateAllCandles(account, candlesFiltered)
     return candles
@@ -252,14 +239,14 @@ async function execute (account) {
         await operations.handleUserDataUpdate(newData)
       }
     })
-    listeners[account].userData = wsListenKey
+    state[account].userDataListeners = wsListenKey
   }
 
   function handleGetStopAndTarget (account, entryPrice, stopPrice, side) {
     if (ACCOUNTS[account].strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
-      return ACCOUNTS[account].getStopAndTargetPrice(stopPrice, entryPrice)
+      return state[account].getStopAndTargetPrice(stopPrice, entryPrice)
     } else if (ACCOUNTS[account].strategy === STRATEGIES.SHARK) {
-      return ACCOUNTS[account].getStopAndTargetPrice(entryPrice, side)
+      return state[account].getStopAndTargetPrice(entryPrice, side)
     } else return false
   }
 
@@ -283,7 +270,7 @@ async function changeLeverage (account, value) {
     }
     console.log('Leverage Changed Successfully: ', symbol)
   })
-  setLeverage(account, value)
+  setAccountData(account, ACCOUNT_PROP.LEVERAGE, value)
   return true
 }
 
@@ -299,19 +286,15 @@ function updateSymbols (account, newSymbols) {
 
 function handleChangeStrategy (account, stratName) {
   if (!SET_STRATEGY[stratName]) return false
-  const strategy = SET_STRATEGY[stratName]
-  setPeriodInterval(account, strategy.getInterval())
-  setValidate(account, strategy.validateEntry)
-  setGetStopAndTargetPrice(account, strategy.getStopAndTargetPrice)
-  setStrategy(account, stratName)
+  setAccountData(account, ACCOUNT_PROP.STRATEGY, stratName)
   return true
 }
 function turnBotOn (account, bool) {
   if (bool) {
     if (!ACCOUNTS[account].botOn) {
-      listeners[account].candles = []
+      state[account].candlesListeners = []
       ACCOUNTS[account].tradesOn = []
-      setBotOn(account, bool)
+      setAccountData(account, ACCOUNT_PROP.BOT_ON, bool)
       const isBotOn = execute(account)
       if (!isBotOn) return false
     }
@@ -319,24 +302,22 @@ function turnBotOn (account, bool) {
     resetListenersAndCandles(account)
     ACCOUNTS[account].tradesOn = []
     updateListenKeyIsOn(account, false)
-    setBotOn(account, bool)
+    setAccountData(account, ACCOUNT_PROP.BOT_ON, bool)
   }
 }
 
 function resetListenersAndCandles (account) {
-  listeners[account].candles.forEach(list => { list.listener.close(1000) })
-  if (listeners[account].userData) listeners[account].userData.close(1000)
-  listeners[account].candles = []
-  ACCOUNTS[account].allCandles = []
+  state[account].candlesListeners.forEach(list => { list.listener.close(1000) })
+  if (state[account].userDataListeners) state[account].userDataListeners.close(1000)
+  state[account].candlesListeners = []
+  state[account].allCandles = []
 }
 
 module.exports = {
   changeLeverage,
   execute,
   updateSymbols,
-  setEntryValue,
   getAccountData,
   handleChangeStrategy,
-  turnBotOn,
-  setLimitOrdersSameTime
+  turnBotOn
 }
