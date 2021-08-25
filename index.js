@@ -259,7 +259,7 @@ async function execute (account) {
     if (ACCOUNTS[account].strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
       return ACCOUNTS[account].getStopAndTargetPrice(stopPrice, entryPrice)
     } else if (ACCOUNTS[account].strategy === STRATEGIES.SHARK) {
-      return ACCOUNTS[account].getStopAndTargetPrice(entryPrice, side)
+      return false
     } else return false
   }
 
