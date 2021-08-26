@@ -88,11 +88,13 @@ accountRoutes.put('/:account/boton', async (req, res) => {
   const { botOn } = req.body
   if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
   if (typeof botOn !== 'boolean') return res.status(400).send({ error: 'Bad type' })
-  const nowIsOn = turnBotOn(botOn)
+  const botOnNow = getAccountData('botOn')
+  if (botOnNow === botOn) return res.status(400).send({ error: `botOn is already ${botOn}` })
+  const data = turnBotOn(botOn)
   console.log('bot its tooggled')
-  if (nowIsOn) execute(account)
+  if (botOn) execute(account)
   else await (await getExecuteState(account)).resetListenersAndCandles()
-  return res.send(getAccountData())
+  return res.send(data)
 })
 
 accountRoutes.put('/:account/leverage', async (req, res) => {
