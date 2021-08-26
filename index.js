@@ -1,5 +1,4 @@
 const api = require('./services/api.js')
-const Account = require('../src/models/account')
 const operations = require('./operations/userDataUpdate')
 const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
@@ -9,15 +8,10 @@ const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
 const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const accountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
+const checkAccountOnStart = require('./operations/accountOnStart.js')
 
 // let allCandles = []
 
-async function checkAccountOnStart (account) {
-  const { updateListenKeyIsOn } = await accountState(account)
-  const accountData = await Account.findOne({ type: account })
-  if (accountData.listenKeyIsOn) updateListenKeyIsOn(false)
-  if (accountData.botOn) execute()
-}
 checkAccountOnStart(ACCOUNTS_TYPE.PRIMARY)
 checkAccountOnStart(ACCOUNTS_TYPE.SECONDARY)
 
@@ -26,7 +20,7 @@ async function execute (account) {
   const { getState, setState, addToStateArray, updateAllCandles } = await getExecuteState(account)
   const { getAccountData, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await accountState(account)
   const accountdata = getAccountData()
-  telegram.sendMessage('Bot Foi Iniciado ou Reiniciado')
+  telegram.sendMessage(`Bot Foi Iniciado ou Reiniciado, conta: ${account}`)
   const isLeverageChanged = await changeLeverage(account)
   if (!isLeverageChanged) return false
 
@@ -138,7 +132,7 @@ async function execute (account) {
           updateListenKeyIsOn(true)
           clearInterval(keyInterval)
         } else {
-          telegram.sendMessage('Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos')
+          telegram.sendMessage(`Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos, conta: ${account}`)
           console.log('Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos')
         }
       }, 10000)

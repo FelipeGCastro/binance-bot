@@ -109,6 +109,10 @@ async function getBalance (account) {
   return privateCall(account, '/fapi/v2/balance')
 }
 
+async function getAccountInfo (account) {
+  return privateCall(account, '/fapi/v2/account')
+}
+
 async function exchangeInfo () {
   return publicCall('/fapi/v1/exchangeInfo')
 }
@@ -130,5 +134,6 @@ module.exports = {
   newOrder,
   cancelAllOrders,
   cancelOrder,
-  getAllOpenOrders
+  getAllOpenOrders,
+  getAccountInfo
 }
