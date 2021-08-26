@@ -59,14 +59,12 @@ async function getAccountState (account) {
     if (bool) {
       if (!ACCOUNT.botOn) {
         clearTradesOn()
-        setAccountData(ACCOUNT_PROP.BOT_ON, bool)
-        return true
+        return await setAccountData(ACCOUNT_PROP.BOT_ON, bool)
       }
     } else {
       clearTradesOn()
       updateListenKeyIsOn(false)
-      setAccountData(ACCOUNT_PROP.BOT_ON, bool)
-      return false
+      return await setAccountData(ACCOUNT_PROP.BOT_ON, bool)
     }
   }
 
