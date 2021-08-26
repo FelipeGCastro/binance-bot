@@ -3,8 +3,10 @@ const Trade = require('../src/models/trade')
 const telegram = require('../services/telegram')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 const SIDE = require('../tools/constants').SIDE
-const { POSITION_SIDE, TRADES_ON } = require('../tools/constants')
+const { POSITION_SIDE, TRADES_ON, ACCOUNT_PROP } = require('../tools/constants')
 const { createTpandSLOrder } = require('./tpsl')
+const getAccountState = require('../states/account')
+const getExecuteState = require('../states/execute')
 
 let positions = []
 function setPosition (position) {
@@ -20,7 +22,8 @@ async function handleUserDataUpdate (data) {
   if (data.e === 'ACCOUNT_UPDATE') {
     handlePosition(data)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
-    const tradesOn = await data.o.getTradesDelayed(data.o.account)
+    const { getTradesDelayed } = await getAccountState(data.o.account)
+    const tradesOn = await getTradesDelayed()
     const trade = tradesOn.find(trade => trade.symbol === data.o.s)
     if (trade) {
       if (data.o.X === 'FILLED' || data.o.X === 'PARTIALLY_FILLED') {
@@ -37,7 +40,8 @@ async function handleUserDataUpdate (data) {
 }
 
 async function handlePosition (data) {
-  const tradesOn = await data.getTradesDelayed(data.account)
+  const { getTradesDelayed } = await getAccountState(data.account)
+  const tradesOn = await getTradesDelayed()
   const positionHasTradeOn = data.a.P.filter(pos => {
     const position = tradesOn.find(trade => trade.symbol === pos.s)
     return !!position
@@ -54,6 +58,7 @@ async function handleFilledOrder (order) {
       console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol)
 
       if (order.X === 'FILLED') {
+        const { updateTradesOn } = await getAccountState(order.account)
         // account, entryPrice, stopPrice, side
         const result = order.getStopAndTargetPrice(order.account, order.L, order.trade.stopMarketPrice, order.trade.side)
         console.log(result, 'New Stop and Take profit Price')
@@ -61,11 +66,11 @@ async function handleFilledOrder (order) {
           order.trade.stopMarketPrice = result.stopPrice
           order.trade.takeProfitPrice = result.targetPrice
           if (result.breakevenTriggerPrice) {
-            order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.BREAKEVEN_PRICE, result.breakevenTriggerPrice)
-            order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.RISE_STOP_PRICE, result.riseStopTriggerPrice)
+            updateTradesOn(order.trade.symbol, TRADES_ON.BREAKEVEN_PRICE, result.breakevenTriggerPrice)
+            updateTradesOn(order.trade.symbol, TRADES_ON.RISE_STOP_PRICE, result.riseStopTriggerPrice)
           }
         }
-        order.updateTradesOn(order.account, order.trade.symbol, TRADES_ON.ENTRY_PRICE, order.L)
+        updateTradesOn(order.trade.symbol, TRADES_ON.ENTRY_PRICE, order.L)
         await createTpandSLOrder(order)
       }
     } else {
@@ -73,17 +78,10 @@ async function handleFilledOrder (order) {
     }
   } else if (position) {
     if (order.o === ORDER_TYPE.MARKET) {
-      if (order.ot === ORDER_TYPE.STOP_MARKET ||
-        order.ot === ORDER_TYPE.TAKE_PROFIT_MARKET) {
-        console.log('Saida 18 Order Type TPSL FILLED', order.ot)
+      if (order.X === 'FILLED') {
+        console.log('Saida 19 - Order MARKET Filled - TpSl or Close manually')
         return await tpslOrderFilled(order)
-      } else {
-        if (order.X === 'FILLED') {
-          console.log('Saida 19 -Order MARKET Filled with NO position open NO TPSL')
-          tpslOrderFilled(order)
-        }
       }
-      order.removeFromTradesOn(order.account, order.symbol)
     } else {
       console.log('Saida 20 - TYPE of order no Market:', order.o)
       return false
@@ -96,6 +94,7 @@ async function handleFilledOrder (order) {
 async function tpslOrderFilled (order) {
   console.log('Stop or Profit Order was triggered')
   telegram.sendMessage(`PNL: ${order.rp}`)
+  const { removeFromTradesOn } = await getAccountState(order.account)
   const isGain = order.rp > 0
   const data = {
     symbol: order.symbol,
@@ -110,11 +109,27 @@ async function tpslOrderFilled (order) {
     strategy: order.trade.strategy,
     account: order.account
   }
-  order.removeFromTradesOn(order.account, order.symbol)
+  removeFromTradesOn(order.symbol)
   const trade = await Trade.create(data)
   if (!trade) console.log('Cannot create trade')
   const ordersCancelled = await api.cancelAllOrders(order.account, order.symbol)
   if (!ordersCancelled) console.log('Problems to cancel orders')
+  verifyBalance(order.account)
+}
+
+async function verifyBalance (account) {
+  const { getTradesDelayed, turnBotOn, getAccountData } = await getAccountState(account)
+  const { resetListenersAndCandles } = await getExecuteState(account)
+  const tradesOn = await getTradesDelayed()
+  if (tradesOn.length === 0) {
+    const limitLoss = getAccountData(ACCOUNT_PROP.LIMIT_LOSS)
+    const balanceData = await api.getBalance(account)
+    const balance = balanceData.filter((coin) => (coin.asset === 'USDT'))[0].availableBalance
+    if (balance < limitLoss) {
+      turnBotOn(false)
+      resetListenersAndCandles()
+    }
+  }
 }
 
 module.exports = {
