@@ -1,7 +1,6 @@
 const Account = require('../src/models/account')
 const { updateAccountData } = require('../services/socket.js')
 const { ACCOUNT_PROP } = require('../tools/constants')
-const getExecuteState = require('./execute')
 
 async function getAccountState (account) {
   const ACCOUNT = await Account.findOne({ type: account })
@@ -51,23 +50,18 @@ async function getAccountState (account) {
   }
 
   async function updateSymbols (newSymbols) {
-    const { resetListenersAndCandles } = await getExecuteState(account)
     ACCOUNT.symbols = newSymbols
-    resetListenersAndCandles()
     return true
   }
 
   async function turnBotOn (bool) {
-    const { resetListenersAndCandles, setState } = await getExecuteState(account)
     if (bool) {
       if (!ACCOUNT.botOn) {
-        setState('candlesListeners', [])
         ACCOUNT.tradesOn = []
         setAccountData(ACCOUNT_PROP.BOT_ON, bool)
         return true
       }
     } else {
-      resetListenersAndCandles()
       ACCOUNT.tradesOn = []
       updateListenKeyIsOn(false)
       setAccountData(ACCOUNT_PROP.BOT_ON, bool)
