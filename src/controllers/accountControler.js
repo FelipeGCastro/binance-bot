@@ -5,6 +5,7 @@ const api = require('../../services/api')
 const helpers = require('../../helpers/index')
 const getAccountState = require('../../states/account')
 const { execute } = require('../../index')
+const getExecuteState = require('../../states/execute')
 
 const accountRoutes = express.Router()
 
@@ -59,7 +60,7 @@ accountRoutes.get('/:account/symbols', async (req, res) => {
 accountRoutes.put('/:account/symbols', async (req, res) => {
   const { account } = req.params
   const { symbols } = req.body
-  const { getAccountData, updateSymbols } = await getAccountState(account)
+  const { getAccountData, getTradesOn, updateSymbols } = await getAccountState(account)
   if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
   if (!Array.isArray(symbols)) return res.status(400).send({ error: 'Bad type' })
   if (symbols.length > 5) return res.status(400).send({ error: 'Max symbols is 5' })
@@ -71,7 +72,10 @@ accountRoutes.put('/:account/symbols', async (req, res) => {
     })
   }
   if (notValid) return res.status(400).send({ error: 'One or More symbol does not exist' })
+  const tradesOn = getTradesOn()
+  if (tradesOn.length > 0) return res.status(400).send({ error: 'You have trades on!' })
   if (!updateSymbols(symbols)) return res.status(400).send({ error: 'Cannot remove updatesymbol' })
+  await (await getExecuteState(account)).resetListenersAndCandles()
   return res.send(getAccountData())
 })
 
@@ -84,6 +88,7 @@ accountRoutes.put('/:account/boton', async (req, res) => {
   const nowIsOn = turnBotOn(botOn)
   console.log('bot its tooggled')
   if (nowIsOn) execute(account)
+  else await (await getExecuteState(account)).resetListenersAndCandles()
   return res.send(getAccountData())
 })
 
