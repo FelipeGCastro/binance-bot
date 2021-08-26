@@ -1,15 +1,25 @@
 const api = require('./services/api.js')
+const Account = require('../src/models/account')
 const operations = require('./operations/userDataUpdate')
 const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
 const newOrder = require('./operations/newOrder')
-const { STRATEGIES, SIDE, TRADES_ON, ACCOUNT_PROP } = require('./tools/constants')
+const { STRATEGIES, SIDE, TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
 const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
 const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const accountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
 
 // let allCandles = []
+
+async function checkAccountOnStart (account) {
+  const { updateListenKeyIsOn } = await accountState(account)
+  const accountData = await Account.findOne({ type: account })
+  if (accountData.listenKeyIsOn) updateListenKeyIsOn(false)
+  if (accountData.botOn) execute()
+}
+checkAccountOnStart(ACCOUNTS_TYPE.PRIMARY)
+checkAccountOnStart(ACCOUNTS_TYPE.SECONDARY)
 
 // START MAIN FUNCTION
 async function execute (account) {
