@@ -14,22 +14,21 @@ const getExecuteState = require('./states/execute.js')
 // START MAIN FUNCTION
 async function execute (account) {
   const { getState, setState, addToStateArray, updateAllCandles } = await getExecuteState(account)
-  const { ACCOUNT, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await accountState(account)
+  const { ACCOUNT, getAccountData, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await accountState(account)
   telegram.sendMessage('Bot Foi Iniciado ou Reiniciado')
-  const isLeverageChanged = await changeLeverage()
+  const isLeverageChanged = await changeLeverage(account)
   if (!isLeverageChanged) return false
 
   ACCOUNT.symbols.forEach((symbol) => {
     if (!symbol) return
-
     addAllCandles(symbol)
     setWsListeners(symbol)
   })
 
   async function addAllCandles (symbol) {
-    console.log(symbol, 'addAllCandles')
     const candles = await api.candles(symbol, getState('interval'))
     if (candles) addToStateArray('allCandles', { candles, symbol })
+    else console.log('error on get Candles')
   }
 
   async function setWsListeners (symbol) {
@@ -54,6 +53,7 @@ async function execute (account) {
   }
 
   async function handleCloseCandle (data, symbol) {
+    const accountData = getAccountData()
     const allCandles = getState('allCandles')
     const validateEntry = getState('validateEntry')
     const candlesObj = allCandles.find(cand => cand.symbol === symbol)
@@ -62,11 +62,10 @@ async function execute (account) {
     if (!candlesObj) return
     const hasTradeOn = tradesOn.find(trade => trade.symbol === candlesObj.symbol)
     const newCandles = await handleAddCandle(data, candlesObj)
-
     if (!hasTradeOn &&
-        !ACCOUNT.limitReached &&
-        ACCOUNT.listenKeyIsOn &&
-        ACCOUNT.botOn) {
+        !accountData.limitReached &&
+        accountData.listenKeyIsOn &&
+        accountData.botOn) {
       const valid = await validateEntry(newCandles, symbol)
       console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
 
@@ -176,21 +175,23 @@ async function execute (account) {
       })
     }, 15000)
   }
+}
 
-  async function changeLeverage (account) {
-    ACCOUNT.symbols.forEach(async (symbol) => {
-      const changedLeverage = await api.changeLeverage(account, ACCOUNT.leverage, symbol)
-      if (!changedLeverage) {
-        console.log('Error when change Leverage')
-        return false
-      }
-      console.log('Leverage Changed Successfully: ', symbol)
-    })
-    return true
-  }
+async function changeLeverage (account) {
+  const { ACCOUNT } = await accountState(account)
+  ACCOUNT.symbols.forEach(async (symbol) => {
+    const changedLeverage = await api.changeLeverage(account, ACCOUNT.leverage, symbol)
+    if (!changedLeverage) {
+      console.log('Error when change Leverage')
+      return false
+    }
+    console.log('Leverage Changed Successfully: ', symbol)
+  })
+  return true
 }
 // END OF EXECUTE FUCTION
 
 module.exports = {
-  execute
+  execute,
+  changeLeverage
 }

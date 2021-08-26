@@ -3,14 +3,17 @@ const { updateAccountData } = require('../services/socket.js')
 const { ACCOUNT_PROP } = require('../tools/constants')
 
 async function getAccountState (account) {
-  const ACCOUNT = await Account.findOne({ type: account })
+  let ACCOUNT
 
-  function setAccountData (key, value) {
+  if (!ACCOUNT) ACCOUNT = await Account.findOne({ type: account })
+
+  async function setAccountData (key, value) {
     ACCOUNT[key] = value
-    return true
+    const updated = await Account.findOneAndUpdate({ type: account }, { [key]: value }, { new: true })
+    return updated
   }
 
-  function getAccountData (key = false) { return key ? ACCOUNT[key] : ACCOUNT }
+  function getAccountData (key = null) { return key ? ACCOUNT[key] : ACCOUNT }
 
   function getTradesDelayed () {
     return new Promise(resolve => {
@@ -18,9 +21,15 @@ async function getAccountState (account) {
     })
   }
 
-  function setTradesOn (trade) {
+  async function setTradesOn (trade) {
     ACCOUNT.tradesOn.push(trade)
+    await Account.findOneAndUpdate({ type: account }, { tradesOn: ACCOUNT.tradesOn })
     updateAccountData(account, ACCOUNT)
+  }
+
+  async function clearTradesOn () {
+    ACCOUNT.tradesOn = []
+    await Account.findOneAndUpdate({ type: account }, { tradesOn: ACCOUNT.tradesOn })
   }
 
   function updateTradesOn (symbol, key, value) {
@@ -31,38 +40,30 @@ async function getAccountState (account) {
     setTradesOn(account, newObject)
   }
 
-  function removeFromTradesOn (symb) {
+  async function removeFromTradesOn (symb) {
     ACCOUNT.tradesOn = ACCOUNT.tradesOn.filter(trade => trade.symbol !== symb)
-    ACCOUNT.limitReached = ACCOUNT.tradesOn.length >= ACCOUNT.limitOrdersSameTime
+    await Account.findOneAndUpdate({ type: account }, { tradesOn: ACCOUNT.tradesOn })
     updateAccountData(account, ACCOUNT)
   }
 
-  function updateListenKeyIsOn (value) {
+  async function updateListenKeyIsOn (value) {
     ACCOUNT.listenKeyIsOn = value
+    await Account.findOneAndUpdate({ type: account }, { listenKeyIsOn: value })
     updateAccountData(account, ACCOUNT)
   }
 
   function getTradesOn () { return ACCOUNT.tradesOn }
 
-  function handleChangeStrategy (stratName) {
-    setAccountData(ACCOUNT_PROP.STRATEGY, stratName)
-    return true
-  }
-
-  async function updateSymbols (newSymbols) {
-    ACCOUNT.symbols = newSymbols
-    return true
-  }
-
   async function turnBotOn (bool) {
+    console.log('turnBotOn', bool)
     if (bool) {
       if (!ACCOUNT.botOn) {
-        ACCOUNT.tradesOn = []
+        clearTradesOn()
         setAccountData(ACCOUNT_PROP.BOT_ON, bool)
         return true
       }
     } else {
-      ACCOUNT.tradesOn = []
+      clearTradesOn()
       updateListenKeyIsOn(false)
       setAccountData(ACCOUNT_PROP.BOT_ON, bool)
       return false
@@ -79,8 +80,6 @@ async function getAccountState (account) {
     updateTradesOn,
     removeFromTradesOn,
     updateListenKeyIsOn,
-    handleChangeStrategy,
-    updateSymbols,
     turnBotOn
   }
 }
