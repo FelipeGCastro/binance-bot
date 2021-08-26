@@ -128,6 +128,7 @@ async function verifyBalance (account) {
     if (balance < limitLoss) {
       turnBotOn(false)
       resetListenersAndCandles()
+      telegram.sendMessage('Atingiu seu maximo de perda! Parei o Bot!')
     }
   }
 }
