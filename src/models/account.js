@@ -44,11 +44,7 @@ const AccountSchema = new mongoose.Schema({
     type: Boolean,
     required: true
   },
-  tradesOn: {
-    type: [TradeOnSchema],
-    required: false,
-    default: []
-  },
+  tradesOn: [TradeOnSchema],
   createdAt: {
     type: Date,
     default: Date.now
