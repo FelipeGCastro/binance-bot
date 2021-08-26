@@ -52,16 +52,20 @@ function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide, close
   if (positionSide === POSITION.SHORT) {
     stopPrice25 = Number(closePrice) + (closePrice * (0.25 / 100))
     const highPricesOnly = tools.extractData(lastThreeCandles, 'HIGH')
-    const highestPrice = Highest.calculate({ values: highPricesOnly, period: 3 })[0]
+    let highestPrice = Highest.calculate({ values: highPricesOnly, period: 3 })[0]
     if (highestPrice < stopLossDefault) {
+      stopPrice25 = tools.ParseFloatByFormat(stopPrice25, closePrice)
+      highestPrice = tools.ParseFloatByFormat(highestPrice, closePrice)
       if (highestPrice < stopPrice25) return stopPrice25
       else return highestPrice
     } else return stopLossDefault
   } else if (positionSide === POSITION.LONG) {
     stopPrice25 = Number(closePrice) - (closePrice * (0.25 / 100))
     const lowPricesOnly = tools.extractData(lastThreeCandles, 'LOW')
-    const lowestPrice = Lowest.calculate({ values: lowPricesOnly, period: 3 })[0]
+    let lowestPrice = Lowest.calculate({ values: lowPricesOnly, period: 3 })[0]
     if (lowestPrice > stopLossDefault) {
+      stopPrice25 = tools.ParseFloatByFormat(stopPrice25, closePrice)
+      lowestPrice = tools.ParseFloatByFormat(lowestPrice, closePrice)
       if (lowestPrice > stopPrice25) return stopPrice25
       else return lowestPrice
     } else return stopLossDefault
