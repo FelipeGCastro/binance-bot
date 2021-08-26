@@ -32,6 +32,9 @@ const AccountSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  limitLoss: {
+    type: Number
+  },
   limitOrdersSameTime: {
     type: Number,
     required: true

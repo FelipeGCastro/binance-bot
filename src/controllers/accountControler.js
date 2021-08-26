@@ -20,6 +20,7 @@ async function checkAccounts () {
       leverage: 5,
       entryValue: 100,
       maxEntryValue: 120,
+      limitLoss: 80,
       limitOrdersSameTime: 4,
       limitReached: false,
       listenKeyIsOn: false
@@ -32,6 +33,7 @@ async function checkAccounts () {
       leverage: 5,
       entryValue: 100,
       maxEntryValue: 120,
+      limitLoss: 80,
       limitOrdersSameTime: 4,
       limitReached: false,
       listenKeyIsOn: false

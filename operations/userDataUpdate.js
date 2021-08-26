@@ -3,9 +3,10 @@ const Trade = require('../src/models/trade')
 const telegram = require('../services/telegram')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 const SIDE = require('../tools/constants').SIDE
-const { POSITION_SIDE, TRADES_ON } = require('../tools/constants')
+const { POSITION_SIDE, TRADES_ON, ACCOUNT_PROP } = require('../tools/constants')
 const { createTpandSLOrder } = require('./tpsl')
 const getAccountState = require('../states/account')
+const getExecuteState = require('../states/execute')
 
 let positions = []
 function setPosition (position) {
@@ -77,18 +78,10 @@ async function handleFilledOrder (order) {
     }
   } else if (position) {
     if (order.o === ORDER_TYPE.MARKET) {
-      if (order.ot === ORDER_TYPE.STOP_MARKET ||
-        order.ot === ORDER_TYPE.TAKE_PROFIT_MARKET) {
-        console.log('Saida 18 Order Type TPSL FILLED', order.ot)
+      if (order.X === 'FILLED') {
+        console.log('Saida 19 - Order MARKET Filled - TpSl or Close manually')
         return await tpslOrderFilled(order)
-      } else {
-        if (order.X === 'FILLED') {
-          console.log('Saida 19 -Order MARKET Filled with NO position open NO TPSL')
-          tpslOrderFilled(order)
-        }
       }
-      const { removeFromTradesOn } = await getAccountState(order.account)
-      removeFromTradesOn(order.symbol)
     } else {
       console.log('Saida 20 - TYPE of order no Market:', order.o)
       return false
@@ -121,6 +114,22 @@ async function tpslOrderFilled (order) {
   if (!trade) console.log('Cannot create trade')
   const ordersCancelled = await api.cancelAllOrders(order.account, order.symbol)
   if (!ordersCancelled) console.log('Problems to cancel orders')
+  verifyBalance(order.account)
+}
+
+async function verifyBalance (account) {
+  const { getTradesDelayed, turnBotOn, getAccountData } = await getAccountState(account)
+  const { resetListenersAndCandles } = await getExecuteState(account)
+  const tradesOn = await getTradesDelayed()
+  if (tradesOn.length === 0) {
+    const limitLoss = getAccountData(ACCOUNT_PROP.LIMIT_LOSS)
+    const balanceData = await api.getBalance(account)
+    const balance = balanceData.filter((coin) => (coin.asset === 'USDT'))[0].availableBalance
+    if (balance < limitLoss) {
+      turnBotOn(false)
+      resetListenersAndCandles()
+    }
+  }
 }
 
 module.exports = {
