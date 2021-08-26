@@ -12,8 +12,8 @@ const checkAccountOnStart = require('./operations/accountOnStart.js')
 
 // let allCandles = []
 
-checkAccountOnStart(ACCOUNTS_TYPE.PRIMARY)
-checkAccountOnStart(ACCOUNTS_TYPE.SECONDARY)
+checkAccountOnStart(ACCOUNTS_TYPE.PRIMARY, execute)
+checkAccountOnStart(ACCOUNTS_TYPE.SECONDARY, execute)
 
 // START MAIN FUNCTION
 async function execute (account) {
