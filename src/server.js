@@ -5,8 +5,6 @@ const account = require('./controllers/accountControler')
 const tradeRoutes = require('./controllers/tradeController')
 const authMiddleware = require('./middlewares/auth')
 const http = require('http')
-const { getAccountData } = require('..')
-const { ACCOUNTS_TYPE } = require('../tools/constants')
 
 const app = express()
 const httpServer = http.createServer(app)
@@ -20,8 +18,6 @@ app.use('/trade', tradeRoutes).use(authMiddleware)
 
 io.on('connection', (socket) => {
   console.log('New Conection:', socket.id)
-  socket.emit('primaryAccount', getAccountData(ACCOUNTS_TYPE.PRIMARY))
-  socket.emit('secondaryAccount', getAccountData(ACCOUNTS_TYPE.SECONDARY))
   socket.emit()
   require('../services/socket').setIo(io)
 })

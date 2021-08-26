@@ -8,18 +8,19 @@ const STRATEGIES = {
   HIDDEN_DIVERGENCE: 'hiddenDivergence'
 }
 
-// tradesOn = {
-// stopMarketPrice,
-// takeProfitPrice,
-// entryPrice,
-// symbol,
-// breakevenTriggerPrice,
-// riseStopTriggerPrice
-// breakevenCreated
-// riseStopCreated
-// stopOrderCreated,
-// profitOrderCreated
-// }
+const ACCOUNT_PROP = {
+  STRATEGY: 'strategy',
+  SYMBOLS: 'symbols',
+  BOT_ON: 'botOn',
+  LEVERAGE: 'leverage',
+  ENTRY_VALUE: 'entryValue',
+  MAX_ENTRY_VALUE: 'maxEntryValue',
+  LIMIT_ORDERS: 'limitOrdersSameTime',
+  LIMIT_REACHED: 'limitReached',
+  LISTEN_KEY_IS_ON: 'listenKeyIsOn',
+  TRADES_ON: 'tradesOn',
+  LIMIT_LOSS: 'limitLoss'
+}
 
 const TRADES_ON = {
   STOP_PRICE: 'stopMarketPrice',
@@ -81,5 +82,6 @@ module.exports = {
   POSITION_SIDE,
   INDICATORS_OBJ,
   ACCOUNTS_TYPE,
-  TRADES_ON
+  TRADES_ON,
+  ACCOUNT_PROP
 }
