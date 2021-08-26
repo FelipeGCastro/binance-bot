@@ -3,13 +3,11 @@ const mongoose = require('../database')
 const TradeOnSchema = new mongoose.Schema({
   type: {
     type: String,
-    unique: true,
     required: true,
     lowercase: true
   },
   symbol: {
     type: String,
-    unique: true,
     required: true
   },
   strategy: {
@@ -64,6 +62,4 @@ const TradeOnSchema = new mongoose.Schema({
   }
 })
 
-const TradeOn = mongoose.model('TradeOn', TradeOnSchema)
-
-module.exports = { TradeOn, TradeOnSchema }
+module.exports = { TradeOnSchema }
