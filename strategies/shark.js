@@ -94,10 +94,10 @@ function hasCrossStoch (candles, symbol) {
   const dUnder20 = lastD < 20 || beforeD < 20
   console.log('k:', lastK, 'd:', lastD, '---> Before: ', 'k:', beforeK, 'd:', beforeD)
   if (crossDown) {
-    if (!kOver80 || !dOver80) return false
+    if (!kOver80 && !dOver80) return false
     return crossDown
   } else if (crossUp) {
-    if (!kUnder20 || !dUnder20) return false
+    if (!kUnder20 && !dUnder20) return false
     return crossUp
   } else {
     return false
