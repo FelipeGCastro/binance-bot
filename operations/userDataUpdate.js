@@ -78,9 +78,15 @@ async function handleFilledOrder (order) {
     }
   } else if (position) {
     if (order.o === ORDER_TYPE.MARKET) {
-      if (order.X === 'FILLED') {
-        console.log('Saida 19 - Order MARKET Filled - TpSl or Close manually')
+      if (order.ot === ORDER_TYPE.STOP_MARKET ||
+        order.ot === ORDER_TYPE.TAKE_PROFIT_MARKET) {
+        console.log('Saida 18 Order Type TPSL FILLED', order.ot)
         return await tpslOrderFilled(order)
+      } else {
+        if (order.X === 'FILLED') {
+          console.log('Saida 19 - Order MARKET Filled - TpSl or Close manually')
+          return await tpslOrderFilled(order)
+        }
       }
     } else {
       console.log('Saida 20 - TYPE of order no Market:', order.o)
