@@ -63,6 +63,7 @@ async function getAccountState (account) {
     } else {
       clearTradesOn()
       updateListenKeyIsOn(false)
+      await setAccountData(ACCOUNT_PROP.LIMIT_REACHED, false)
       return await setAccountData(ACCOUNT_PROP.BOT_ON, bool)
     }
   }

@@ -91,7 +91,7 @@ accountRoutes.put('/:account/boton', async (req, res) => {
   if (typeof botOn !== 'boolean') return res.status(400).send({ error: 'Bad type' })
   const botOnNow = getAccountData('botOn')
   if (botOnNow === botOn) return res.status(400).send({ error: `botOn is already ${botOn}` })
-  const data = turnBotOn(botOn)
+  const data = await turnBotOn(botOn)
   console.log('bot its tooggled')
   const { resetListenersAndCandles } = await getExecuteState(account)
   if (botOn) execute(account)
