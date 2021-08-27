@@ -55,7 +55,6 @@ async function getAccountState (account) {
   function getTradesOn () { return ACCOUNT.tradesOn }
 
   async function turnBotOn (bool) {
-    console.log('turnBotOn', bool)
     if (bool) {
       if (!ACCOUNT.botOn) {
         clearTradesOn()
