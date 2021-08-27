@@ -2,9 +2,8 @@ const Account = require('../src/models/account')
 const { updateAccountData } = require('../services/socket.js')
 const { ACCOUNT_PROP } = require('../tools/constants')
 
+let ACCOUNT
 async function getAccountState (account) {
-  let ACCOUNT
-
   if (!ACCOUNT) ACCOUNT = await Account.findOne({ type: account })
 
   async function setAccountData (key, value) {
