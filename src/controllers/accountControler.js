@@ -96,6 +96,16 @@ accountRoutes.put('/:account/boton', async (req, res) => {
   else await (await getExecuteState(account)).resetListenersAndCandles()
   return res.send(data)
 })
+accountRoutes.put('/:account/limitLoss', async (req, res) => {
+  const { account } = req.params
+  const { getAccountData, setAccountData } = await getAccountState(account)
+  const { limitLoss } = req.body
+  if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
+  if (typeof limitLoss !== 'number') return res.status(400).send({ error: 'Bad type' })
+  setAccountData(ACCOUNT_PROP.LIMIT_LOSS, limitLoss)
+  console.log('change Limit')
+  return res.send(getAccountData())
+})
 
 accountRoutes.put('/:account/leverage', async (req, res) => {
   const { account } = req.params
