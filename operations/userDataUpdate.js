@@ -9,18 +9,14 @@ const getAccountState = require('../states/account')
 const getExecuteState = require('../states/execute')
 
 let positions = []
-function setPosition (position) {
-  const newPositionsArray = positions.filter(pos => pos.s !== position.s)
-  newPositionsArray.push(position)
-  positions = newPositionsArray
-}
+
 function getPosition (symbol) {
   return positions.find(pos => pos.s === symbol)
 }
 
 async function handleUserDataUpdate (data) {
   if (data.e === 'ACCOUNT_UPDATE') {
-    handlePosition(data)
+    positions = data.a.P
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
     const { getTradesDelayed } = await getAccountState(data.o.account)
     const tradesOn = await getTradesDelayed()
@@ -34,21 +30,10 @@ async function handleUserDataUpdate (data) {
         return false
       }
     } else {
+      console.log('Has no Trade On')
       return false
     }
   } else console.log('What Type is ? - ', data.e)
-}
-
-async function handlePosition (data) {
-  const { getTradesDelayed } = await getAccountState(data.account)
-  const tradesOn = await getTradesDelayed()
-  const positionHasTradeOn = data.a.P.filter(pos => {
-    const position = tradesOn.find(trade => trade.symbol === pos.s)
-    return !!position
-  })
-  if (positionHasTradeOn[0]) {
-    setPosition(positionHasTradeOn[0])
-  }
 }
 
 async function handleFilledOrder (order) {
