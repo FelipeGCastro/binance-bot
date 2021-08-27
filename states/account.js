@@ -11,7 +11,7 @@ async function getAccountState (account) {
 
   async function setAccountData (key, value) {
     ACCOUNT[account][key] = value
-    const updated = await Account.findOneAndUpdate({ type: account }, { [key]: value }, { new: true })
+    const updated = await Account.findOneAndUpdate({ type: account }, { $set: { [key]: value } }, { new: true })
     return updated
   }
 
@@ -25,13 +25,13 @@ async function getAccountState (account) {
 
   async function setTradesOn (trade) {
     ACCOUNT[account].tradesOn.push(trade)
-    await Account.findOneAndUpdate({ type: account }, { tradesOn: ACCOUNT[account].tradesOn })
+    await Account.findOneAndUpdate({ type: account }, { $set: { tradesOn: ACCOUNT[account].tradesOn } })
     updateAccountData(account, ACCOUNT[account])
   }
 
   async function clearTradesOn () {
     ACCOUNT[account].tradesOn = []
-    await Account.findOneAndUpdate({ type: account }, { tradesOn: ACCOUNT[account].tradesOn })
+    await Account.findOneAndUpdate({ type: account }, { $set: { tradesOn: ACCOUNT[account].tradesOn } })
   }
 
   function updateTradesOn (symbol, key, value) {
@@ -44,13 +44,13 @@ async function getAccountState (account) {
 
   async function removeFromTradesOn (symb) {
     ACCOUNT[account].tradesOn = ACCOUNT[account].tradesOn.filter(trade => trade.symbol !== symb)
-    await Account.findOneAndUpdate({ type: account }, { tradesOn: ACCOUNT[account].tradesOn })
+    await Account.findOneAndUpdate({ type: account }, { $set: { tradesOn: ACCOUNT[account].tradesOn } })
     updateAccountData(account, ACCOUNT[account])
   }
 
   async function updateListenKeyIsOn (value) {
     ACCOUNT[account].listenKeyIsOn = value
-    await Account.findOneAndUpdate({ type: account }, { listenKeyIsOn: value })
+    await Account.findOneAndUpdate({ type: account }, { $set: { listenKeyIsOn: value } })
     updateAccountData(account, ACCOUNT[account])
   }
 
