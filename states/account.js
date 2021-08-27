@@ -17,7 +17,7 @@ async function getAccountState (account) {
 
   function getTradesDelayed () {
     return new Promise(resolve => {
-      setTimeout(() => resolve(ACCOUNT.tradesOn), 2000)
+      setTimeout(() => resolve(ACCOUNT.tradesOn), 1000)
     })
   }
 
