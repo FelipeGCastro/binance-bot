@@ -3,9 +3,8 @@ const operations = require('./operations/userDataUpdate')
 const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
 const newOrder = require('./operations/newOrder')
-const { STRATEGIES, SIDE, TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
-const { handleVerifyAndCreateTpSl } = require('./operations/tpsl')
-const { verifyRiseStop } = require('./operations/changeStopLoss.js')
+const { STRATEGIES, TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
+// const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const accountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
 const checkAccountOnStart = require('./operations/accountOnStart.js')
@@ -44,18 +43,18 @@ async function execute (account) {
         lastEventAt = data.E
         await handleCloseCandle(data, symbol)
       }
-      analysingCandle(data, symbol)
+      // analysingCandle(data, symbol)
     })
     addToStateArray('candlesListeners', { listener, symbol })
   }
 
-  async function analysingCandle (data, symbol) {
-    const tradesOn = getTradesOn()
-    const hasTradeOn = tradesOn.find(trade => trade.symbol === symbol)
-    if (hasTradeOn && hasTradeOn[TRADES_ON.BREAKEVEN_PRICE] && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
-      await verifyRiseStop(account, data, hasTradeOn)
-    }
-  }
+  // async function analysingCandle (data, symbol) {
+  //   const tradesOn = getTradesOn()
+  //   const hasTradeOn = tradesOn.find(trade => trade.symbol === symbol)
+  //   if (hasTradeOn && hasTradeOn[TRADES_ON.BREAKEVEN_PRICE] && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
+  //     await verifyRiseStop(account, data, hasTradeOn)
+  //   }
+  // }
 
   async function handleCloseCandle (data, symbol) {
     const accountData = getAccountData()
@@ -93,7 +92,6 @@ async function execute (account) {
             [TRADES_ON.STRATEGY]: valid.strategy
           })
           telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${accountData.strategy}, account: ${account}`)
-          verifyAfterFewSeconds()
         }
         console.log('Entry is Valid')
       }
@@ -170,17 +168,6 @@ async function execute (account) {
     } else if (accountData.strategy === STRATEGIES.SHARK) {
       return false
     } else return false
-  }
-
-  function verifyAfterFewSeconds () {
-    const tradesOn = getTradesOn()
-    setTimeout(() => {
-      tradesOn.forEach(trade => {
-        const tpslSide = trade.side && trade.side === SIDE.SELL ? SIDE.BUY : SIDE.SELL
-        if (!trade.symbol && !trade.stopMarketPrice && !trade.takeProfitPrice) return
-        handleVerifyAndCreateTpSl(trade.symbol, tpslSide, trade.stopMarketPrice, trade.takeProfitPrice, account)
-      })
-    }, 15000)
   }
 }
 

@@ -2,6 +2,7 @@ const axios = require('axios')
 const querystring = require('querystring')
 const crypto = require('crypto')
 const { ACCOUNTS_TYPE } = require('../tools/constants')
+const { sendMessage } = require('./telegram')
 
 const apikeyPrimary = process.env.API_KEY
 const apiSecretPrimary = process.env.SECRET_KEY
@@ -34,7 +35,9 @@ async function privateCall (account, path, data = {}, method = 'GET') {
     })
     return result.data
   } catch (error) {
+    sendMessage(`code: ${error.data?.code},mensagem: ${error.data?.msg}`)
     console.error(error)
+    return false
   }
 }
 
