@@ -1,41 +1,52 @@
 const getAccountState = require('./account')
 const hiddenDivergence = require('../strategies/hiddenDivergence')
 const sharkStrategy = require('../strategies/shark')
-const { STRATEGIES } = require('../tools/constants')
+const { STRATEGIES, ACCOUNTS_TYPE, ACCOUNT_PROP } = require('../tools/constants')
 
 const state = {
-  candlesListeners: [],
-  userDataListeners: null,
-  validateEntry: () => {},
-  getStopAndTargetPrice: () => {},
-  interval: null,
-  allCandles: []
+  [ACCOUNTS_TYPE.PRIMARY]: {
+    candlesListeners: [],
+    userDataListeners: null,
+    validateEntry: () => {},
+    getStopAndTargetPrice: () => {},
+    interval: null,
+    allCandles: []
+  },
+  [ACCOUNTS_TYPE.SECONDARY]: {
+    candlesListeners: [],
+    userDataListeners: null,
+    validateEntry: () => {},
+    getStopAndTargetPrice: () => {},
+    interval: null,
+    allCandles: []
+  }
 }
 
 async function getExecuteState (account) {
   try {
-    const { ACCOUNT } = await getAccountState(account)
+    const { getAccountData } = await getAccountState(account)
+    const strategy = getAccountData(ACCOUNT_PROP.STRATEGY)
     const SET_STRATEGY = {
       [STRATEGIES.SHARK]: sharkStrategy,
       [STRATEGIES.HIDDEN_DIVERGENCE]: hiddenDivergence
     }
 
-    state.validateEntry = SET_STRATEGY[ACCOUNT.strategy].validateEntry
-    state.getStopAndTargetPrice = SET_STRATEGY[ACCOUNT.strategy].getStopAndTargetPrice
-    state.interval = SET_STRATEGY[ACCOUNT.strategy].getInterval()
+    state[account].validateEntry = SET_STRATEGY[strategy].validateEntry
+    state[account].getStopAndTargetPrice = SET_STRATEGY[strategy].getStopAndTargetPrice
+    state[account].interval = SET_STRATEGY[strategy].getInterval()
 
-    function setState (key, values) { state[key] = values }
-    function getState (key) { return key ? state[key] : state }
+    function setState (key, values) { state[account][key] = values }
+    function getState (key) { return key ? state[account][key] : state[account] }
     function addToStateArray (key, value) {
-      state[key].push(value)
+      state[account][key].push(value)
     }
-    function updateAllCandles (arrayWithValues) { state.allCandles = arrayWithValues }
+    function updateAllCandles (arrayWithValues) { state[account].allCandles = arrayWithValues }
     function resetListenersAndCandles () {
-      console.log('candles Listerners: ', state.candlesListeners.length, 'userDataListerners: ', typeof state.userDataListeners)
-      state.candlesListeners.forEach(list => { list.listener.close(1000) })
-      if (state.userDataListeners) state.userDataListeners.close(1000)
-      state.candlesListeners = []
-      state.allCandles = []
+      console.log('candles Listerners: ', state[account].candlesListeners.length, 'userDataListerners: ', typeof state[account].userDataListeners)
+      state[account].candlesListeners.forEach(list => { list.listener.close(1000) })
+      if (state[account].userDataListeners) state[account].userDataListeners.close(1000)
+      state[account].candlesListeners = []
+      state[account].allCandles = []
     }
     return { updateAllCandles, setState, getState, addToStateArray, resetListenersAndCandles }
   } catch (error) {
