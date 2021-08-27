@@ -4,7 +4,7 @@ const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
 const newOrder = require('./operations/newOrder')
 const { STRATEGIES, TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
-// const { verifyRiseStop } = require('./operations/changeStopLoss.js')
+const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const accountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
 const checkAccountOnStart = require('./operations/accountOnStart.js')
@@ -43,18 +43,18 @@ async function execute (account) {
         lastEventAt = data.E
         await handleCloseCandle(data, symbol)
       }
-      // analysingCandle(data, symbol)
+      analysingCandle(data, symbol)
     })
     addToStateArray('candlesListeners', { listener, symbol })
   }
 
-  // async function analysingCandle (data, symbol) {
-  //   const tradesOn = getTradesOn()
-  //   const hasTradeOn = tradesOn.find(trade => trade.symbol === symbol)
-  //   if (hasTradeOn && hasTradeOn[TRADES_ON.BREAKEVEN_PRICE] && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
-  //     await verifyRiseStop(account, data, hasTradeOn)
-  //   }
-  // }
+  async function analysingCandle (data, symbol) {
+    const tradesOn = getTradesOn()
+    const hasTradeOn = tradesOn.find(trade => trade.symbol === symbol)
+    if (hasTradeOn && hasTradeOn[TRADES_ON.BREAKEVEN_PRICE] && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
+      await verifyRiseStop(account, data, hasTradeOn)
+    }
+  }
 
   async function handleCloseCandle (data, symbol) {
     const accountData = getAccountData()
@@ -89,7 +89,9 @@ async function execute (account) {
             [TRADES_ON.PROFIT_PRICE]: valid.targetPrice,
             [TRADES_ON.ENTRY_PRICE]: ordered.avgPrice,
             [TRADES_ON.SIDE]: ordered.side,
-            [TRADES_ON.STRATEGY]: valid.strategy
+            [TRADES_ON.STRATEGY]: valid.strategy,
+            [TRADES_ON.BREAKEVEN_PRICE]: valid.breakevenTriggerPrice
+
           })
           telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${accountData.strategy}, account: ${account}`)
         }

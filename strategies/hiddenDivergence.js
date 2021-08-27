@@ -41,6 +41,7 @@ function validateEntry (candles, symbol) {
           stopPrice: stopAndTarget.stopPrice,
           targetPrice: stopAndTarget.targetPrice,
           closePrice: divergence.lastClosePrice,
+          breakevenTriggerPrice: stopAndTarget.breakevenTriggerPrice,
           symbol
         }
       } else {

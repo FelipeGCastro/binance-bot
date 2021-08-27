@@ -7,7 +7,7 @@ const getAccountState = require('../states/account')
 async function verifyRiseStop (account, data, trade) {
   let stopPrice
   if (trade[TRADES_ON.SIDE] === SIDE.BUY) {
-    if (trade[TRADES_ON.RISE_STOP_PRICE] < data.k.c) {
+    if (trade[TRADES_ON.RISE_STOP_PRICE] && trade[TRADES_ON.RISE_STOP_PRICE] < data.k.c) {
       console.log('riseStopFunction')
       stopPrice = trade[TRADES_ON.ENTRY_PRICE] > data.k.l ? trade.entryPrice : data.k.l
 
@@ -18,7 +18,7 @@ async function verifyRiseStop (account, data, trade) {
       await changeStopLoss(account, trade[TRADES_ON.ENTRY_PRICE], trade, TRADES_ON.BREAKEVEN_CREATED)
     }
   } else if (trade[TRADES_ON.SIDE] === SIDE.SELL) {
-    if (trade[TRADES_ON.RISE_STOP_PRICE] > data.k.c) {
+    if (trade[TRADES_ON.RISE_STOP_PRICE] && trade[TRADES_ON.RISE_STOP_PRICE] > data.k.c) {
       console.log('riseStopFunction')
       stopPrice = trade[TRADES_ON.ENTRY_PRICE] < data.k.h ? trade[TRADES_ON.ENTRY_PRICE] : data.k.h
       await changeStopLoss(account, stopPrice, trade, TRADES_ON.RISE_STOP_CREATED)
