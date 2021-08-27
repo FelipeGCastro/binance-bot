@@ -14,7 +14,7 @@ const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
 const profitPerc = 0.5
-const breakEvenPerc = 0.5
+const breakEvenPerc = 0.4
 const riseStopPerc = 0.8
 
 function validateEntry (candles) {

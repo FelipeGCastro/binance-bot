@@ -12,17 +12,17 @@ const { sendMessage } = require('./services/telegram')
 const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
 
 // const ETH5M = require('./temp/5M/part1/ETH5M')
-// const ADA5M = require('./temp/5M/part0/ADA5M')
 // const AKRO5M = require('./temp/5M/part0/AKRO5M.js')
-// const DOGE5M = require('./temp/5M/part0/DOGE5M')
 // const XRP5M = require('./temp/5M/part0/XRP5M')
-// const MATIC5M = require('./temp/5M/part0/MATIC5M.js')
-// const DENT5M = require('./temp/5M/part0/DENT5M')
+const ADA5M = require('./temp/5M/part1/ADA5M')
+const DOGE5M = require('./temp/5M/part1/DOGE5M')
+const MATIC5M = require('./temp/5M/part1/MATIC5M.js')
+const DENT5M = require('./temp/5M/part1/DENT5M')
 
-const ADA30M = require('./temp/30M/part0/ADA30M')
-const AKRO30M = require('./temp/30M/part0/AKRO30M.js')
-const DOGE30M = require('./temp/30M/part0/DOGE30M')
-const XRP30M = require('./temp/30M/part0/XRP30M')
+// const ADA30M = require('./temp/30M/part0/ADA30M')
+// const AKRO30M = require('./temp/30M/part0/AKRO30M.js')
+// const DOGE30M = require('./temp/30M/part0/DOGE30M')
+// const XRP30M = require('./temp/30M/part0/XRP30M')
 
 // const SAND1M = require('./temp/1M/part3/SAND1M')
 // const MATIC1M = require('./temp/1M/part3/MATIC1M')
@@ -30,82 +30,82 @@ const XRP30M = require('./temp/30M/part0/XRP30M')
 // const XRP1M = require('./temp/1M/part3/XRP1M')
 // const ETH1M = require('./temp/1M/part3/ETH1M')
 
-// const symbolsData = {
-//   // ETH5M: {
-//   //   name: 'ETH5M',
-//   //   data: ETH5M,
-//   //   winTrades: [],
-//   //   losesTrades: [],
-//   //   breakevenTrades: [],
-//   //   tradesOn: false
-//   // },
-//   ADA5M: {
-//     name: 'ADA5M',
-//     data: ADA5M,
-//     winTrades: [],
-//     losesTrades: [],
-//     breakevenTrades: [],
-//     tradesOn: false
-//   },
-//   AKRO5M: {
-//     name: 'AKRO5M',
-//     data: AKRO5M,
-//     winTrades: [],
-//     losesTrades: [],
-//     breakevenTrades: [],
-//     tradesOn: false
-//   },
-//   DOGE5M: {
-//     name: 'DOGE5M',
-//     data: DOGE5M,
-//     winTrades: [],
-//     losesTrades: [],
-//     breakevenTrades: [],
-//     tradesOn: false
-//   },
-//   XRP5M: {
-//     name: 'XRP5M',
-//     data: XRP5M,
-//     winTrades: [],
-//     losesTrades: [],
-//     breakevenTrades: [],
-//     tradesOn: false
-//   }
-// }
 const symbolsData = {
-  ADA30M: {
-    name: 'ADA30M',
-    data: ADA30M,
+  // ETH5M: {
+  //   name: 'ETH5M',
+  //   data: ETH5M,
+  //   winTrades: [],
+  //   losesTrades: [],
+  //   breakevenTrades: [],
+  //   tradesOn: false
+  // },
+  ADA5M: {
+    name: 'ADA5M',
+    data: ADA5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
     tradesOn: false
   },
-  AKRO30M: {
-    name: 'AKRO30M',
-    data: AKRO30M,
+  MATIC5M: {
+    name: 'MATIC5M',
+    data: MATIC5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
     tradesOn: false
   },
-  DOGE30M: {
-    name: 'DOGE30M',
-    data: DOGE30M,
+  DOGE5M: {
+    name: 'DOGE5M',
+    data: DOGE5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
     tradesOn: false
   },
-  XRP30M: {
-    name: 'XRP30M',
-    data: XRP30M,
+  DENT5M: {
+    name: 'DENT5M',
+    data: DENT5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
     tradesOn: false
   }
 }
+// const symbolsData = {
+//   ADA30M: {
+//     name: 'ADA30M',
+//     data: ADA30M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   },
+//   AKRO30M: {
+//     name: 'AKRO30M',
+//     data: AKRO30M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   },
+//   DOGE30M: {
+//     name: 'DOGE30M',
+//     data: DOGE30M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   },
+//   XRP30M: {
+//     name: 'XRP30M',
+//     data: XRP30M,
+//     winTrades: [],
+//     losesTrades: [],
+//     breakevenTrades: [],
+//     tradesOn: false
+//   }
+// }
 
 // const symbolsData = {
 //   SAND1M: {
@@ -163,7 +163,7 @@ let botOn = false
 
 const strategy = STRATEGIES.SHARK
 
-const BREAKEVEN_ON = false
+const BREAKEVEN_ON = true
 
 function setBotOn (bool) { botOn = bool }
 
