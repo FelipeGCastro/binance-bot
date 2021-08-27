@@ -14,9 +14,9 @@ const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
 const profitPerc = 0.5
-const breakEvenPerc = 0.5
+const breakEvenPerc = 0.4
 const riseStopPerc = 0.8
-const breakevenIsOn = false
+const breakevenIsOn = true
 
 function validateEntry (candles, symbol) {
   const trendingEma = validateEma200And50(candles)
@@ -39,6 +39,7 @@ function validateEntry (candles, symbol) {
         stopPrice,
         targetPrice: stopAndTarget.targetPrice,
         closePrice: lastCandle[CANDLE.CLOSE],
+        breakevenTriggerPrice: stopAndTarget.breakevenTriggerPrice,
         symbol
       }
     } else {
