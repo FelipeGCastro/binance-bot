@@ -36,12 +36,9 @@ async function getAccountState (account) {
 
   async function updateTradesOn (symbol, key, value) {
     console.log('updateTradesOn', ACCOUNT[account].tradesOn)
-    const oldObject = ACCOUNT[account].tradesOn.find(trade => trade.symbol === symbol)
-    if (!oldObject) return
-    ACCOUNT[account].tradesOn = ACCOUNT[account].tradesOn.filter(trade => trade.symbol !== symbol)
-    console.log('oldObject', oldObject)
-    const newObject = { ...oldObject, [key]: value }
-    ACCOUNT[account].tradesOn.push(newObject)
+    const tradeIndex = ACCOUNT[account].tradesOn.findIndex(trade => trade.symbol === symbol)
+    if (!tradeIndex) return
+    ACCOUNT[account].tradesOn[tradeIndex][key] = value
     console.log('updateTradesOn - Updated', ACCOUNT[account].tradesOn)
     await Account.findOneAndUpdate({ type: account }, { $set: { tradesOn: ACCOUNT[account].tradesOn } })
   }
