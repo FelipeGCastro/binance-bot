@@ -3,7 +3,7 @@ const operations = require('./operations/userDataUpdate')
 const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
 const newOrder = require('./operations/newOrder')
-const { STRATEGIES, TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
+const { TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
 const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const accountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
@@ -149,27 +149,13 @@ async function execute (account) {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = {
-            ...data.o,
-            getStopAndTargetPrice: handleGetStopAndTarget,
-            account
-          }
+          const dataOrder = { ...data.o, account }
           newData = { ...data, o: dataOrder }
         } else { newData = { ...data, account } }
         await operations.handleUserDataUpdate(newData)
       }
     })
     setState('userDataListeners', wsListenKey)
-  }
-
-  function handleGetStopAndTarget (account, entryPrice, stopPrice, side) {
-    const accountData = getAccountData()
-    const getStopAndTargetPrice = getState('getStopAndTargetPrice')
-    if (accountData.strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
-      return getStopAndTargetPrice(stopPrice, entryPrice)
-    } else if (accountData.strategy === STRATEGIES.SHARK) {
-      return false
-    } else return false
   }
 }
 
