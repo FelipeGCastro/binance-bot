@@ -1,36 +1,23 @@
 const api = require('../services/api')
 const Trade = require('../src/models/trade')
 const telegram = require('../services/telegram')
-const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 const SIDE = require('../tools/constants').SIDE
 const { POSITION_SIDE, TRADES_ON, ACCOUNT_PROP } = require('../tools/constants')
 const { createTpandSLOrder } = require('./tpsl')
 const getAccountState = require('../states/account')
 const getExecuteState = require('../states/execute')
 
-let positions = []
-
-function getPosition (symbol) {
-  return positions.find(pos => pos.s === symbol)
-}
-
-function setPosition (updatedPositions) { positions = updatedPositions }
-
 async function handleUserDataUpdate (data) {
-  if (data.e === 'ACCOUNT_UPDATE') {
-    setPosition(data.a.P)
-  } else if (data.e === 'ORDER_TRADE_UPDATE') {
+  if (data.e === 'ORDER_TRADE_UPDATE') {
     const { getTradesDelayed } = await getAccountState(data.o.account)
     const tradesOn = await getTradesDelayed()
     const trade = tradesOn.find(trade => trade.symbol === data.o.s)
     if (trade) {
-      if (data.o.X === 'FILLED' || data.o.X === 'PARTIALLY_FILLED') {
-        await handleFilledOrder({ ...data.o, trade, symbol: trade.symbol })
-      } else if (data.o.X === 'CANCELED') {
-        console.log('Order Canceled', data.o.ot)
-      } else {
-        return false
-      }
+      if (data.o.X === 'FILLED') {
+        if (data.o.i === trade[TRADES_ON.TRADE_ID]) handleFilledOrder({ ...data.o, trade })
+        if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
+        data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID]) tpslOrderFilled({ ...data.o, trade })
+      } else console.log(data.o.X)
     } else {
       console.log('Has no Trade On')
       return false
@@ -39,50 +26,13 @@ async function handleUserDataUpdate (data) {
 }
 
 async function handleFilledOrder (order) {
-  const position = getPosition(order.symbol)
-  if (position && position.pa !== '0') {
-    if (order.o === ORDER_TYPE.MARKET) {
-      console.log('Saida 17 Order Market Filled, open position', order.X, order.symbol)
+  const { updateTradesOn } = await getAccountState(order.account)
+  // account, entryPrice, stopPrice, side
 
-      if (order.X === 'FILLED') {
-        const { updateTradesOn } = await getAccountState(order.account)
-        // account, entryPrice, stopPrice, side
-        const result = order.getStopAndTargetPrice(order.account, order.L, order.trade.stopMarketPrice, order.trade.side)
-        console.log(result, 'New Stop and Take profit Price')
-        if (result) {
-          order.trade.stopMarketPrice = result.stopPrice
-          order.trade.takeProfitPrice = result.targetPrice
-          if (result.breakevenTriggerPrice) {
-            await updateTradesOn(order.trade.symbol, TRADES_ON.BREAKEVEN_PRICE, result.breakevenTriggerPrice)
-            await updateTradesOn(order.trade.symbol, TRADES_ON.RISE_STOP_PRICE, result.riseStopTriggerPrice)
-          }
-        }
-        await updateTradesOn(order.trade.symbol, TRADES_ON.ENTRY_PRICE, order.L)
-        await createTpandSLOrder(order)
-      }
-    } else {
-      return false
-    }
-  } else if (position) {
-    if (order.o === ORDER_TYPE.MARKET) {
-      if (order.ot === ORDER_TYPE.STOP_MARKET ||
-        order.ot === ORDER_TYPE.TAKE_PROFIT_MARKET) {
-        console.log('Saida 18 Order Type TPSL FILLED', order.ot)
-        return await tpslOrderFilled(order)
-      } else {
-        if (order.X === 'FILLED') {
-          console.log('Saida 19 - Order MARKET Filled - TpSl or Close manually')
-          return await tpslOrderFilled(order)
-        }
-      }
-    } else {
-      console.log('Saida 20 - TYPE of order no Market:', order.o)
-      return false
-    }
-  } else {
-    console.log('Do not have trade right now, so ignored')
-  }
+  await updateTradesOn(order.trade.symbol, TRADES_ON.ENTRY_PRICE, order.L)
+  await createTpandSLOrder(order)
 }
+// tpslOrderFilled(order)
 
 async function tpslOrderFilled (order) {
   console.log('Stop or Profit Order was triggered')
