@@ -39,6 +39,7 @@ async function getAccountState (account) {
     const oldObject = ACCOUNT[account].tradesOn.find(trade => trade.symbol === symbol)
     if (!oldObject) return
     ACCOUNT[account].tradesOn = ACCOUNT[account].tradesOn.filter(trade => trade.symbol !== symbol)
+    console.log('oldObject', oldObject)
     const newObject = { ...oldObject, [key]: value }
     ACCOUNT[account].tradesOn.push(newObject)
     console.log('updateTradesOn - Updated', ACCOUNT[account].tradesOn)
