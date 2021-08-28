@@ -1,10 +1,10 @@
 const api = require('../services/api.js')
 const { sendMessage } = require('../services/telegram.js')
-const accountState = require('../states/account')
+const getAccountState = require('../states/account')
 const { ACCOUNT_PROP, ORDER_TYPE, TRADES_ON, SIDE } = require('../tools/constants.js')
 
 async function scanTradesOn (account, execute) {
-  const { removeFromTradesOn, getAccountData } = await accountState(account)
+  const { removeFromTradesOn, getAccountData } = await getAccountState(account)
   const tradesOn = getAccountData(ACCOUNT_PROP.TRADES_ON)
   if (tradesOn.length > 0) {
     const accountInfo = await api.getAccountInfo(account)
@@ -33,7 +33,7 @@ async function scanTradesOn (account, execute) {
 }
 
 async function createOrder (account, type, price, symbol, side) {
-  const { updateTradesOn } = await accountState(account)
+  const { updateTradesOn } = await getAccountState(account)
   const ordered = await api.newOrder(account, symbol, null, side, type, true, price)
   const tradesOnKey = type === ORDER_TYPE.TAKE_PROFIT_MARKET ? TRADES_ON.PROFIT_CREATED : TRADES_ON.STOP_CREATED
   if (!ordered) {

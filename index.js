@@ -5,7 +5,7 @@ const telegram = require('./services/telegram')
 const newOrder = require('./operations/newOrder')
 const { TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
 const { verifyRiseStop } = require('./operations/changeStopLoss.js')
-const accountState = require('./states/account')
+const getAccountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
 const checkAccountOnStart = require('./operations/accountOnStart.js')
 
@@ -17,7 +17,7 @@ checkAccountOnStart(ACCOUNTS_TYPE.SECONDARY, execute)
 // START MAIN FUNCTION
 async function execute (account) {
   const { getState, setState, addToStateArray, updateAllCandles } = await getExecuteState(account)
-  const { getAccountData, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await accountState(account)
+  const { getAccountData, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await getAccountState(account)
   const accountdata = getAccountData()
   telegram.sendMessage(`Bot Foi Iniciado ou Reiniciado, conta: ${account}`)
   const isLeverageChanged = await changeLeverage(account)
@@ -160,7 +160,7 @@ async function execute (account) {
 }
 
 async function changeLeverage (account) {
-  const { getAccountData } = await accountState(account)
+  const { getAccountData } = await getAccountState(account)
   const accountData = getAccountData()
   accountData.symbols.forEach(async (symbol) => {
     const changedLeverage = await api.changeLeverage(account, accountData.leverage, symbol)
