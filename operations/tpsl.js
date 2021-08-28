@@ -11,11 +11,6 @@ async function createTpandSLOrder (order) {
 
   if (!stopMarketPrice || !takeProfitPrice) return false
 
-  if (order.symbol !== symbol) {
-    console.log('No match in Symbols to create TPSL')
-    return false
-  }
-
   return await handleVerifyAndCreateTpSl(symbol, side, stopMarketPrice, takeProfitPrice, order.account)
 }
 
