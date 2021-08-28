@@ -30,7 +30,7 @@ async function verifyRiseStop (account, data, trade) {
 }
 
 async function changeStopLoss (account, stopPrice, trade, operationType) {
-  const { updateTradesOn } = await getAccountState()
+  const { updateTradesOn } = await getAccountState(account)
   const { side, symbol } = trade
   const stopSide = side === SIDE.SELL ? SIDE.BUY : SIDE.SELL
 

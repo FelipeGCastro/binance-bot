@@ -14,10 +14,10 @@ async function handleUserDataUpdate (data) {
     const trade = tradesOn.find(trade => trade.symbol === data.o.s)
     if (trade) {
       if (data.o.X === 'FILLED') {
-        if (data.o.i === trade[TRADES_ON.TRADE_ID]) handleFilledOrder(data.o)
+        if (data.o.i === trade[TRADES_ON.TRADE_ID]) handleFilledOrder({ ...data.o, trade })
         if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
-        data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID]) tpslOrderFilled(data.o)
-      }
+        data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID]) tpslOrderFilled({ ...data.o, trade })
+      } else console.log(data.o.X)
     } else {
       console.log('Has no Trade On')
       return false
