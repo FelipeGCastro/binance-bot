@@ -3,9 +3,9 @@ const operations = require('./operations/userDataUpdate')
 const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
 const newOrder = require('./operations/newOrder')
-const { STRATEGIES, TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
+const { TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE } = require('./tools/constants')
 const { verifyRiseStop } = require('./operations/changeStopLoss.js')
-const accountState = require('./states/account')
+const getAccountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
 const checkAccountOnStart = require('./operations/accountOnStart.js')
 
@@ -17,7 +17,7 @@ checkAccountOnStart(ACCOUNTS_TYPE.SECONDARY, execute)
 // START MAIN FUNCTION
 async function execute (account) {
   const { getState, setState, addToStateArray, updateAllCandles } = await getExecuteState(account)
-  const { getAccountData, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await accountState(account)
+  const { getAccountData, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await getAccountState(account)
   const accountdata = getAccountData()
   telegram.sendMessage(`Bot Foi Iniciado ou Reiniciado, conta: ${account}`)
   const isLeverageChanged = await changeLeverage(account)
@@ -149,11 +149,7 @@ async function execute (account) {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = {
-            ...data.o,
-            getStopAndTargetPrice: handleGetStopAndTarget,
-            account
-          }
+          const dataOrder = { ...data.o, account }
           newData = { ...data, o: dataOrder }
         } else { newData = { ...data, account } }
         await operations.handleUserDataUpdate(newData)
@@ -161,20 +157,10 @@ async function execute (account) {
     })
     setState('userDataListeners', wsListenKey)
   }
-
-  function handleGetStopAndTarget (account, entryPrice, stopPrice, side) {
-    const accountData = getAccountData()
-    const getStopAndTargetPrice = getState('getStopAndTargetPrice')
-    if (accountData.strategy === STRATEGIES.HIDDEN_DIVERGENCE) {
-      return getStopAndTargetPrice(stopPrice, entryPrice)
-    } else if (accountData.strategy === STRATEGIES.SHARK) {
-      return false
-    } else return false
-  }
 }
 
 async function changeLeverage (account) {
-  const { getAccountData } = await accountState(account)
+  const { getAccountData } = await getAccountState(account)
   const accountData = getAccountData()
   accountData.symbols.forEach(async (symbol) => {
     const changedLeverage = await api.changeLeverage(account, accountData.leverage, symbol)
