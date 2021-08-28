@@ -14,9 +14,11 @@ function getPosition (symbol) {
   return positions.find(pos => pos.s === symbol)
 }
 
+function setPosition (updatedPositions) { positions = updatedPositions }
+
 async function handleUserDataUpdate (data) {
   if (data.e === 'ACCOUNT_UPDATE') {
-    positions = data.a.P
+    setPosition(data.a.P)
   } else if (data.e === 'ORDER_TRADE_UPDATE') {
     const { getTradesDelayed } = await getAccountState(data.o.account)
     const tradesOn = await getTradesDelayed()
