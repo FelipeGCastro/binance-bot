@@ -10,6 +10,15 @@ const TradeOnSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  tradeId: {
+    type: Number
+  },
+  stopLossId: {
+    type: Number
+  },
+  takeProfitId: {
+    type: Number
+  },
   strategy: {
     type: String,
     required: true
