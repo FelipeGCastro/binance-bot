@@ -34,7 +34,10 @@ const TRADES_ON = {
   STOP_CREATED: 'stopOrderCreated',
   PROFIT_CREATED: 'profitOrderCreated',
   SIDE: 'side',
-  STRATEGY: 'strategy'
+  STRATEGY: 'strategy',
+  TRADE_ID: 'tradeId',
+  STOP_LOSS_ID: 'stopLossId',
+  TAKE_PROFIT_ID: 'takeProfitId'
 }
 
 const ORDER_TYPE = {
