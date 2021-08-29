@@ -5,9 +5,11 @@ const { validateEma200And50 } = require('../indicators/ema.js')
 const CANDLE = require('../tools/constants').CANDLE
 const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
-const { SIDE } = require('../tools/constants')
+const { SIDE, POSITION_SIDE } = require('../tools/constants')
 const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
+const bearishEngulfingPattern = require('technicalindicators').bearishengulfingpattern
+const bullishEngulfingPattern = require('technicalindicators').bullishengulfingpattern
 
 const periodTime = '5m'
 const rsiPeriod = 3// 80 - 20
@@ -15,7 +17,7 @@ const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
 const profitPerc = 0.5
 const breakEvenPerc = 0.4
-const riseStopPerc = 0.8
+const riseStopPerc = 0.45
 
 function validateEntry (candles) {
   const trendingEma = validateEma200And50(candles, true)
@@ -26,6 +28,8 @@ function validateEntry (candles) {
   if (!checkLastCandle(candles, crossStoch)) return false
   if (!validatedRsi) return false
   if (crossStoch !== trendingEma.position) return false
+  const isEngulfing = checkingEngulfing(candles, crossStoch)
+  if (!isEngulfing) return false
   else {
     const lastThreeCandles = tools.getLasts(candles, 3)
     const stopAndTarget = getStopAndTargetPrice(lastCandle[CANDLE.CLOSE], crossStoch)
@@ -44,6 +48,31 @@ function validateEntry (candles) {
     } else {
       return false
     }
+  }
+}
+// open: [21.44,27.89],
+// high: [25.10,30.87],
+// close: [23.25,15.36],
+// low: [20.82,14.93],
+
+function checkingEngulfing (candles, positionSide) {
+  const lastTwoCandles = tools.getLasts(candles, 2)
+  const lastTwoClose = tools.extractData(lastTwoCandles, 'CLOSE')
+  const lastTwoOpen = tools.extractData(lastTwoCandles, 'OPEN')
+  const lastTwoHigh = tools.extractData(lastTwoCandles, 'HIGH')
+  const lastTwoLow = tools.extractData(lastTwoCandles, 'LOW')
+  const twoCandlesInput = {
+    open: lastTwoOpen,
+    high: lastTwoHigh,
+    close: lastTwoClose,
+    low: lastTwoLow
+  }
+  if (positionSide === POSITION_SIDE.SHORT) {
+    const result = bearishEngulfingPattern(twoCandlesInput)
+    return result
+  } else if (positionSide === POSITION_SIDE.LONG) {
+    const result = bullishEngulfingPattern(twoCandlesInput)
+    return result
   }
 }
 

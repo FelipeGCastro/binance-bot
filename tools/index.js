@@ -1,5 +1,6 @@
 function extractData (dataArray, index = 'CLOSE') {
   const type = {
+    OPEN: 1,
     CLOSE: 4,
     HIGH: 2,
     LOW: 3

@@ -1,6 +1,6 @@
 const EMA = require('trading-signals').EMA
 const tools = require('../tools/index.js')
-const POSITION = require('../tools/constants').POSITION_SIDE
+const { POSITION_SIDE, CANDLE } = require('../tools/constants')
 
 const periodEma200 = 200
 const periodEma50 = 50
@@ -16,14 +16,17 @@ function checkingEma (candles, period = 150) {
   }
 }
 
-function validateEma200And50 (candles) {
+function validateEma200And50 (candles, overOrBellowEMA = false) {
+  const lastCandle = candles[candles.length - 1]
   const ema200 = checkingEma(candles, periodEma200)
   const ema50 = checkingEma(candles, periodEma50)
   const data = { ema200, ema50, position: '' }
   if (ema200 < ema50) {
-    data.position = POSITION.LONG
+    if (overOrBellowEMA && lastCandle[CANDLE.CLOSE] < ema200) return false
+    data.position = POSITION_SIDE.LONG
   } else {
-    data.position = POSITION.SHORT
+    if (overOrBellowEMA && lastCandle[CANDLE.CLOSE] > ema200) return false
+    data.position = POSITION_SIDE.SHORT
   }
   return data
 }

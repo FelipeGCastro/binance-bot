@@ -5,6 +5,7 @@ const sharkDivergence = require('./strategies/sharkWithDivergence')
 const sharkWithBB = require('./strategies/sharkWithBB')
 const sharkDivergenceBB = require('./strategies/sharkDivergenceBB')
 const divergenceWithBB = require('./strategies/divergenceWithBB')
+const sharkWithEngulfing = require('./strategies/sharkWithEngulfing')
 
 const { STRATEGIES, TRADES_ON, CANDLE } = require('./tools/constants')
 // const { verifyRiseStop } = require('./operations/changeStopLoss.js')
@@ -14,10 +15,10 @@ const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
 // const ETH5M = require('./temp/5M/part1/ETH5M')
 // const AKRO5M = require('./temp/5M/part0/AKRO5M.js')
 // const XRP5M = require('./temp/5M/part0/XRP5M')
-const ADA5M = require('./temp/5M/part1/ADA5M')
-const DOGE5M = require('./temp/5M/part1/DOGE5M')
-const MATIC5M = require('./temp/5M/part1/MATIC5M.js')
-const DENT5M = require('./temp/5M/part1/DENT5M')
+const ADA5M = require('./temp/5M/part2/ADA5M')
+const DENT5M = require('./temp/5M/part2/DENT5M')
+const DOGE5M = require('./temp/5M/part2/DOGE5M.js')
+const MATIC5M = require('./temp/5M/part2/MATIC5M')
 
 // const ADA30M = require('./temp/30M/part0/ADA30M')
 // const AKRO30M = require('./temp/30M/part0/AKRO30M.js')
@@ -29,16 +30,8 @@ const DENT5M = require('./temp/5M/part1/DENT5M')
 // const ADA1M = require('./temp/1M/part3/ADA1M')
 // const XRP1M = require('./temp/1M/part3/XRP1M')
 // const ETH1M = require('./temp/1M/part3/ETH1M')
-
+// ADA5M DENT5M DOGE5M MATIC5M
 const symbolsData = {
-  // ETH5M: {
-  //   name: 'ETH5M',
-  //   data: ETH5M,
-  //   winTrades: [],
-  //   losesTrades: [],
-  //   breakevenTrades: [],
-  //   tradesOn: false
-  // },
   ADA5M: {
     name: 'ADA5M',
     data: ADA5M,
@@ -47,9 +40,9 @@ const symbolsData = {
     breakevenTrades: [],
     tradesOn: false
   },
-  MATIC5M: {
-    name: 'MATIC5M',
-    data: MATIC5M,
+  DENT5M: {
+    name: 'DENT5M',
+    data: DENT5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
@@ -63,9 +56,9 @@ const symbolsData = {
     breakevenTrades: [],
     tradesOn: false
   },
-  DENT5M: {
-    name: 'DENT5M',
-    data: DENT5M,
+  MATIC5M: {
+    name: 'MATIC5M',
+    data: MATIC5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
@@ -156,12 +149,13 @@ const SET_STRATEGY = {
   [STRATEGIES.SHARK_DIVERGENCE]: sharkDivergence,
   [STRATEGIES.SHARK_BB]: sharkWithBB,
   [STRATEGIES.SHARK_DIVERGENCE_BB]: sharkDivergenceBB,
-  [STRATEGIES.DIVERGENCE_BB]: divergenceWithBB
+  [STRATEGIES.DIVERGENCE_BB]: divergenceWithBB,
+  [STRATEGIES.SHARK_ENGULFING]: sharkWithEngulfing
 }
 
 let botOn = false
 
-const strategy = STRATEGIES.SHARK
+const strategy = STRATEGIES.SHARK_ENGULFING
 
 const BREAKEVEN_ON = true
 
