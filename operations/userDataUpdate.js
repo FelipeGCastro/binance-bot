@@ -30,9 +30,16 @@ async function handleUserDataUpdate (data) {
 
 async function handleFilledOrder (order) {
   const { updateTradesOn } = await getAccountState(order.account)
-  // account, entryPrice, stopPrice, side
-
-  await updateTradesOn(order.trade.symbol, TRADES_ON.ENTRY_PRICE, order.L)
+  // strategy, entryPrice, positionSideOrSide, oldStopPrice
+  const result = order.getStopAndTargetPrice(order.trade.strategy, order.L, order.trade.side, order.trade.stopPrice)
+  // targetPrice stopPrice breakevenTriggerPrice riseStopTriggerPrice
+  if (result) {
+    order.trade.stopMarketPrice = result.stopPrice
+    order.trade.takeProfitPrice = result.targetPrice
+    if (result.breakevenTriggerPrice) updateTradesOn(order.trade.symbol, TRADES_ON.BREAKEVEN_PRICE, result.breakevenTriggerPrice)
+    if (result.riseStopTriggerPrice) updateTradesOn(order.trade.symbol, TRADES_ON.RISE_STOP_PRICE, result.riseStopTriggerPrice)
+  }
+  updateTradesOn(order.trade.symbol, TRADES_ON.ENTRY_PRICE, order.L)
   await createTpandSLOrder(order)
 }
 // tpslOrderFilled(order)

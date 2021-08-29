@@ -15,8 +15,9 @@ const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
 const profitPerc = 0.5
 const breakEvenPerc = 0.4
-const riseStopPerc = 0.8
+const riseStopPerc = 0.45
 const breakevenIsOn = true
+const riseStopIsOn = false
 
 function validateEntry (candles, symbol) {
   const trendingEma = validateEma200And50(candles)
@@ -109,16 +110,18 @@ function getInterval () {
   return periodTime
 }
 
-function getStopAndTargetPrice (entryPrice, side) {
-  const isSell = side === POSITION.SHORT || side === SIDE.SELL
-  let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice
+function getStopAndTargetPrice (entryPrice, positionSideOrSide, oldStopPrice = null) {
+  const isSell = positionSideOrSide === POSITION.SHORT || positionSideOrSide === SIDE.SELL
+  let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice, newStopPrice
   if (isSell) {
-    stopPrice = Number(entryPrice) + (entryPrice * (stopPerc / 100))
+    newStopPrice = Number(entryPrice) + (entryPrice * (stopPerc / 100))
+    stopPrice = !!oldStopPrice && oldStopPrice < newStopPrice ? oldStopPrice : newStopPrice
     targetPrice = Number(entryPrice) - (entryPrice * (profitPerc / 100))
     breakevenTriggerPrice = Number(entryPrice) - (entryPrice * (breakEvenPerc / 100))
     riseStopTriggerPrice = Number(entryPrice) - (entryPrice * (riseStopPerc / 100))
   } else {
-    stopPrice = Number(entryPrice) - (entryPrice * (stopPerc / 100))
+    newStopPrice = Number(entryPrice) - (entryPrice * (stopPerc / 100))
+    stopPrice = !!oldStopPrice && oldStopPrice > newStopPrice ? oldStopPrice : newStopPrice
     targetPrice = Number(entryPrice) + (entryPrice * (profitPerc / 100))
     breakevenTriggerPrice = Number(entryPrice) + (entryPrice * (breakEvenPerc / 100))
     riseStopTriggerPrice = Number(entryPrice) + (entryPrice * (riseStopPerc / 100))
@@ -130,10 +133,9 @@ function getStopAndTargetPrice (entryPrice, side) {
   riseStopTriggerPrice = tools.ParseFloatByFormat(riseStopTriggerPrice, entryPrice)
   if (targetPrice && stopPrice) {
     const data = { targetPrice, stopPrice }
-    if (breakevenIsOn) {
-      data.breakevenTriggerPrice = breakevenTriggerPrice
-      data.riseStopTriggerPrice = riseStopTriggerPrice
-    }
+    if (breakevenIsOn) data.breakevenTriggerPrice = breakevenTriggerPrice
+    if (riseStopIsOn) data.riseStopTriggerPrice = riseStopTriggerPrice
+
     return data
   } else {
     return false
