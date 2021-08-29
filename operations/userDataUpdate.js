@@ -40,7 +40,7 @@ async function tpslOrderFilled (order) {
   const { removeFromTradesOn } = await getAccountState(order.account)
   const isGain = order.rp > 0
   const data = {
-    symbol: order.symbol,
+    symbol: order.trade.symbol,
     side: order.S === SIDE.SELL ? POSITION_SIDE.LONG : POSITION_SIDE.SHORT,
     closePrice: order.L,
     entryPrice: order.trade.entryPrice,
@@ -52,10 +52,10 @@ async function tpslOrderFilled (order) {
     strategy: order.trade.strategy,
     account: order.account
   }
-  removeFromTradesOn(order.symbol)
+  removeFromTradesOn(order.trade.symbol)
   const trade = await Trade.create(data)
   if (!trade) console.log('Cannot create trade')
-  const ordersCancelled = await api.cancelAllOrders(order.account, order.symbol)
+  const ordersCancelled = await api.cancelAllOrders(order.account, order.trade.symbol)
   if (!ordersCancelled) console.log('Problems to cancel orders')
   verifyBalance(order.account)
 }
