@@ -69,6 +69,8 @@ function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide, close
     if (lowestPrice > stopLossDefault) {
       stopPrice25 = tools.ParseFloatByFormat(stopPrice25, closePrice)
       lowestPrice = tools.ParseFloatByFormat(lowestPrice, closePrice)
+      console.log('getStopLossFlex - ', ' stopPrice25: ', stopPrice25, ' lowestPrice: ', lowestPrice, ' stopLossDefault: ', stopLossDefault)
+
       if (lowestPrice > stopPrice25) return stopPrice25
       else return lowestPrice
     } else return stopLossDefault
