@@ -33,6 +33,7 @@ async function changeStopLoss (account, stopPrice, trade, operationType) {
   const { updateTradesOn } = await getAccountState(account)
   const { side, symbol } = trade
   const stopSide = side === SIDE.SELL ? SIDE.BUY : SIDE.SELL
+  const typeId = operationType === TRADES_ON.BREAKEVEN_CREATED ? TRADES_ON.BREAKEVEN_ID : TRADES_ON.RISE_STOP_ID
 
   const openOrders = await api.getAllOpenOrders(account, symbol)
   console.log('changeStopLoss - trade:', trade)
@@ -55,6 +56,7 @@ async function changeStopLoss (account, stopPrice, trade, operationType) {
       return false
     } else {
       await updateTradesOn(symbol, operationType, true)
+      await updateTradesOn(symbol, typeId, ordered.orderId)
       return true
     }
   }
