@@ -19,7 +19,8 @@ const ACCOUNT_PROP = {
   LIMIT_REACHED: 'limitReached',
   LISTEN_KEY_IS_ON: 'listenKeyIsOn',
   TRADES_ON: 'tradesOn',
-  LIMIT_LOSS: 'limitLoss'
+  LIMIT_LOSS: 'limitLoss',
+  ONLY_ERROR_MSG: 'onlyErrorMessages'
 }
 
 const TRADES_ON = {

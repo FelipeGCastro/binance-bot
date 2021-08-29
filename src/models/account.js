@@ -18,7 +18,8 @@ const AccountSchema = new mongoose.Schema({
   },
   botOn: {
     type: Boolean,
-    required: true
+    required: true,
+    default: false
   },
   leverage: {
     type: Number,
@@ -41,13 +42,20 @@ const AccountSchema = new mongoose.Schema({
   },
   limitReached: {
     type: Boolean,
-    required: true
+    required: true,
+    default: false
   },
   listenKeyIsOn: {
     type: Boolean,
-    required: true
+    required: true,
+    default: false
   },
   tradesOn: [TradeOnSchema],
+  onlyErrorMessages: {
+    type: Boolean,
+    require: true,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

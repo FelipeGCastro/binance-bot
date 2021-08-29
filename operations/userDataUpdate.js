@@ -46,7 +46,7 @@ async function handleFilledOrder (order) {
 
 async function tpslOrderFilled (order) {
   console.log('Stop or Profit Order was triggered')
-  telegram.sendMessage(`PNL: ${order.rp}, conta: ${order.account}`)
+  telegram.sendMessage(order.account, `PNL: ${order.rp}, conta: ${order.account}`)
   const { removeFromTradesOn } = await getAccountState(order.account)
   const isGain = order.rp > 0
   const data = {
@@ -81,7 +81,7 @@ async function verifyBalance (account) {
     if (balance < limitLoss) {
       turnBotOn(false)
       resetListenersAndCandles()
-      telegram.sendMessage(`Atingiu seu maximo de perda! Parei o Bot! ${account}`)
+      telegram.sendMessage(account, `Atingiu seu maximo de perda! Parei o Bot! ${account}`)
     }
   }
 }
