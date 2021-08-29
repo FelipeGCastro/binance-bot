@@ -16,27 +16,21 @@ async function checkAccounts () {
       type: ACCOUNTS_TYPE.PRIMARY,
       strategy: STRATEGIES.SHARK,
       symbols: ['ADAUSDT', 'DOGEUSDT', 'AKROUSDT', 'XRPUSDT'],
-      botOn: false,
       leverage: 5,
       entryValue: 100,
       maxEntryValue: 120,
       limitLoss: 80,
-      limitOrdersSameTime: 4,
-      limitReached: false,
-      listenKeyIsOn: false
+      limitOrdersSameTime: 4
     },
     {
       type: ACCOUNTS_TYPE.SECONDARY,
       strategy: STRATEGIES.SHARK,
       symbols: ['ADAUSDT', 'DOGEUSDT', 'LINAUSDT', 'C98USDT'],
-      botOn: false,
       leverage: 5,
       entryValue: 100,
       maxEntryValue: 120,
       limitLoss: 80,
-      limitOrdersSameTime: 4,
-      limitReached: false,
-      listenKeyIsOn: false
+      limitOrdersSameTime: 4
     }])
   }
 }
@@ -146,6 +140,18 @@ accountRoutes.put('/:account/strategy', async (req, res) => {
     console.log('changed strategy')
   } else return res.status(400).send({ error: 'Bad request' })
 
+  return res.send(getAccountData())
+})
+
+accountRoutes.put('/:account/onlyErrorMessages', async (req, res) => {
+  const { account } = req.params
+  const { onlyErrorMessages } = req.body
+  const { getAccountData, setAccountData } = await getAccountState(account)
+  if (account !== ACCOUNTS_TYPE.PRIMARY && account !== ACCOUNTS_TYPE.SECONDARY) { return res.status(400).send({ error: 'Bad type' }) }
+  if (typeof onlyErrorMessages !== 'boolean') return res.status(400).send({ error: 'Bad type' })
+  const oldOnlyErrorMessages = getAccountData(ACCOUNT_PROP.ONLY_ERROR_MSG)
+  if (onlyErrorMessages === oldOnlyErrorMessages) return res.status(400).send({ error: `onlyErrorMessages is already ${onlyErrorMessages}` })
+  setAccountData(ACCOUNT_PROP.ONLY_ERROR_MSG, onlyErrorMessages)
   return res.send(getAccountData())
 })
 

@@ -38,7 +38,7 @@ async function createOrder (account, type, price, symbol, side) {
   const tradesOnKey = type === ORDER_TYPE.TAKE_PROFIT_MARKET ? TRADES_ON.PROFIT_CREATED : TRADES_ON.STOP_CREATED
   if (!ordered) {
     await updateTradesOn(symbol, tradesOnKey, false)
-    sendMessage(`Problem ao criar ${type} Order para ${symbol}`)
+    sendMessage(account, `Problem ao criar ${type} Order para ${symbol}`)
     console.log(`Error creating ${type} order`)
     return false
   } else {

@@ -19,7 +19,7 @@ async function execute (account) {
   const { getState, setState, addToStateArray, updateAllCandles } = await getExecuteState(account)
   const { getAccountData, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await getAccountState(account)
   const accountdata = getAccountData()
-  telegram.sendMessage(`Bot Foi Iniciado ou Reiniciado, conta: ${account}`)
+  telegram.sendMessage(account, `Bot Foi Iniciado ou Reiniciado, conta: ${account}`)
   const isLeverageChanged = await changeLeverage(account)
   if (!isLeverageChanged) return false
 
@@ -93,7 +93,7 @@ async function execute (account) {
             [TRADES_ON.BREAKEVEN_PRICE]: valid.breakevenTriggerPrice,
             [TRADES_ON.TRADE_ID]: ordered.orderId
           })
-          telegram.sendMessage(`Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${accountData.strategy}, account: ${account}`)
+          telegram.sendMessage(account, `Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${accountData.strategy}, account: ${account}`)
         }
         console.log('Entry is Valid')
       }
@@ -132,7 +132,7 @@ async function execute (account) {
           updateListenKeyIsOn(true)
           clearInterval(keyInterval)
         } else {
-          telegram.sendMessage(`Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos, conta: ${account}`)
+          telegram.sendMessage(account, `Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos, conta: ${account}`)
           console.log('Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos')
         }
       }, 10000)
