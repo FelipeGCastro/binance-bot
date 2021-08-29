@@ -15,8 +15,11 @@ async function handleUserDataUpdate (data) {
     if (trade) {
       if (data.o.X === 'FILLED') {
         if (data.o.i === trade[TRADES_ON.TRADE_ID]) handleFilledOrder({ ...data.o, trade })
-        if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
-        data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID]) tpslOrderFilled({ ...data.o, trade })
+        else if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
+        data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID] ||
+        data.o.i === trade[TRADES_ON.BREAKEVEN_ID] ||
+        data.o.i === trade[TRADES_ON.RISE_STOP_ID]) tpslOrderFilled({ ...data.o, trade })
+        else if (trade.symbol === data.o.s) tpslOrderFilled({ ...data.o, trade })
       } else console.log(data.o.X)
     } else {
       console.log('Has no Trade On')
