@@ -31,7 +31,7 @@ async function handleUserDataUpdate (data) {
 async function handleFilledOrder (order) {
   const { updateTradesOn } = await getAccountState(order.account)
   // strategy, entryPrice, positionSideOrSide, oldStopPrice
-  const result = order.getStopAndTargetPrice(order.trade.strategy, order.L, order.trade.side, order.trade.stopPrice)
+  const result = order.getStopAndTargetPrice(order.trade.strategy, order.L, order.trade.side, order.trade.stopMarketPrice)
   // targetPrice stopPrice breakevenTriggerPrice riseStopTriggerPrice
   if (result) {
     order.trade.stopMarketPrice = result.stopPrice
