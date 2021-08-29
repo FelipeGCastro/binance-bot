@@ -58,6 +58,7 @@ function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide, close
     if (highestPrice < stopLossDefault) {
       stopPrice25 = tools.ParseFloatByFormat(stopPrice25, closePrice)
       highestPrice = tools.ParseFloatByFormat(highestPrice, closePrice)
+      console.log('getStopLossFlex - ', ' stopPrice25: ', stopPrice25, ' highestPrice: ', highestPrice, ' stopLossDefault: ', stopLossDefault)
       if (highestPrice < stopPrice25) return stopPrice25
       else return highestPrice
     } else return stopLossDefault
@@ -115,12 +116,14 @@ function getStopAndTargetPrice (entryPrice, positionSideOrSide, oldStopPrice = n
   let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice, newStopPrice
   if (isSell) {
     newStopPrice = Number(entryPrice) + (entryPrice * (stopPerc / 100))
+    if (oldStopPrice) console.log('getStopAndTargetPrice-', 'oldStopPrice: ', oldStopPrice, 'newStopPrice: ', newStopPrice)
     stopPrice = !!oldStopPrice && oldStopPrice < newStopPrice ? oldStopPrice : newStopPrice
     targetPrice = Number(entryPrice) - (entryPrice * (profitPerc / 100))
     breakevenTriggerPrice = Number(entryPrice) - (entryPrice * (breakEvenPerc / 100))
     riseStopTriggerPrice = Number(entryPrice) - (entryPrice * (riseStopPerc / 100))
   } else {
     newStopPrice = Number(entryPrice) - (entryPrice * (stopPerc / 100))
+    if (oldStopPrice) console.log('getStopAndTargetPrice-', 'oldStopPrice: ', oldStopPrice, 'newStopPrice: ', newStopPrice)
     stopPrice = !!oldStopPrice && oldStopPrice > newStopPrice ? oldStopPrice : newStopPrice
     targetPrice = Number(entryPrice) + (entryPrice * (profitPerc / 100))
     breakevenTriggerPrice = Number(entryPrice) + (entryPrice * (breakEvenPerc / 100))
