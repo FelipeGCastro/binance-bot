@@ -15,15 +15,15 @@ const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
 // const ETH5M = require('./temp/5M/part1/ETH5M')
 // const AKRO5M = require('./temp/5M/part0/AKRO5M.js')
 // const XRP5M = require('./temp/5M/part0/XRP5M')
-// const ADA5M = require('./temp/5M/part2/ADA5M')
-// const DENT5M = require('./temp/5M/part2/DENT5M')
-// const DOGE5M = require('./temp/5M/part2/DOGE5M.js')
-// const MATIC5M = require('./temp/5M/part2/MATIC5M')
+const ADA5M = require('./temp/5M/part2/ADA5M')
+const DENT5M = require('./temp/5M/part2/DENT5M')
+const DOGE5M = require('./temp/5M/part2/DOGE5M.js')
+const MATIC5M = require('./temp/5M/part2/MATIC5M')
 
-const BTS5M = require('./temp/5M/part0/BTS5M')
-const BTT5M = require('./temp/5M/part0/BTT5M')
-const DENT5M = require('./temp/5M/part0/DENT5M.js')
-const LINA5M = require('./temp/5M/part0/LINA5M')
+// const BTS5M = require('./temp/5M/part0/BTS5M')
+// const BTT5M = require('./temp/5M/part0/BTT5M')
+// const DENT5M = require('./temp/5M/part0/DENT5M.js')
+// const LINA5M = require('./temp/5M/part0/LINA5M')
 
 // const SAND1M = require('./temp/1M/part3/SAND1M')
 // const MATIC1M = require('./temp/1M/part3/MATIC1M')
@@ -32,9 +32,9 @@ const LINA5M = require('./temp/5M/part0/LINA5M')
 // const ETH1M = require('./temp/1M/part3/ETH1M')
 // BTS5M BTT5M DENT5M LINA5M
 const symbolsData = {
-  BTS5M: {
-    name: 'BTS5M',
-    data: BTS5M,
+  ADA5M: {
+    name: 'ADA5M',
+    data: ADA5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
@@ -50,18 +50,18 @@ const symbolsData = {
     riseStopTrades: [],
     tradesOn: false
   },
-  BTT5M: {
-    name: 'BTT5M',
-    data: BTT5M,
+  DOGE5M: {
+    name: 'DOGE5M',
+    data: DOGE5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
     riseStopTrades: [],
     tradesOn: false
   },
-  LINA5M: {
-    name: 'LINA5M',
-    data: LINA5M,
+  MATIC5M: {
+    name: 'MATIC5M',
+    data: MATIC5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
@@ -146,7 +146,8 @@ function getAccountData () {
     wins: symbolsData[key].winTrades.length,
     loss: symbolsData[key].losesTrades.length,
     breakeven: symbolsData[key].breakevenTrades.length,
-    winPerc: sumPercentage(symbolsData[key].winTrades, 'winPercentage'),
+    rise: symbolsData[key].riseStopTrades.length,
+    winPerc: sumPercentage(symbolsData[key].winTrades.concat(symbolsData[key].riseStopTrades), 'winPercentage'),
     lossPerc: sumPercentage(symbolsData[key].losesTrades, 'lossPercentage'),
     ...symbolsData[key],
     data: []
@@ -178,8 +179,8 @@ async function execute () {
         console.log('FINISH')
         sendMessage(`symbol: ${key},
           wins: ${symbolsData[key].winTrades.length}, loses: ${symbolsData[key].losesTrades.length},
-          breakeven: ${symbolsData[key].breakevenTrades.length},
-          win %: ${sumPercentage(symbolsData[key].winTrades, 'winPercentage')}, loss %: ${sumPercentage(symbolsData[key].losesTrades, 'lossPercentage')}
+          breakeven: ${symbolsData[key].breakevenTrades.length}, rise: ${symbolsData[key].riseStopTrades.length}
+          win %: ${sumPercentage(symbolsData[key].winTrades.concat(symbolsData[key].riseStopTrades), 'winPercentage')}, loss %: ${sumPercentage(symbolsData[key].losesTrades, 'lossPercentage')}
           `) // winPercentage  lossPercentage
         clearInterval(mainInterval)
       }
@@ -222,10 +223,12 @@ async function execute () {
           if (RISE_STOP_ON) {
             if (data[CANDLE.HIGH] < symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]) {
               symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = data[CANDLE.HIGH]
+              symbolsData[key].tradesOn.winPercentage = getPercentage(data[CANDLE.HIGH], symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE])
+              symbolsData[key].tradesOn.isRise = true
             } else {
               symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
+              symbolsData[key].tradesOn.isBreakeven = true
             }
-            symbolsData[key].tradesOn.isRise = true
           }
         } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn.breakevenTriggerPrice) {
           if (BREAKEVEN_ON) {
@@ -246,10 +249,12 @@ async function execute () {
           if (RISE_STOP_ON) {
             if (data[CANDLE.LOW] > symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]) {
               symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = data[CANDLE.LOW]
+              symbolsData[key].tradesOn.winPercentage = getPercentage(data[CANDLE.LOW], symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE])
+              symbolsData[key].tradesOn.isRise = true
             } else {
               symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
+              symbolsData[key].tradesOn.isBreakeven = true
             }
-            symbolsData[key].tradesOn.isRise = true
           }
         } else if (data[CANDLE.HIGH] > symbolsData[key].tradesOn.breakevenTriggerPrice) {
           if (BREAKEVEN_ON) {
