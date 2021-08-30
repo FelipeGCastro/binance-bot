@@ -128,7 +128,6 @@ let botOn = false
 const strategy = STRATEGIES.SHARK
 
 const BREAKEVEN_ON = true
-const RISE_STOP_ON = true
 
 function setBotOn (bool) { botOn = bool }
 
@@ -146,8 +145,7 @@ function getAccountData () {
     wins: symbolsData[key].winTrades.length,
     loss: symbolsData[key].losesTrades.length,
     breakeven: symbolsData[key].breakevenTrades.length,
-    rise: symbolsData[key].riseStopTrades.length,
-    winPerc: sumPercentage(symbolsData[key].winTrades.concat(symbolsData[key].riseStopTrades), 'winPercentage'),
+    winPerc: sumPercentage(symbolsData[key].winTrades, 'winPercentage'),
     lossPerc: sumPercentage(symbolsData[key].losesTrades, 'lossPercentage'),
     ...symbolsData[key],
     data: []
@@ -179,8 +177,8 @@ async function execute () {
         console.log('FINISH')
         sendMessage(`symbol: ${key},
           wins: ${symbolsData[key].winTrades.length}, loses: ${symbolsData[key].losesTrades.length},
-          breakeven: ${symbolsData[key].breakevenTrades.length}, rise: ${symbolsData[key].riseStopTrades.length}
-          win %: ${sumPercentage(symbolsData[key].winTrades.concat(symbolsData[key].riseStopTrades), 'winPercentage')}, loss %: ${sumPercentage(symbolsData[key].losesTrades, 'lossPercentage')}
+          breakeven: ${symbolsData[key].breakevenTrades.length},
+          win %: ${sumPercentage(symbolsData[key].winTrades, 'winPercentage')}, loss %: ${sumPercentage(symbolsData[key].losesTrades, 'lossPercentage')}
           `) // winPercentage  lossPercentage
         clearInterval(mainInterval)
       }
@@ -211,25 +209,13 @@ async function execute () {
       handleAddCandle(data)
       if (symbolsData[key].tradesOn[TRADES_ON.SIDE] === 'SELL') {
         if (data[CANDLE.HIGH] > symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE]) {
-          if (symbolsData[key].tradesOn.isRise) symbolsData[key].riseStopTrades.push(symbolsData[key].tradesOn)
-          else if (symbolsData[key].tradesOn.isBreakeven) symbolsData[key].breakevenTrades.push(symbolsData[key].tradesOn)
+          if (symbolsData[key].tradesOn.isBreakeven) symbolsData[key].breakevenTrades.push(symbolsData[key].tradesOn)
           else symbolsData[key].losesTrades.push(symbolsData[key].tradesOn)
 
           setTradesOn(key, false)
         } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn[TRADES_ON.PROFIT_PRICE]) {
           symbolsData[key].winTrades.push(symbolsData[key].tradesOn)
           setTradesOn(key, false)
-        } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn.riseStopTriggerPrice) {
-          if (RISE_STOP_ON) {
-            if (data[CANDLE.HIGH] < symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]) {
-              symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = data[CANDLE.HIGH]
-              symbolsData[key].tradesOn.winPercentage = getPercentage(data[CANDLE.HIGH], symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE])
-              symbolsData[key].tradesOn.isRise = true
-            } else {
-              symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
-              symbolsData[key].tradesOn.isBreakeven = true
-            }
-          }
         } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn.breakevenTriggerPrice) {
           if (BREAKEVEN_ON) {
             symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
@@ -241,21 +227,9 @@ async function execute () {
           symbolsData[key].winTrades.push(symbolsData[key].tradesOn)
           setTradesOn(key, false)
         } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE]) {
-          if (symbolsData[key].tradesOn.isRise) symbolsData[key].riseStopTrades.push(symbolsData[key].tradesOn)
-          else if (symbolsData[key].tradesOn.isBreakeven) symbolsData[key].breakevenTrades.push(symbolsData[key].tradesOn)
+          if (symbolsData[key].tradesOn.isBreakeven) symbolsData[key].breakevenTrades.push(symbolsData[key].tradesOn)
           else symbolsData[key].losesTrades.push(symbolsData[key].tradesOn)
           setTradesOn(key, false)
-        } else if (data[CANDLE.HIGH] > symbolsData[key].tradesOn.riseStopTriggerPrice) {
-          if (RISE_STOP_ON) {
-            if (data[CANDLE.LOW] > symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]) {
-              symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = data[CANDLE.LOW]
-              symbolsData[key].tradesOn.winPercentage = getPercentage(data[CANDLE.LOW], symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE])
-              symbolsData[key].tradesOn.isRise = true
-            } else {
-              symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
-              symbolsData[key].tradesOn.isBreakeven = true
-            }
-          }
         } else if (data[CANDLE.HIGH] > symbolsData[key].tradesOn.breakevenTriggerPrice) {
           if (BREAKEVEN_ON) {
             symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
