@@ -15,29 +15,30 @@ const { getFirsts, getLasts, getPercentage } = require('./tools/index.js')
 // const ETH5M = require('./temp/5M/part1/ETH5M')
 // const AKRO5M = require('./temp/5M/part0/AKRO5M.js')
 // const XRP5M = require('./temp/5M/part0/XRP5M')
-const ADA5M = require('./temp/5M/part2/ADA5M')
-const DENT5M = require('./temp/5M/part2/DENT5M')
-const DOGE5M = require('./temp/5M/part2/DOGE5M.js')
-const MATIC5M = require('./temp/5M/part2/MATIC5M')
+// const ADA5M = require('./temp/5M/part2/ADA5M')
+// const DENT5M = require('./temp/5M/part2/DENT5M')
+// const DOGE5M = require('./temp/5M/part2/DOGE5M.js')
+// const MATIC5M = require('./temp/5M/part2/MATIC5M')
 
-// const ADA30M = require('./temp/30M/part0/ADA30M')
-// const AKRO30M = require('./temp/30M/part0/AKRO30M.js')
-// const DOGE30M = require('./temp/30M/part0/DOGE30M')
-// const XRP30M = require('./temp/30M/part0/XRP30M')
+const BTS5M = require('./temp/5M/part0/BTS5M')
+const BTT5M = require('./temp/5M/part0/BTT5M')
+const DENT5M = require('./temp/5M/part0/DENT5M.js')
+const LINA5M = require('./temp/5M/part0/LINA5M')
 
 // const SAND1M = require('./temp/1M/part3/SAND1M')
 // const MATIC1M = require('./temp/1M/part3/MATIC1M')
 // const ADA1M = require('./temp/1M/part3/ADA1M')
 // const XRP1M = require('./temp/1M/part3/XRP1M')
 // const ETH1M = require('./temp/1M/part3/ETH1M')
-// ADA5M DENT5M DOGE5M MATIC5M
+// BTS5M BTT5M DENT5M LINA5M
 const symbolsData = {
-  ADA5M: {
-    name: 'ADA5M',
-    data: ADA5M,
+  BTS5M: {
+    name: 'BTS5M',
+    data: BTS5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
+    riseStopTrades: [],
     tradesOn: false
   },
   DENT5M: {
@@ -46,59 +47,28 @@ const symbolsData = {
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
+    riseStopTrades: [],
     tradesOn: false
   },
-  DOGE5M: {
-    name: 'DOGE5M',
-    data: DOGE5M,
+  BTT5M: {
+    name: 'BTT5M',
+    data: BTT5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
+    riseStopTrades: [],
     tradesOn: false
   },
-  MATIC5M: {
-    name: 'MATIC5M',
-    data: MATIC5M,
+  LINA5M: {
+    name: 'LINA5M',
+    data: LINA5M,
     winTrades: [],
     losesTrades: [],
     breakevenTrades: [],
+    riseStopTrades: [],
     tradesOn: false
   }
 }
-// const symbolsData = {
-//   ADA30M: {
-//     name: 'ADA30M',
-//     data: ADA30M,
-//     winTrades: [],
-//     losesTrades: [],
-//     breakevenTrades: [],
-//     tradesOn: false
-//   },
-//   AKRO30M: {
-//     name: 'AKRO30M',
-//     data: AKRO30M,
-//     winTrades: [],
-//     losesTrades: [],
-//     breakevenTrades: [],
-//     tradesOn: false
-//   },
-//   DOGE30M: {
-//     name: 'DOGE30M',
-//     data: DOGE30M,
-//     winTrades: [],
-//     losesTrades: [],
-//     breakevenTrades: [],
-//     tradesOn: false
-//   },
-//   XRP30M: {
-//     name: 'XRP30M',
-//     data: XRP30M,
-//     winTrades: [],
-//     losesTrades: [],
-//     breakevenTrades: [],
-//     tradesOn: false
-//   }
-// }
 
 // const symbolsData = {
 //   SAND1M: {
@@ -155,9 +125,10 @@ const SET_STRATEGY = {
 
 let botOn = false
 
-const strategy = STRATEGIES.SHARK_ENGULFING
+const strategy = STRATEGIES.SHARK
 
 const BREAKEVEN_ON = true
+const RISE_STOP_ON = true
 
 function setBotOn (bool) { botOn = bool }
 
@@ -239,13 +210,23 @@ async function execute () {
       handleAddCandle(data)
       if (symbolsData[key].tradesOn[TRADES_ON.SIDE] === 'SELL') {
         if (data[CANDLE.HIGH] > symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE]) {
-          if (symbolsData[key].tradesOn.isBreakeven) symbolsData[key].breakevenTrades.push(symbolsData[key].tradesOn)
+          if (symbolsData[key].tradesOn.isRise) symbolsData[key].riseStopTrades.push(symbolsData[key].tradesOn)
+          else if (symbolsData[key].tradesOn.isBreakeven) symbolsData[key].breakevenTrades.push(symbolsData[key].tradesOn)
           else symbolsData[key].losesTrades.push(symbolsData[key].tradesOn)
 
           setTradesOn(key, false)
         } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn[TRADES_ON.PROFIT_PRICE]) {
           symbolsData[key].winTrades.push(symbolsData[key].tradesOn)
           setTradesOn(key, false)
+        } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn.riseStopTriggerPrice) {
+          if (RISE_STOP_ON) {
+            if (data[CANDLE.HIGH] < symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]) {
+              symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = data[CANDLE.HIGH]
+            } else {
+              symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
+            }
+            symbolsData[key].tradesOn.isRise = true
+          }
         } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn.breakevenTriggerPrice) {
           if (BREAKEVEN_ON) {
             symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
@@ -257,9 +238,19 @@ async function execute () {
           symbolsData[key].winTrades.push(symbolsData[key].tradesOn)
           setTradesOn(key, false)
         } else if (data[CANDLE.LOW] < symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE]) {
-          if (symbolsData[key].tradesOn.isBreakeven) symbolsData[key].breakevenTrades.push(symbolsData[key].tradesOn)
+          if (symbolsData[key].tradesOn.isRise) symbolsData[key].riseStopTrades.push(symbolsData[key].tradesOn)
+          else if (symbolsData[key].tradesOn.isBreakeven) symbolsData[key].breakevenTrades.push(symbolsData[key].tradesOn)
           else symbolsData[key].losesTrades.push(symbolsData[key].tradesOn)
           setTradesOn(key, false)
+        } else if (data[CANDLE.HIGH] > symbolsData[key].tradesOn.riseStopTriggerPrice) {
+          if (RISE_STOP_ON) {
+            if (data[CANDLE.LOW] > symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]) {
+              symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = data[CANDLE.LOW]
+            } else {
+              symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]
+            }
+            symbolsData[key].tradesOn.isRise = true
+          }
         } else if (data[CANDLE.HIGH] > symbolsData[key].tradesOn.breakevenTriggerPrice) {
           if (BREAKEVEN_ON) {
             symbolsData[key].tradesOn[TRADES_ON.STOP_PRICE] = symbolsData[key].tradesOn[TRADES_ON.ENTRY_PRICE]

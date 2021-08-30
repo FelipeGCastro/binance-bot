@@ -14,8 +14,8 @@ const rsiPeriod = 3// 80 - 20
 const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
 const profitPerc = 0.5
-const breakEvenPerc = 0.4
-const riseStopPerc = 0.8
+const breakEvenPerc = 0.375
+const riseStopPerc = 0.4
 
 function validateEntry (candles) {
   const trendingEma = validateEma200And50(candles, true)
