@@ -91,7 +91,8 @@ async function execute (account) {
             [TRADES_ON.SIDE]: ordered.side,
             [TRADES_ON.STRATEGY]: valid.strategy,
             [TRADES_ON.BREAKEVEN_PRICE]: valid.breakevenTriggerPrice,
-            [TRADES_ON.TRADE_ID]: ordered.orderId
+            [TRADES_ON.TRADE_ID]: ordered.orderId,
+            [TRADES_ON.QUANTITY]: ordered.origQty
           })
           telegram.sendMessage(account, `Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${accountData.strategy}, account: ${account}`)
         }
