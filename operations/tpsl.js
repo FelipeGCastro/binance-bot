@@ -5,16 +5,16 @@ const { SIDE, TRADES_ON } = require('../tools/constants')
 const getAccountState = require('../states/account')
 
 async function createTpandSLOrder (order) {
-  const { stopMarketPrice, takeProfitPrice, symbol } = order.trade
+  const { stopMarketPrice, takeProfitPrice, symbol, quantity } = order.trade
   const orderIsSell = order.S === SIDE.SELL
   const side = orderIsSell ? SIDE.BUY : SIDE.SELL
 
   if (!stopMarketPrice || !takeProfitPrice) return false
 
-  return await handleVerifyAndCreateTpSl(symbol, side, stopMarketPrice, takeProfitPrice, order.account)
+  return await handleVerifyAndCreateTpSl(symbol, side, stopMarketPrice, takeProfitPrice, order.account, quantity)
 }
 
-async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takeProfitPrice, account) {
+async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takeProfitPrice, account, quantity) {
   const { updateTradesOn } = await getAccountState(account)
 
   const isStopLossCreated = await createOrder(ORDER_TYPE.STOP_MARKET, stopMarketPrice)
@@ -29,6 +29,8 @@ async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takePro
       await updateTradesOn(symbol, tradesOnCreatedKey, false)
       telegram.sendMessage(account, `Problem ao criar ${type} Order para ${symbol},`)
       console.log(`Error creating ${type} order`)
+      const orderedClose = await api.newOrder(account, symbol, quantity, side, ORDER_TYPE.MARKET)
+      if (orderedClose) telegram.sendMessage(account, `Posição fechada por erro ao criar TPSL: ${type} Order para ${symbol},`)
       return false
     } else {
       await updateTradesOn(symbol, tradesOnIDKey, ordered.orderId)

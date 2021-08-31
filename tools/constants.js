@@ -40,7 +40,8 @@ const TRADES_ON = {
   STOP_LOSS_ID: 'stopLossId',
   TAKE_PROFIT_ID: 'takeProfitId',
   BREAKEVEN_ID: 'breakevenId',
-  RISE_STOP_ID: 'riseStopId'
+  RISE_STOP_ID: 'riseStopId',
+  QUANTITY: 'quantity'
 }
 
 const ORDER_TYPE = {
