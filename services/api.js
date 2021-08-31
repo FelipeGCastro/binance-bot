@@ -36,8 +36,8 @@ async function privateCall (account, path, data = {}, method = 'GET') {
     return result.data
   } catch (error) {
     if (error.response?.data?.code) {
-      sendMessage(account, `code: ${error.response?.data?.code}, mensagem: ${error.response?.data?.msg}`, true)
-      console.error(`code: ${error.response?.data?.code}, mensagem: ${error.response?.data?.msg}`)
+      sendMessage(account, `code: ${error.response?.data?.code}, mensagem: ${error.response?.data?.msg}, conta: ${account}`, true)
+      console.error(`code: ${error.response?.data?.code}, mensagem: ${error.response?.data?.msg}, conta: ${account}`)
     } else {
       console.log(error)
     }

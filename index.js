@@ -71,7 +71,7 @@ async function execute (account) {
         accountData.listenKeyIsOn &&
         accountData.botOn) {
       const valid = await validateEntry(newCandles, symbol)
-      console.log('Fechou!', candlesObj.symbol, new Date().getMinutes())
+      console.log('Fechou!', candlesObj.symbol)
 
       if (valid && valid.symbol === candlesObj.symbol) {
         const ordered = await newOrder.handleNewOrder({

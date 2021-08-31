@@ -42,7 +42,6 @@ async function getExecuteState (account) {
     }
     function updateAllCandles (arrayWithValues) { state[account].allCandles = arrayWithValues }
     function resetListenersAndCandles () {
-      console.log('candles Listerners: ', state[account].candlesListeners.length, 'userDataListerners: ', typeof state[account].userDataListeners)
       state[account].candlesListeners.forEach(list => { list.listener.close(1000) })
       if (state[account].userDataListeners) state[account].userDataListeners.close(1000)
       state[account].candlesListeners = []

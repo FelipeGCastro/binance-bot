@@ -20,12 +20,11 @@ async function handleUserDataUpdate (data) {
         data.o.i === trade[TRADES_ON.BREAKEVEN_ID] ||
         data.o.i === trade[TRADES_ON.RISE_STOP_ID]) tpslOrderFilled({ ...data.o, trade })
         else if (trade.symbol === data.o.s) tpslOrderFilled({ ...data.o, trade })
-      } else console.log(data.o.X)
+      }
     } else {
-      console.log('Has no Trade On')
       return false
     }
-  } else console.log('What Type is ? - ', data.e)
+  }
 }
 
 async function handleFilledOrder (order) {
