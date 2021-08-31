@@ -58,7 +58,6 @@ function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide, close
     if (highestPrice < stopLossDefault) {
       stopPrice25 = tools.ParseFloatByFormat(stopPrice25, closePrice)
       highestPrice = tools.ParseFloatByFormat(highestPrice, closePrice)
-      console.log('getStopLossFlex - ', ' stopPrice25: ', stopPrice25, ' highestPrice: ', highestPrice, ' stopLossDefault: ', stopLossDefault)
       if (highestPrice < stopPrice25) return stopPrice25
       else return highestPrice
     } else return stopLossDefault
@@ -69,8 +68,6 @@ function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide, close
     if (lowestPrice > stopLossDefault) {
       stopPrice25 = tools.ParseFloatByFormat(stopPrice25, closePrice)
       lowestPrice = tools.ParseFloatByFormat(lowestPrice, closePrice)
-      console.log('getStopLossFlex - ', ' stopPrice25: ', stopPrice25, ' lowestPrice: ', lowestPrice, ' stopLossDefault: ', stopLossDefault)
-
       if (lowestPrice > stopPrice25) return stopPrice25
       else return lowestPrice
     } else return stopLossDefault
@@ -97,7 +94,6 @@ function hasCrossStoch (candles, symbol) {
   const dOver80 = lastD > 80 || beforeD > 80
   const kUnder20 = lastK < 20 || beforeK < 20
   const dUnder20 = lastD < 20 || beforeD < 20
-  console.log('k:', lastK, 'd:', lastD, '---> Before: ', 'k:', beforeK, 'd:', beforeD)
   if (crossDown) {
     if (!kOver80 && !dOver80) return false
     return crossDown
@@ -118,14 +114,12 @@ function getStopAndTargetPrice (entryPrice, positionSideOrSide, oldStopPrice = n
   let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice, newStopPrice
   if (isSell) {
     newStopPrice = Number(entryPrice) + (entryPrice * (stopPerc / 100))
-    if (oldStopPrice) console.log('getStopAndTargetPrice-', 'oldStopPrice: ', oldStopPrice, 'newStopPrice: ', newStopPrice)
     stopPrice = !!oldStopPrice && oldStopPrice < newStopPrice ? oldStopPrice : newStopPrice
     targetPrice = Number(entryPrice) - (entryPrice * (profitPerc / 100))
     breakevenTriggerPrice = Number(entryPrice) - (entryPrice * (breakEvenPerc / 100))
     riseStopTriggerPrice = Number(entryPrice) - (entryPrice * (riseStopPerc / 100))
   } else {
     newStopPrice = Number(entryPrice) - (entryPrice * (stopPerc / 100))
-    if (oldStopPrice) console.log('getStopAndTargetPrice-', 'oldStopPrice: ', oldStopPrice, 'newStopPrice: ', newStopPrice)
     stopPrice = !!oldStopPrice && oldStopPrice > newStopPrice ? oldStopPrice : newStopPrice
     targetPrice = Number(entryPrice) + (entryPrice * (profitPerc / 100))
     breakevenTriggerPrice = Number(entryPrice) + (entryPrice * (breakEvenPerc / 100))

@@ -36,7 +36,6 @@ async function changeStopLoss (account, stopPrice, trade, operationType) {
   const typeId = operationType === TRADES_ON.BREAKEVEN_CREATED ? TRADES_ON.BREAKEVEN_ID : TRADES_ON.RISE_STOP_ID
 
   const openOrders = await api.getAllOpenOrders(account, symbol)
-  console.log('changeStopLoss - trade:', trade)
   if (openOrders[0]) {
     const hasStopLossOrder = openOrders.find(order => order.type === 'STOP_MARKET')
     const createdNewStopLoss = await createStopLossOrder()
