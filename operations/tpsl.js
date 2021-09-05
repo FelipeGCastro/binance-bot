@@ -27,10 +27,10 @@ async function handleVerifyAndCreateTpSl (symbol, side, stopMarketPrice, takePro
     const tradesOnIDKey = type === ORDER_TYPE.TAKE_PROFIT_MARKET ? TRADES_ON.TAKE_PROFIT_ID : TRADES_ON.STOP_LOSS_ID
     if (!ordered) {
       await updateTradesOn(symbol, tradesOnCreatedKey, false)
-      telegram.sendMessage(account, `Problem ao criar ${type} Order para ${symbol},`)
-      console.log(`Error creating ${type} order`)
+      telegram.sendMessage(account, `Problem ao criar ${type} Order para ${symbol}, price: ${price}, account: ${account}`, true)
+      console.log(`Error creating ${type} order, price: ${price}, account: ${account}`)
       const orderedClose = await api.newOrder(account, symbol, quantity, side, ORDER_TYPE.MARKET)
-      if (orderedClose) telegram.sendMessage(account, `Posição fechada por erro ao criar TPSL: ${type} Order para ${symbol},`)
+      if (orderedClose) telegram.sendMessage(account, `Posição fechada por erro ao criar TPSL: ${type} Order para ${symbol},`, true)
       return false
     } else {
       await updateTradesOn(symbol, tradesOnIDKey, ordered.orderId)

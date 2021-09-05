@@ -50,8 +50,10 @@ async function changeStopLoss (account, stopPrice, trade, operationType) {
     const ordered = await api.newOrder(account, symbol, null, stopSide, ORDER_TYPE.STOP_MARKET, true, stopPrice)
     if (!ordered) {
       await updateTradesOn(symbol, operationType, false)
-      telegram.sendMessage(account, `Problem MUDAR o ${ORDER_TYPE.STOP_MARKET} Order para ${symbol}, conta: ${account}`)
-      console.log(`Error CHANGING ${ORDER_TYPE.STOP_MARKET} order`)
+      telegram.sendMessage(account, `Problem MUDAR o ${ORDER_TYPE.STOP_MARKET} Order para ${symbol},
+      conta: ${account},
+      stop price: ${stopPrice}`, true)
+      console.log(`Error CHANGING ${ORDER_TYPE.STOP_MARKET} order, stop price: ${stopPrice}`)
       return false
     } else {
       await updateTradesOn(symbol, operationType, true)
