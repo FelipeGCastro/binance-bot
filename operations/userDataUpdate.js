@@ -13,17 +13,35 @@ async function handleUserDataUpdate (data) {
     const tradesOn = await getTradesDelayed()
     const trade = tradesOn.find(trade => trade.symbol === data.o.s)
     if (trade) {
-      if (data.o.X === 'FILLED') {
-        if (data.o.i === trade[TRADES_ON.TRADE_ID]) handleFilledOrder({ ...data.o, trade })
-        else if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
-        data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID] ||
-        data.o.i === trade[TRADES_ON.BREAKEVEN_ID] ||
-        data.o.i === trade[TRADES_ON.RISE_STOP_ID]) tpslOrderFilled({ ...data.o, trade })
-        else if (trade.symbol === data.o.s) tpslOrderFilled({ ...data.o, trade })
-      }
+      handleCheckOrders(data, trade)
     } else {
-      return false
+      setTimeout(async () => {
+        const tradesOn = await getTradesDelayed()
+        const trade = tradesOn.find(trade => trade.symbol === data.o.s)
+        if (trade) {
+          handleCheckOrders(data, trade)
+        } else {
+          telegram.sendMessage(data.o.account, `
+          Trade is not in TradesOn,
+          Account: ${data.o.account},
+          Symbol: ${data.o.s},
+          Status: ${data.o.X},
+          `, true)
+          return false
+        }
+      }, 2000)
     }
+  }
+}
+
+function handleCheckOrders (data, trade) {
+  if (data.o.X === 'FILLED') {
+    if (data.o.i === trade[TRADES_ON.TRADE_ID]) handleFilledOrder({ ...data.o, trade })
+    else if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
+    data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID] ||
+    data.o.i === trade[TRADES_ON.BREAKEVEN_ID] ||
+    data.o.i === trade[TRADES_ON.RISE_STOP_ID]) tpslOrderFilled({ ...data.o, trade })
+    else if (trade.symbol === data.o.s) tpslOrderFilled({ ...data.o, trade })
   }
 }
 
