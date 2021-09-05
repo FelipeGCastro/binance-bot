@@ -15,6 +15,7 @@ const stochPeriod = 3 // 80 - 20
 const stopPerc = 0.5
 const profitPerc = 0.5
 const breakEvenPerc = 0.4
+const stopMinPerc = 0.20
 const riseStopPerc = 0.45
 const breakevenIsOn = true
 const riseStopIsOn = false
@@ -50,25 +51,25 @@ function validateEntry (candles, symbol) {
 }
 
 function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide, closePrice) {
-  let stopPrice25
+  let stopPriceMin
   if (positionSide === POSITION.SHORT) {
-    stopPrice25 = Number(closePrice) + (closePrice * (0.25 / 100))
+    stopPriceMin = Number(closePrice) + (closePrice * (stopMinPerc / 100))
     const highPricesOnly = tools.extractData(lastThreeCandles, 'HIGH')
     let highestPrice = Highest.calculate({ values: highPricesOnly, period: 3 })[0]
     if (highestPrice < stopLossDefault) {
-      stopPrice25 = tools.ParseFloatByFormat(stopPrice25, closePrice)
+      stopPriceMin = tools.ParseFloatByFormat(stopPriceMin, closePrice)
       highestPrice = tools.ParseFloatByFormat(highestPrice, closePrice)
-      if (highestPrice < stopPrice25) return stopPrice25
+      if (highestPrice < stopPriceMin) return stopPriceMin
       else return highestPrice
     } else return stopLossDefault
   } else if (positionSide === POSITION.LONG) {
-    stopPrice25 = Number(closePrice) - (closePrice * (0.25 / 100))
+    stopPriceMin = Number(closePrice) - (closePrice * (0.25 / 100))
     const lowPricesOnly = tools.extractData(lastThreeCandles, 'LOW')
     let lowestPrice = Lowest.calculate({ values: lowPricesOnly, period: 3 })[0]
     if (lowestPrice > stopLossDefault) {
-      stopPrice25 = tools.ParseFloatByFormat(stopPrice25, closePrice)
+      stopPriceMin = tools.ParseFloatByFormat(stopPriceMin, closePrice)
       lowestPrice = tools.ParseFloatByFormat(lowestPrice, closePrice)
-      if (lowestPrice > stopPrice25) return stopPrice25
+      if (lowestPrice > stopPriceMin) return stopPriceMin
       else return lowestPrice
     } else return stopLossDefault
   } else return false
