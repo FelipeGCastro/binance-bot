@@ -10,20 +10,23 @@ const getExecuteState = require('../states/execute')
 async function handleUserDataUpdate (data) {
   if (data.e === 'ORDER_TRADE_UPDATE') {
     if (data.o.X === 'FILLED') {
+      console.log('Order Filled:', data.o.s)
       const { getTradesOn } = await getAccountState(data.o.account)
       const tradesOn = getTradesOn()
       const trade = tradesOn.find(trade => trade.symbol === data.o.s)
       if (trade) handleCheckOrders(data, trade)
-      else if (data.o.ot === 'MARKET') createTradesOn(data)
+      else createTradesOn(data)
     }
+    console.log('order status: ', data.o.X, 'order symbol: ', data.o.s)
   }
 }
 
 async function createTradesOn (data) {
+  console.log('createTradesOn')
   const { getTradesOn, setAccountData, setTradesOn, getAccountData } = await getAccountState(data.o.account)
   const tradesOn = getTradesOn()
   const accountData = getAccountData()
-  const result = data.o.getStopAndTargetPrice(data.o.L, data.o.S, data.o.s)
+  const result = await data.o.getStopAndTargetPrice(data.o.L, data.o.S, data.o.s)
   setAccountData(ACCOUNT_PROP.LIMIT_REACHED, (tradesOn.length + 1) >= accountData.limitOrdersSameTime)
   const trade = {
     [TRADES_ON.SYMBOL]: data.o.s,

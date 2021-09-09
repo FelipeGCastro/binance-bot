@@ -41,9 +41,10 @@ function validateEntry (candles, symbol) {
 }
 
 function getStopLossFlex (candles, positionSide, entryPrice) {
+  const isSell = positionSide === POSITION.SHORT || positionSide === SIDE.SELL
   const lastThreeCandles = tools.getLasts(candles, 3)
   let stopPriceMin, stopPriceMax
-  if (positionSide === POSITION.SHORT) {
+  if (isSell) {
     stopPriceMin = Number(entryPrice) + (entryPrice * (stopMinPerc / 100))
     stopPriceMax = Number(entryPrice) + (entryPrice * (stopPerc / 100))
     stopPriceMax = tools.ParseFloatByFormat(stopPriceMax, entryPrice)
@@ -55,7 +56,7 @@ function getStopLossFlex (candles, positionSide, entryPrice) {
       if (highestPrice < stopPriceMin) return stopPriceMin
       else return highestPrice
     } else return stopPriceMax
-  } else if (positionSide === POSITION.LONG) {
+  } else {
     stopPriceMin = Number(entryPrice) - (entryPrice * (stopMinPerc / 100))
     stopPriceMax = Number(entryPrice) - (entryPrice * (stopPerc / 100))
     stopPriceMax = tools.ParseFloatByFormat(stopPriceMax, entryPrice)
@@ -67,7 +68,7 @@ function getStopLossFlex (candles, positionSide, entryPrice) {
       if (lowestPrice > stopPriceMin) return stopPriceMin
       else return lowestPrice
     } else return stopPriceMax
-  } else return false
+  }
 }
 
 function checkLastCandle (candles, position) {
@@ -106,6 +107,7 @@ function getInterval () {
 }
 
 function getStopAndTargetPrice (candles, entryPrice, positionSideOrSide) {
+  console.log('getStopAndTargetPrice', candles.length, entryPrice, positionSideOrSide)
   const isSell = positionSideOrSide === POSITION.SHORT || positionSideOrSide === SIDE.SELL
   let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice
   if (isSell) {
@@ -119,7 +121,7 @@ function getStopAndTargetPrice (candles, entryPrice, positionSideOrSide) {
     breakevenTriggerPrice = Number(entryPrice) + (entryPrice * (breakEvenPerc / 100))
     riseStopTriggerPrice = Number(entryPrice) + (entryPrice * (riseStopPerc / 100))
   }
-
+  console.log('stopPrice: ', stopPrice)
   targetPrice = tools.ParseFloatByFormat(targetPrice, entryPrice)
   breakevenTriggerPrice = tools.ParseFloatByFormat(breakevenTriggerPrice, entryPrice)
   riseStopTriggerPrice = tools.ParseFloatByFormat(riseStopTriggerPrice, entryPrice)

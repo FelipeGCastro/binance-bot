@@ -145,12 +145,14 @@ async function execute (account) {
   }
 
   function handleParamsGetTpSl (entryPrice, positionSideOrSide, symbol) {
+    console.log('handleParamsGetTpSl', entryPrice, positionSideOrSide, symbol)
     const allCandles = getState('allCandles')
     const strategy = getAccountData('strategy')
     const candlesObj = allCandles.find(cand => cand.symbol === symbol)
     const getStopAndTargetPrice = getState('getStopAndTargetPrice')
     const result = getStopAndTargetPrice(candlesObj.candles, entryPrice, positionSideOrSide)
     result.strategy = strategy
+    console.log('handleParamsGetTpSl - result', result)
     return result
   }
 }
