@@ -10,7 +10,9 @@ const getExecuteState = require('../states/execute')
 async function handleUserDataUpdate (data) {
   if (data.e === 'ORDER_TRADE_UPDATE') {
     if (data.o.X === 'FILLED') {
-      const { getTradesOn } = await getAccountState(data.o.account)
+      const { getTradesOn, getAccountData } = await getAccountState(data.o.account)
+      const symbols = getAccountData('symbols')
+      if (!symbols.includes(data.o.s)) return
       const tradesOn = getTradesOn()
       const trade = tradesOn.find(trade => trade.symbol === data.o.s)
       if (trade) tpslOrderFilled({ ...data.o, trade })
@@ -25,7 +27,7 @@ async function createTradesOn (data) {
   const { getTradesOn, setAccountData, setTradesOn, getAccountData } = await getAccountState(data.o.account)
   const tradesOn = getTradesOn()
   const accountData = getAccountData()
-  const result = await data.o.getStopAndTargetPrice(data.o.L, data.o.S, data.o.s)
+  const result = data.o.getStopAndTargetPrice(data.o.L, data.o.S, data.o.s)
   setAccountData(ACCOUNT_PROP.LIMIT_REACHED, (tradesOn.length + 1) >= accountData.limitOrdersSameTime)
   const trade = {
     [TRADES_ON.SYMBOL]: data.o.s,
