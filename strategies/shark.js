@@ -30,49 +30,45 @@ function validateEntry (candles, symbol) {
   if (!validatedRsi) return false
   if (crossStoch !== trendingEma.position) return false
   else {
-    const lastThreeCandles = tools.getLasts(candles, 3)
-    const stopAndTarget = getStopAndTargetPrice(lastCandle[CANDLE.CLOSE], crossStoch)
-    const stopPrice = getStopLossFlex(lastThreeCandles, stopAndTarget.stopPrice, crossStoch, lastCandle[CANDLE.CLOSE])
-    if (stopAndTarget) {
-      return {
-        strategy: STRATEGIES.SHARK,
-        timeLastCandle: lastCandle[CANDLE.OPEN_TIME],
-        side: crossStoch,
-        stopPrice,
-        targetPrice: stopAndTarget.targetPrice,
-        closePrice: lastCandle[CANDLE.CLOSE],
-        breakevenTriggerPrice: stopAndTarget.breakevenTriggerPrice,
-        symbol
-      }
-    } else {
-      return false
+    return {
+      strategy: STRATEGIES.SHARK,
+      timeLastCandle: lastCandle[CANDLE.OPEN_TIME],
+      side: crossStoch,
+      closePrice: lastCandle[CANDLE.CLOSE],
+      symbol
     }
   }
 }
 
-function getStopLossFlex (lastThreeCandles, stopLossDefault, positionSide, closePrice) {
-  let stopPriceMin
-  if (positionSide === POSITION.SHORT) {
-    stopPriceMin = Number(closePrice) + (closePrice * (stopMinPerc / 100))
+function getStopLossFlex (candles, positionSide, entryPrice) {
+  const isSell = positionSide === POSITION.SHORT || positionSide === SIDE.SELL
+  const lastThreeCandles = tools.getLasts(candles, 3)
+  let stopPriceMin, stopPriceMax
+  if (isSell) {
+    stopPriceMin = Number(entryPrice) + (entryPrice * (stopMinPerc / 100))
+    stopPriceMax = Number(entryPrice) + (entryPrice * (stopPerc / 100))
+    stopPriceMax = tools.ParseFloatByFormat(stopPriceMax, entryPrice)
     const highPricesOnly = tools.extractData(lastThreeCandles, 'HIGH')
     let highestPrice = Highest.calculate({ values: highPricesOnly, period: 3 })[0]
-    if (highestPrice < stopLossDefault) {
-      stopPriceMin = tools.ParseFloatByFormat(stopPriceMin, closePrice)
-      highestPrice = tools.ParseFloatByFormat(highestPrice, closePrice)
+    if (highestPrice < stopPriceMax) {
+      stopPriceMin = tools.ParseFloatByFormat(stopPriceMin, entryPrice)
+      highestPrice = tools.ParseFloatByFormat(highestPrice, entryPrice)
       if (highestPrice < stopPriceMin) return stopPriceMin
       else return highestPrice
-    } else return stopLossDefault
-  } else if (positionSide === POSITION.LONG) {
-    stopPriceMin = Number(closePrice) - (closePrice * (0.25 / 100))
+    } else return stopPriceMax
+  } else {
+    stopPriceMin = Number(entryPrice) - (entryPrice * (stopMinPerc / 100))
+    stopPriceMax = Number(entryPrice) - (entryPrice * (stopPerc / 100))
+    stopPriceMax = tools.ParseFloatByFormat(stopPriceMax, entryPrice)
     const lowPricesOnly = tools.extractData(lastThreeCandles, 'LOW')
     let lowestPrice = Lowest.calculate({ values: lowPricesOnly, period: 3 })[0]
-    if (lowestPrice > stopLossDefault) {
-      stopPriceMin = tools.ParseFloatByFormat(stopPriceMin, closePrice)
-      lowestPrice = tools.ParseFloatByFormat(lowestPrice, closePrice)
+    if (lowestPrice > stopPriceMax) {
+      stopPriceMin = tools.ParseFloatByFormat(stopPriceMin, entryPrice)
+      lowestPrice = tools.ParseFloatByFormat(lowestPrice, entryPrice)
       if (lowestPrice > stopPriceMin) return stopPriceMin
       else return lowestPrice
-    } else return stopLossDefault
-  } else return false
+    } else return stopPriceMax
+  }
 }
 
 function checkLastCandle (candles, position) {
@@ -110,25 +106,22 @@ function getInterval () {
   return periodTime
 }
 
-function getStopAndTargetPrice (entryPrice, positionSideOrSide, oldStopPrice = null) {
+function getStopAndTargetPrice (candles, entryPrice, positionSideOrSide) {
   const isSell = positionSideOrSide === POSITION.SHORT || positionSideOrSide === SIDE.SELL
-  let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice, newStopPrice
+  let stopPrice, targetPrice, breakevenTriggerPrice, riseStopTriggerPrice
   if (isSell) {
-    newStopPrice = Number(entryPrice) + (entryPrice * (stopPerc / 100))
-    stopPrice = !!oldStopPrice && oldStopPrice < newStopPrice ? oldStopPrice : newStopPrice
+    stopPrice = getStopLossFlex(candles, positionSideOrSide, entryPrice)
     targetPrice = Number(entryPrice) - (entryPrice * (profitPerc / 100))
     breakevenTriggerPrice = Number(entryPrice) - (entryPrice * (breakEvenPerc / 100))
     riseStopTriggerPrice = Number(entryPrice) - (entryPrice * (riseStopPerc / 100))
   } else {
-    newStopPrice = Number(entryPrice) - (entryPrice * (stopPerc / 100))
-    stopPrice = !!oldStopPrice && oldStopPrice > newStopPrice ? oldStopPrice : newStopPrice
+    stopPrice = getStopLossFlex(candles, positionSideOrSide, entryPrice)
     targetPrice = Number(entryPrice) + (entryPrice * (profitPerc / 100))
     breakevenTriggerPrice = Number(entryPrice) + (entryPrice * (breakEvenPerc / 100))
     riseStopTriggerPrice = Number(entryPrice) + (entryPrice * (riseStopPerc / 100))
   }
 
   targetPrice = tools.ParseFloatByFormat(targetPrice, entryPrice)
-  stopPrice = tools.ParseFloatByFormat(stopPrice, entryPrice)
   breakevenTriggerPrice = tools.ParseFloatByFormat(breakevenTriggerPrice, entryPrice)
   riseStopTriggerPrice = tools.ParseFloatByFormat(riseStopTriggerPrice, entryPrice)
   if (targetPrice && stopPrice) {
