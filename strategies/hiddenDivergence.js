@@ -6,6 +6,7 @@ const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
 const STRATEGIES = require('../tools/constants').STRATEGIES
 const POSITION = require('../tools/constants').POSITION_SIDE
+const SIDE = require('../tools/constants').SIDE
 const hasCrossStoch = require('../tools/validations').hasCrossStoch
 
 const periodTime = '1m'
@@ -13,6 +14,8 @@ const rsiPeriod = 14// 80 - 20
 const stochPeriod = 14 // 80 - 20
 const lookBackPeriod = 26
 const lastPivotRange = 6
+const breakevenIsOn = true
+const riseStopIsOn = false
 
 const getInterval = () => periodTime
 
@@ -32,20 +35,12 @@ function validateEntry (candles, symbol) {
   if (crossStoch === trendingEma.position) {
     const divergence = validateDivergence(candles, crossStoch)
     if (divergence) {
-      const stopAndTarget = getStopAndTargetPrice(divergence.lastTopOrBottomPrice, divergence.lastClosePrice)
-      if (stopAndTarget) {
-        return {
-          strategy: STRATEGIES.HIDDEN_DIVERGENCE,
-          timeLastCandle: candles[candles.length - 1][0],
-          side: crossStoch,
-          stopPrice: stopAndTarget.stopPrice,
-          targetPrice: stopAndTarget.targetPrice,
-          closePrice: divergence.lastClosePrice,
-          breakevenTriggerPrice: stopAndTarget.breakevenTriggerPrice,
-          symbol
-        }
-      } else {
-        return false
+      return {
+        strategy: STRATEGIES.HIDDEN_DIVERGENCE,
+        timeLastCandle: candles[candles.length - 1][0],
+        side: crossStoch,
+        closePrice: divergence.lastClosePrice,
+        symbol
       }
     } else {
       return false
@@ -56,7 +51,24 @@ function validateEntry (candles, symbol) {
 }
 // breakevenTriggerPrice
 // riseStopTriggerPrice
-function getStopAndTargetPrice (stopPrice, entryPrice) {
+function getStopAndTargetPrice (candles, entryPrice, positionSideOrSide) {
+  const isSell = positionSideOrSide === POSITION.SHORT || positionSideOrSide === SIDE.SELL
+  const lastCandles = tools.getLasts(candles, lastPivotRange)
+  let stopPrice
+  if (isSell) {
+    const onlyHighPrices = tools.extractData(lastCandles, 'HIGH')
+    stopPrice = Highest.calculate({
+      values: onlyHighPrices,
+      period: lastPivotRange
+    })[0]
+  } else {
+    const onlyLowPrices = tools.extractData(lastCandles, 'LOW')
+    stopPrice = Lowest.calculate({
+      values: onlyLowPrices,
+      period: lastPivotRange
+    })[0]
+  }
+
   let targetPrice = ((entryPrice - stopPrice) * 2) + Number(entryPrice)
   let breakevenTriggerPrice = ((entryPrice - stopPrice) * 1.5) + Number(entryPrice)
   let riseStopTriggerPrice = ((entryPrice - stopPrice) * 1.8) + Number(entryPrice)
@@ -68,7 +80,11 @@ function getStopAndTargetPrice (stopPrice, entryPrice) {
   breakevenTriggerPrice = tools.ParseFloatByFormat(breakevenTriggerPrice, stopPrice)
   riseStopTriggerPrice = tools.ParseFloatByFormat(riseStopTriggerPrice, stopPrice)
   if (targetPrice && stopPrice) {
-    return { targetPrice, stopPrice, breakevenTriggerPrice, riseStopTriggerPrice }
+    const data = { targetPrice, stopPrice }
+    if (breakevenIsOn) data.breakevenTriggerPrice = breakevenTriggerPrice
+    if (riseStopIsOn) data.riseStopTriggerPrice = riseStopTriggerPrice
+
+    return data
   } else {
     return false
   }

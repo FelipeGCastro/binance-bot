@@ -3,7 +3,7 @@ const operations = require('./operations/userDataUpdate')
 const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
 const newOrder = require('./operations/newOrder')
-const { TRADES_ON, ACCOUNT_PROP, ACCOUNTS_TYPE, STRATEGIES } = require('./tools/constants')
+const { TRADES_ON, ACCOUNTS_TYPE } = require('./tools/constants')
 const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const getAccountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
@@ -17,7 +17,7 @@ checkAccountOnStart(ACCOUNTS_TYPE.SECONDARY, execute)
 // START MAIN FUNCTION
 async function execute (account) {
   const { getState, setState, addToStateArray, updateAllCandles } = await getExecuteState(account)
-  const { getAccountData, getTradesOn, setAccountData, setTradesOn, updateListenKeyIsOn } = await getAccountState(account)
+  const { getAccountData, getTradesOn, updateListenKeyIsOn } = await getAccountState(account)
   const accountdata = getAccountData()
   telegram.sendMessage(account, `Bot Foi Iniciado ou Reiniciado, conta: ${account}`)
   const isLeverageChanged = await changeLeverage(account)
@@ -74,28 +74,13 @@ async function execute (account) {
       console.log('Fechou!', candlesObj.symbol)
 
       if (valid && valid.symbol === candlesObj.symbol) {
-        const ordered = await newOrder.handleNewOrder({
+        await newOrder.handleNewOrder({
           ...valid,
           entryValue: accountData.entryValue,
           maxEntryValue: accountData.maxEntryValue,
           symbol,
           account
         })
-        if (ordered) {
-          setAccountData(ACCOUNT_PROP.LIMIT_REACHED, (tradesOn.length + 1) >= accountData.limitOrdersSameTime)
-          setTradesOn({
-            [TRADES_ON.SYMBOL]: symbol,
-            [TRADES_ON.STOP_PRICE]: valid.stopPrice,
-            [TRADES_ON.PROFIT_PRICE]: valid.targetPrice,
-            [TRADES_ON.ENTRY_PRICE]: ordered.avgPrice,
-            [TRADES_ON.SIDE]: ordered.side,
-            [TRADES_ON.STRATEGY]: valid.strategy,
-            [TRADES_ON.BREAKEVEN_PRICE]: valid.breakevenTriggerPrice,
-            [TRADES_ON.TRADE_ID]: ordered.orderId,
-            [TRADES_ON.QUANTITY]: ordered.origQty
-          })
-          telegram.sendMessage(account, `Entrou: ${symbol}PERP, Side: ${valid.side}, Strategy: ${accountData.strategy}, account: ${account}`)
-        }
         console.log('Entry is Valid')
       }
     }
@@ -159,11 +144,14 @@ async function execute (account) {
     setState('userDataListeners', wsListenKey)
   }
 
-  function handleParamsGetTpSl (strategy, entryPrice, positionSideOrSide, oldStopPrice) {
+  function handleParamsGetTpSl (entryPrice, positionSideOrSide, symbol) {
+    const allCandles = getState('allCandles')
+    const strategy = getAccountData('strategy')
+    const candlesObj = allCandles.find(cand => cand.symbol === symbol)
     const getStopAndTargetPrice = getState('getStopAndTargetPrice')
-    if (strategy === STRATEGIES.SHARK) return getStopAndTargetPrice(entryPrice, positionSideOrSide, oldStopPrice)
-    else if (strategy === STRATEGIES.HIDDEN_DIVERGENCE) return getStopAndTargetPrice(oldStopPrice, entryPrice)
-    else return false
+    const result = getStopAndTargetPrice(candlesObj.candles, entryPrice, positionSideOrSide)
+    result.strategy = strategy
+    return result
   }
 }
 
