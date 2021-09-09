@@ -10,11 +10,10 @@ const getExecuteState = require('../states/execute')
 async function handleUserDataUpdate (data) {
   if (data.e === 'ORDER_TRADE_UPDATE') {
     if (data.o.X === 'FILLED') {
-      console.log('Order Filled:', data.o.s)
       const { getTradesOn } = await getAccountState(data.o.account)
       const tradesOn = getTradesOn()
       const trade = tradesOn.find(trade => trade.symbol === data.o.s)
-      if (trade) handleCheckOrders(data, trade)
+      if (trade) tpslOrderFilled({ ...data.o, trade })
       else createTradesOn(data)
     }
     console.log('order status: ', data.o.X, 'order symbol: ', data.o.s)
@@ -45,15 +44,15 @@ async function createTradesOn (data) {
   createTpandSLOrder({ ...data.o, trade })
 }
 
-async function handleCheckOrders (data, trade) {
-  if (data.o.X === 'FILLED') {
-    if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
-    data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID] ||
-    data.o.i === trade[TRADES_ON.BREAKEVEN_ID] ||
-    data.o.i === trade[TRADES_ON.RISE_STOP_ID]) tpslOrderFilled({ ...data.o, trade })
-    else if (trade.symbol === data.o.s) tpslOrderFilled({ ...data.o, trade })
-  }
-}
+// async function handleCheckOrders (data, trade) {
+//   if (data.o.X === 'FILLED') {
+//     if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
+//     data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID] ||
+//     data.o.i === trade[TRADES_ON.BREAKEVEN_ID] ||
+//     data.o.i === trade[TRADES_ON.RISE_STOP_ID]) tpslOrderFilled({ ...data.o, trade })
+//     else if (trade.symbol === data.o.s) tpslOrderFilled({ ...data.o, trade })
+//   }
+// }
 
 async function tpslOrderFilled (order) {
   console.log('Stop or Profit Order was triggered')
