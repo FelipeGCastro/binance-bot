@@ -4,8 +4,13 @@ const { SIDE, TRADES_ON } = require('../tools/constants')
 const telegram = require('../services/telegram')
 const getAccountState = require('../states/account')
 
+const symbolsProcessing = []
+
 async function verifyRiseStop (account, data, trade) {
   let stopPrice
+  if (symbolsProcessing.includes(trade[TRADES_ON.SYMBOL])) return
+  else symbolsProcessing.push(trade[TRADES_ON.SYMBOL])
+  console.log('symbolsProcessing - start', symbolsProcessing)
   if (trade[TRADES_ON.SIDE] === SIDE.BUY) {
     if (trade[TRADES_ON.RISE_STOP_PRICE] && trade[TRADES_ON.RISE_STOP_PRICE] < data.k.c) {
       console.log('riseStopFunction')
@@ -45,6 +50,9 @@ async function changeStopLoss (account, stopPrice, trade, operationType) {
   } else {
     await createStopLossOrder()
   }
+  const symbolIndex = symbolsProcessing.findIndex(symb => symb === symbol)
+  if (symbolIndex >= 0) symbolsProcessing.splice(symbolIndex, 1)
+  console.log('symbolsProcessing - end', symbolsProcessing)
 
   async function createStopLossOrder () {
     const ordered = await api.newOrder(account, symbol, null, stopSide, ORDER_TYPE.STOP_MARKET, true, stopPrice)
