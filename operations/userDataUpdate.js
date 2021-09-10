@@ -12,7 +12,6 @@ async function handleUserDataUpdate (data) {
     if (data.o.X === 'FILLED') {
       const { getTradesOn, getAccountData } = await getAccountState(data.o.account)
       const symbols = getAccountData('symbols')
-      console.log('symbols handleuserdataup', symbols, symbols.includes(data.o.s))
       if (!symbols.includes(data.o.s)) return
       const tradesOn = getTradesOn()
       const trade = tradesOn.find(trade => trade.symbol === data.o.s)

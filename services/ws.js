@@ -1,4 +1,5 @@
 const WebSocket = require('ws')
+const { sendMessage } = require('./telegram')
 const wsUrl = process.env.WS_BASE_URL
 
 const streams = {
@@ -15,7 +16,7 @@ const streams = {
   allTickers: () => '!ticker@arr'
 }
 
-function setupWebSocket (eventHandler, path) {
+function setupWebSocket (eventHandler, path, account = null) {
   path = `${wsUrl}${path}`
   const ws = new WebSocket(path)
 
@@ -31,11 +32,14 @@ function setupWebSocket (eventHandler, path) {
 
   ws.on('error', (error) => {
     console.log(error)
+    if (account) {
+      sendMessage(account, `ERRO - na conta: ${account}, websocket deu erro.`, true)
+    }
   })
 }
 
-function listenKey (key, eventHandler) {
-  return setupWebSocket(eventHandler, key)
+function listenKey (key, eventHandler, account) {
+  return setupWebSocket(eventHandler, key, account)
 }
 
 function onDepthLevelUpdate (symbol, level, eventHandler) {
