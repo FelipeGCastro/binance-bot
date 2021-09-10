@@ -128,6 +128,7 @@ async function execute (account) {
   async function setWsListen (listenKey) {
     const accountData = getAccountData()
     const wsListenKey = ws.listenKey(listenKey, async (data) => {
+      console.log('listen key Updating')
       if (data.e === 'listenKeyExpired' && accountData.listenKeyIsOn) {
         updateListenKeyIsOn(false)
         wsListenKey.close()

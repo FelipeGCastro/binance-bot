@@ -28,7 +28,10 @@ function setupWebSocket (eventHandler, path) {
     }
     eventHandler(event)
   })
-  return ws
+
+  ws.on('error', (error) => {
+    console.log(error)
+  })
 }
 
 function listenKey (key, eventHandler) {
