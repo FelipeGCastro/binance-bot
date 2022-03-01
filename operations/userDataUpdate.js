@@ -1,8 +1,6 @@
 const api = require('../services/api')
-const Trade = require('../src/models/trade')
 const telegram = require('../services/telegram')
-const SIDE = require('../tools/constants').SIDE
-const { POSITION_SIDE, TRADES_ON, ACCOUNT_PROP } = require('../tools/constants')
+const { TRADES_ON, ACCOUNT_PROP } = require('../tools/constants')
 const { createTpandSLOrder } = require('./tpsl')
 const getAccountState = require('../states/account')
 const getExecuteState = require('../states/execute')
@@ -10,7 +8,7 @@ const getExecuteState = require('../states/execute')
 async function handleUserDataUpdate (data) {
   if (data.e === 'ORDER_TRADE_UPDATE') {
     if (data.o.X === 'FILLED') {
-      const { getTradesOn, getAccountData } = await getAccountState(data.o.account)
+      const { getTradesOn, getAccountData } = await getAccountState()
       const symbols = getAccountData('symbols')
       if (!symbols.includes(data.o.s)) return
       const tradesOn = getTradesOn()
@@ -24,7 +22,7 @@ async function handleUserDataUpdate (data) {
 
 async function createTradesOn (data) {
   console.log('createTradesOn')
-  const { getTradesOn, setAccountData, setTradesOn, getAccountData } = await getAccountState(data.o.account)
+  const { getTradesOn, setAccountData, setTradesOn, getAccountData } = await getAccountState()
   const tradesOn = getTradesOn()
   const accountData = getAccountData()
   const result = data.o.getStopAndTargetPrice(data.o.L, data.o.S, data.o.s)
@@ -42,7 +40,7 @@ async function createTradesOn (data) {
   }
   if (result.riseStopTriggerPrice) trade[TRADES_ON.RISE_STOP_PRICE] = result.riseStopTriggerPrice
   setTradesOn(trade)
-  telegram.sendMessage(data.o.account, `Entrou: ${data.o.s}PERP, Side: ${data.o.S}, Strategy: ${accountData.strategy}, account: ${data.o.account}`)
+  telegram.sendMessage(`Entrou: ${data.o.s}PERP, Side: ${data.o.S}, Strategy: ${accountData.strategy}`)
   createTpandSLOrder({ ...data.o, trade })
 }
 
@@ -57,43 +55,29 @@ async function createTradesOn (data) {
 // }
 
 async function tpslOrderFilled (order) {
-  console.log('Stop or Profit Order was triggered')
-  telegram.sendMessage(order.account, `PNL: ${order.rp}, conta: ${order.account}`)
-  const { removeFromTradesOn } = await getAccountState(order.account)
-  const isGain = order.rp > 0
-  const data = {
-    symbol: order.trade.symbol,
-    side: order.S === SIDE.SELL ? POSITION_SIDE.LONG : POSITION_SIDE.SHORT,
-    closePrice: order.L,
-    entryPrice: order.trade.entryPrice,
-    stopPrice: isGain ? order.trade.stopMarketPrice : order.L,
-    profitPrice: isGain ? order.L : order.trade.takeProfitPrice,
-    quantity: order.q,
-    profit: order.rp,
-    timestamp: order.T,
-    strategy: order.trade.strategy,
-    account: order.account
-  }
+  const { removeFromTradesOn } = await getAccountState()
+
   removeFromTradesOn(order.trade.symbol)
-  const trade = await Trade.create(data)
-  if (!trade) console.log('Cannot create trade')
-  const ordersCancelled = await api.cancelAllOrders(order.account, order.trade.symbol)
-  if (!ordersCancelled) console.log('Problems to cancel orders')
-  verifyBalance(order.account)
+
+  await api.cancelAllOrders(order.trade.symbol)
+
+  verifyBalance()
 }
 
-async function verifyBalance (account) {
-  const { getTradesDelayed, turnBotOn, getAccountData } = await getAccountState(account)
-  const { resetListenersAndCandles } = await getExecuteState(account)
+async function verifyBalance () {
+  const { getTradesDelayed, turnBotOn, getAccountData } = await getAccountState()
+  const { resetListenersAndCandles } = await getExecuteState()
+  // MAYBE REPLACE THIS WITH A CALL TO KNOW IF THERE IS ANY OPEN POSITIONS AND IF NOT MAKE CALCULATE
   const tradesOn = await getTradesDelayed()
+
   if (tradesOn.length === 0) {
     const limitLoss = getAccountData(ACCOUNT_PROP.LIMIT_LOSS)
-    const balanceData = await api.getBalance(account)
+    const balanceData = await api.getBalance()
     const balance = balanceData.filter((coin) => (coin.asset === 'USDT'))[0].availableBalance
     if (balance < limitLoss) {
       turnBotOn(false)
       resetListenersAndCandles()
-      telegram.sendMessage(account, `Atingiu seu maximo de perda! Parei o Bot! ${account}`)
+      telegram.sendMessage('Atingiu seu maximo de perda! Parei o Bot!')
     }
   }
 }

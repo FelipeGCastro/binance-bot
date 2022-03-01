@@ -16,7 +16,7 @@ const streams = {
   allTickers: () => '!ticker@arr'
 }
 
-function setupWebSocket (eventHandler, path, account = null) {
+function setupWebSocket (eventHandler, path) {
   path = `${wsUrl}${path}`
   const ws = new WebSocket(path)
 
@@ -32,14 +32,12 @@ function setupWebSocket (eventHandler, path, account = null) {
 
   ws.on('error', (error) => {
     console.log(error)
-    if (account) {
-      sendMessage(account, `ERRO - na conta: ${account}, websocket deu erro.`, true)
-    }
+    sendMessage('ERRO - websocket deu erro.', true)
   })
 }
 
-function listenKey (key, eventHandler, account) {
-  return setupWebSocket(eventHandler, key, account)
+function listenKey (key, eventHandler) {
+  return setupWebSocket(eventHandler, key)
 }
 
 function onDepthLevelUpdate (symbol, level, eventHandler) {

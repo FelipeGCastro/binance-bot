@@ -15,12 +15,12 @@ checkAccountOnStart(ACCOUNTS_TYPE.PRIMARY, execute)
 checkAccountOnStart(ACCOUNTS_TYPE.SECONDARY, execute)
 
 // START MAIN FUNCTION
-async function execute (account) {
-  const { getState, setState, addToStateArray, updateAllCandles } = await getExecuteState(account)
-  const { getAccountData, getTradesOn, updateListenKeyIsOn } = await getAccountState(account)
+async function execute () {
+  const { getState, setState, addToStateArray, updateAllCandles } = await getExecuteState()
+  const { getAccountData, getTradesOn, updateListenKeyIsOn } = await getAccountState()
   const accountdata = getAccountData()
-  telegram.sendMessage(account, `Bot Foi Iniciado ou Reiniciado, conta: ${account}`)
-  const isLeverageChanged = await changeLeverage(account)
+  telegram.sendMessage('Bot Foi Iniciado ou Reiniciado')
+  const isLeverageChanged = await changeLeverage()
   if (!isLeverageChanged) return false
 
   accountdata.symbols.forEach((symbol) => {
@@ -52,7 +52,7 @@ async function execute (account) {
     const tradesOn = getTradesOn()
     const hasTradeOn = tradesOn.find(trade => trade.symbol === symbol)
     if (hasTradeOn && hasTradeOn[TRADES_ON.BREAKEVEN_PRICE] && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
-      await verifyRiseStop(account, data, hasTradeOn)
+      await verifyRiseStop(data, hasTradeOn)
     }
   }
 
@@ -78,8 +78,7 @@ async function execute (account) {
           ...valid,
           entryValue: accountData.entryValue,
           maxEntryValue: accountData.maxEntryValue,
-          symbol,
-          account
+          symbol
         })
         console.log('Entry is Valid')
       }
@@ -105,20 +104,20 @@ async function execute (account) {
   getListenKey()
 
   async function getListenKey () {
-    const data = await api.listenKey(account)
+    const data = await api.listenKey()
     if (data) {
       setWsListen(data.listenKey)
       updateListenKeyIsOn(true)
     } else {
       console.log('Error getting listenKey, try again e 10 seconds')
       const keyInterval = setInterval(async () => {
-        const data = await api.listenKey(account)
+        const data = await api.listenKey()
         if (data) {
           setWsListen(data.listenKey)
           updateListenKeyIsOn(true)
           clearInterval(keyInterval)
         } else {
-          telegram.sendMessage(account, `Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos, conta: ${account}`)
+          telegram.sendMessage('Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos')
           console.log('Problemas ao buscar uma ListenKey, nova tentativa em 10 segundos')
         }
       }, 10000)
@@ -135,12 +134,12 @@ async function execute (account) {
       } else {
         let newData
         if (data.o) {
-          const dataOrder = { ...data.o, account, getStopAndTargetPrice: handleParamsGetTpSl }
+          const dataOrder = { ...data.o, getStopAndTargetPrice: handleParamsGetTpSl }
           newData = { ...data, o: dataOrder }
-        } else { newData = { ...data, account } }
+        } else { newData = { ...data } }
         await operations.handleUserDataUpdate(newData)
       }
-    }, account)
+    })
     setState('userDataListeners', wsListenKey)
   }
 
@@ -156,11 +155,12 @@ async function execute (account) {
   }
 }
 
-async function changeLeverage (account) {
-  const { getAccountData } = await getAccountState(account)
+async function changeLeverage () {
+  const { getAccountData } = await getAccountState()
   const accountData = getAccountData()
+
   accountData.symbols.forEach(async (symbol) => {
-    const changedLeverage = await api.changeLeverage(account, accountData.leverage, symbol)
+    const changedLeverage = await api.changeLeverage(accountData.leverage, symbol)
     if (!changedLeverage) {
       console.log('Error when change Leverage')
       return false
