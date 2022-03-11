@@ -1,6 +1,6 @@
 const api = require('../services/api')
 const telegram = require('../services/telegram')
-const { TRADES_ON, ACCOUNT_PROP } = require('../tools/constants')
+const { CURRENT_TRADE, ACCOUNT_PROP } = require('../tools/constants')
 const { createTpandSLOrder } = require('./tpsl')
 const getAccountState = require('../states/account')
 const getExecuteState = require('../states/execute')
@@ -11,8 +11,8 @@ async function handleUserDataUpdate (data) {
       const { getTradesOn, getAccountData } = await getAccountState()
       const symbols = getAccountData('symbols')
       if (!symbols.includes(data.o.s)) return
-      const tradesOn = getTradesOn()
-      const trade = tradesOn.find(trade => trade.symbol === data.o.s)
+      const currentTrades = getTradesOn()
+      const trade = currentTrades.find(trade => trade.symbol === data.o.s)
       if (trade) tpslOrderFilled({ ...data.o, trade })
       else createTradesOn(data)
     }
@@ -22,55 +22,47 @@ async function handleUserDataUpdate (data) {
 
 async function createTradesOn (data) {
   console.log('createTradesOn')
-  const { getTradesOn, setAccountData, setTradesOn, getAccountData } = await getAccountState()
-  const tradesOn = getTradesOn()
+  const { getTradesOn, setAccountData, getAccountData } = await getAccountState()
+  const currentTrades = getTradesOn()
   const accountData = getAccountData()
   const result = data.o.getStopAndTargetPrice(data.o.L, data.o.S, data.o.s)
-  setAccountData(ACCOUNT_PROP.LIMIT_REACHED, (tradesOn.length + 1) >= accountData.limitOrdersSameTime)
+
+  setAccountData(ACCOUNT_PROP.LIMIT_REACHED, (currentTrades.length + 1) >= accountData.limitOrdersSameTime)
+
   const trade = {
-    [TRADES_ON.SYMBOL]: data.o.s,
-    [TRADES_ON.STOP_PRICE]: result.stopPrice,
-    [TRADES_ON.PROFIT_PRICE]: result.targetPrice,
-    [TRADES_ON.ENTRY_PRICE]: data.o.L,
-    [TRADES_ON.SIDE]: data.o.S,
-    [TRADES_ON.STRATEGY]: result.strategy,
-    [TRADES_ON.BREAKEVEN_PRICE]: result.breakevenTriggerPrice,
-    [TRADES_ON.TRADE_ID]: data.o.i,
-    [TRADES_ON.QUANTITY]: data.o.z
+    [CURRENT_TRADE.SYMBOL]: data.o.s,
+    [CURRENT_TRADE.STOP_PRICE]: result.stopPrice,
+    [CURRENT_TRADE.PROFIT_PRICE]: result.targetPrice,
+    [CURRENT_TRADE.ENTRY_PRICE]: data.o.L,
+    [CURRENT_TRADE.SIDE]: data.o.S,
+    [CURRENT_TRADE.STRATEGY]: result.strategy,
+    [CURRENT_TRADE.BREAKEVEN_PRICE]: result.breakevenTriggerPrice,
+    [CURRENT_TRADE.TRADE_ID]: data.o.i,
+    [CURRENT_TRADE.QUANTITY]: data.o.z
   }
-  if (result.riseStopTriggerPrice) trade[TRADES_ON.RISE_STOP_PRICE] = result.riseStopTriggerPrice
-  setTradesOn(trade)
+  if (result.riseStopTriggerPrice) trade[CURRENT_TRADE.RISE_STOP_PRICE] = result.riseStopTriggerPrice
+
   telegram.sendMessage(`Entrou: ${data.o.s}PERP, Side: ${data.o.S}, Strategy: ${accountData.strategy}`)
+
   createTpandSLOrder({ ...data.o, trade })
 }
-
-// async function handleCheckOrders (data, trade) {
-//   if (data.o.X === 'FILLED') {
-//     if (data.o.i === trade[TRADES_ON.STOP_LOSS_ID] ||
-//     data.o.i === trade[TRADES_ON.TAKE_PROFIT_ID] ||
-//     data.o.i === trade[TRADES_ON.BREAKEVEN_ID] ||
-//     data.o.i === trade[TRADES_ON.RISE_STOP_ID]) tpslOrderFilled({ ...data.o, trade })
-//     else if (trade.symbol === data.o.s) tpslOrderFilled({ ...data.o, trade })
-//   }
-// }
 
 async function tpslOrderFilled (order) {
   const { removeFromTradesOn } = await getAccountState()
 
-  removeFromTradesOn(order.trade.symbol)
+  const currentTrades = removeFromTradesOn(order.trade.symbol)
 
   await api.cancelAllOrders(order.trade.symbol)
 
-  verifyBalance()
+  verifyBalance(currentTrades)
 }
 
-async function verifyBalance () {
-  const { getTradesDelayed, turnBotOn, getAccountData } = await getAccountState()
+async function verifyBalance (currentTrades) {
+  const { turnBotOn, getAccountData } = await getAccountState()
   const { resetListenersAndCandles } = await getExecuteState()
   // MAYBE REPLACE THIS WITH A CALL TO KNOW IF THERE IS ANY OPEN POSITIONS AND IF NOT MAKE CALCULATE
-  const tradesOn = await getTradesDelayed()
 
-  if (tradesOn.length === 0) {
+  if (currentTrades.length === 0) {
     const limitLoss = getAccountData(ACCOUNT_PROP.LIMIT_LOSS)
     const balanceData = await api.getBalance()
     const balance = balanceData.filter((coin) => (coin.asset === 'USDT'))[0].availableBalance

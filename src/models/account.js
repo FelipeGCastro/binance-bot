@@ -50,7 +50,7 @@ const AccountSchema = new mongoose.Schema({
     required: true,
     default: false
   },
-  tradesOn: [TradeOnSchema],
+  currentTrades: [TradeOnSchema],
   onlyErrorMessages: {
     type: Boolean,
     require: true,

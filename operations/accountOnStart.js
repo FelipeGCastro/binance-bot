@@ -8,9 +8,9 @@ async function checkAccountOnStart (execute) {
   const accountData = await Account.findOne({ type: 'primary' })
   if (accountData.limitReached) setAccountData(ACCOUNT_PROP.LIMIT_REACHED, false)
   if (accountData.listenKeyIsOn) updateListenKeyIsOn(false)
-  if (accountData.tradesOn.length > 0) {
+  if (accountData.currentTrades.length > 0) {
     const accountInfo = await api.getAccountInfo()
-    accountData.tradesOn.forEach(trade => {
+    accountData.currentTrades.forEach(trade => {
       const hasTrade = accountInfo.positions.find(pos => pos.symbol === trade.symbol)
       if (!hasTrade) removeFromTradesOn(trade.symbol)
     })

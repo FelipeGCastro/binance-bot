@@ -1,6 +1,6 @@
 const api = require('../services/api')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
-const { SIDE, TRADES_ON } = require('../tools/constants')
+const { SIDE, CURRENT_TRADE } = require('../tools/constants')
 const telegram = require('../services/telegram')
 const getAccountState = require('../states/account')
 
@@ -8,28 +8,28 @@ const symbolsProcessing = []
 
 async function verifyRiseStop (data, trade) {
   let stopPrice
-  if (symbolsProcessing.includes(trade[TRADES_ON.SYMBOL])) return
-  else symbolsProcessing.push(trade[TRADES_ON.SYMBOL])
+  if (symbolsProcessing.includes(trade[CURRENT_TRADE.SYMBOL])) return
+  else symbolsProcessing.push(trade[CURRENT_TRADE.SYMBOL])
 
-  if (trade[TRADES_ON.SIDE] === SIDE.BUY) {
-    if (trade[TRADES_ON.RISE_STOP_PRICE] && trade[TRADES_ON.RISE_STOP_PRICE] < data.k.c) {
+  if (trade[CURRENT_TRADE.SIDE] === SIDE.BUY) {
+    if (trade[CURRENT_TRADE.RISE_STOP_PRICE] && trade[CURRENT_TRADE.RISE_STOP_PRICE] < data.k.c) {
       console.log('riseStopFunction')
-      stopPrice = trade[TRADES_ON.ENTRY_PRICE] > data.k.l ? trade.entryPrice : data.k.l
+      stopPrice = trade[CURRENT_TRADE.ENTRY_PRICE] > data.k.l ? trade.entryPrice : data.k.l
 
-      await changeStopLoss(stopPrice, trade, TRADES_ON.RISE_STOP_CREATED)
-    } else if (!trade[TRADES_ON.BREAKEVEN_CREATED] && trade[TRADES_ON.BREAKEVEN_PRICE] < data.k.c) {
+      await changeStopLoss(stopPrice, trade, CURRENT_TRADE.RISE_STOP_CREATED)
+    } else if (!trade[CURRENT_TRADE.BREAKEVEN_CREATED] && trade[CURRENT_TRADE.BREAKEVEN_PRICE] < data.k.c) {
       console.log('breakevenFunction')
 
-      await changeStopLoss(trade[TRADES_ON.ENTRY_PRICE], trade, TRADES_ON.BREAKEVEN_CREATED)
+      await changeStopLoss(trade[CURRENT_TRADE.ENTRY_PRICE], trade, CURRENT_TRADE.BREAKEVEN_CREATED)
     }
-  } else if (trade[TRADES_ON.SIDE] === SIDE.SELL) {
-    if (trade[TRADES_ON.RISE_STOP_PRICE] && trade[TRADES_ON.RISE_STOP_PRICE] > data.k.c) {
+  } else if (trade[CURRENT_TRADE.SIDE] === SIDE.SELL) {
+    if (trade[CURRENT_TRADE.RISE_STOP_PRICE] && trade[CURRENT_TRADE.RISE_STOP_PRICE] > data.k.c) {
       console.log('riseStopFunction')
-      stopPrice = trade[TRADES_ON.ENTRY_PRICE] < data.k.h ? trade[TRADES_ON.ENTRY_PRICE] : data.k.h
-      await changeStopLoss(stopPrice, trade, TRADES_ON.RISE_STOP_CREATED)
-    } else if (!trade[TRADES_ON.BREAKEVEN_CREATED] && trade[TRADES_ON.BREAKEVEN_PRICE] > data.k.c) {
+      stopPrice = trade[CURRENT_TRADE.ENTRY_PRICE] < data.k.h ? trade[CURRENT_TRADE.ENTRY_PRICE] : data.k.h
+      await changeStopLoss(stopPrice, trade, CURRENT_TRADE.RISE_STOP_CREATED)
+    } else if (!trade[CURRENT_TRADE.BREAKEVEN_CREATED] && trade[CURRENT_TRADE.BREAKEVEN_PRICE] > data.k.c) {
       console.log('breakevenFunction')
-      await changeStopLoss(trade[TRADES_ON.ENTRY_PRICE], trade, TRADES_ON.BREAKEVEN_CREATED)
+      await changeStopLoss(trade[CURRENT_TRADE.ENTRY_PRICE], trade, CURRENT_TRADE.BREAKEVEN_CREATED)
     }
   } else return false
 }
@@ -38,7 +38,7 @@ async function changeStopLoss (stopPrice, trade, operationType) {
   const { updateTradesOn } = await getAccountState()
   const { side, symbol } = trade
   const stopSide = side === SIDE.SELL ? SIDE.BUY : SIDE.SELL
-  const typeId = operationType === TRADES_ON.BREAKEVEN_CREATED ? TRADES_ON.BREAKEVEN_ID : TRADES_ON.RISE_STOP_ID
+  const typeId = operationType === CURRENT_TRADE.BREAKEVEN_CREATED ? CURRENT_TRADE.BREAKEVEN_ID : CURRENT_TRADE.RISE_STOP_ID
 
   const openOrders = await api.getAllOpenOrders(symbol)
   if (openOrders[0]) {

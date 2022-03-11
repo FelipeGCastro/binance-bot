@@ -68,9 +68,9 @@ accountRoutes.put('/:account/symbols', async (req, res) => {
   if (notValid) {
     return res.status(400).send({ error: 'One or More symbol does not exist' })
   }
-  const tradesOn = getTradesOn()
+  const currentTrades = getTradesOn()
 
-  if (tradesOn.length > 0) {
+  if (currentTrades.length > 0) {
     return res.status(400).send({ error: 'You have trades on!' })
   }
 

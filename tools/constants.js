@@ -18,12 +18,12 @@ const ACCOUNT_PROP = {
   LIMIT_ORDERS: 'limitOrdersSameTime',
   LIMIT_REACHED: 'limitReached',
   LISTEN_KEY_IS_ON: 'listenKeyIsOn',
-  TRADES_ON: 'tradesOn',
+  CURRENT_TRADE: 'currentTrades',
   LIMIT_LOSS: 'limitLoss',
   ONLY_ERROR_MSG: 'onlyErrorMessages'
 }
 
-const TRADES_ON = {
+const CURRENT_TRADE = {
   STOP_PRICE: 'stopMarketPrice',
   PROFIT_PRICE: 'takeProfitPrice',
   ENTRY_PRICE: 'entryPrice',
@@ -89,6 +89,6 @@ module.exports = {
   POSITION_SIDE,
   INDICATORS_OBJ,
   ACCOUNTS_TYPE,
-  TRADES_ON,
+  CURRENT_TRADE,
   ACCOUNT_PROP
 }

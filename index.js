@@ -3,7 +3,7 @@ const operations = require('./operations/userDataUpdate')
 const ws = require('./services/ws.js')
 const telegram = require('./services/telegram')
 const newOrder = require('./operations/newOrder')
-const { TRADES_ON, ACCOUNTS_TYPE } = require('./tools/constants')
+const { CURRENT_TRADE, ACCOUNTS_TYPE } = require('./tools/constants')
 const { verifyRiseStop } = require('./operations/changeStopLoss.js')
 const getAccountState = require('./states/account')
 const getExecuteState = require('./states/execute.js')
@@ -49,10 +49,10 @@ async function execute () {
   }
 
   async function analysingCandle (data, symbol) {
-    const tradesOn = getTradesOn()
-    const hasTradeOn = tradesOn.find(trade => trade.symbol === symbol)
-    if (hasTradeOn && hasTradeOn[TRADES_ON.BREAKEVEN_PRICE] && !hasTradeOn[TRADES_ON.RISE_STOP_CREATED]) {
-      await verifyRiseStop(data, hasTradeOn)
+    const currentTrades = getTradesOn()
+    const trade = currentTrades.find(trade => trade.symbol === symbol)
+    if (trade && trade[CURRENT_TRADE.BREAKEVEN_PRICE] && !trade[CURRENT_TRADE.RISE_STOP_CREATED]) {
+      await verifyRiseStop(data, trade)
     }
   }
 
@@ -61,12 +61,12 @@ async function execute () {
     const allCandles = getState('allCandles')
     const validateEntry = getState('validateEntry')
     const candlesObj = allCandles.find(cand => cand.symbol === symbol)
-    const tradesOn = getTradesOn()
+    const currentTrades = getTradesOn()
 
     if (!candlesObj) return
-    const hasTradeOn = tradesOn.find(trade => trade.symbol === candlesObj.symbol)
+    const trade = currentTrades.find(trade => trade.symbol === candlesObj.symbol)
     const newCandles = await handleAddCandle(data, candlesObj)
-    if (!hasTradeOn &&
+    if (!trade &&
         !accountData.limitReached &&
         accountData.listenKeyIsOn &&
         accountData.botOn) {

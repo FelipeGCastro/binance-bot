@@ -19,36 +19,37 @@ async function getAccountState () {
 
   function getTradesDelayed () {
     return new Promise(resolve => {
-      setTimeout(() => resolve(ACCOUNT.tradesOn), 1000)
+      setTimeout(() => resolve(ACCOUNT.currentTrades), 1000)
     })
   }
 
   async function tradesOnUpdadeDB () {
-    Account.findOneAndUpdate({ type: 'primary' }, { $set: { tradesOn: ACCOUNT.tradesOn } })
+    Account.findOneAndUpdate({ type: 'primary' }, { $set: { currentTrades: ACCOUNT.currentTrades } })
   }
 
   async function setTradesOn (trade) {
-    ACCOUNT.tradesOn.push(trade)
+    ACCOUNT.currentTrades.push(trade)
     tradesOnUpdadeDB()
     updateAccountData(ACCOUNT)
   }
 
   async function clearTradesOn () {
-    ACCOUNT.tradesOn = []
+    ACCOUNT.currentTrades = []
     tradesOnUpdadeDB()
   }
 
   async function updateTradesOn (symbol, key, value) {
-    const tradeIndex = ACCOUNT.tradesOn.findIndex(trade => trade.symbol === symbol)
+    const tradeIndex = ACCOUNT.currentTrades.findIndex(trade => trade.symbol === symbol)
     if (tradeIndex < 0) return
-    ACCOUNT.tradesOn[tradeIndex][key] = value
+    ACCOUNT.currentTrades[tradeIndex][key] = value
     tradesOnUpdadeDB()
   }
 
   async function removeFromTradesOn (symb) {
-    ACCOUNT.tradesOn = ACCOUNT.tradesOn.filter(trade => trade.symbol !== symb)
+    ACCOUNT.currentTrades = ACCOUNT.currentTrades.filter(trade => trade.symbol !== symb)
     tradesOnUpdadeDB()
     updateAccountData(ACCOUNT)
+    return ACCOUNT.currentTrades
   }
 
   async function updateListenKeyIsOn (value) {
@@ -57,7 +58,7 @@ async function getAccountState () {
     updateAccountData(ACCOUNT)
   }
 
-  function getTradesOn () { return ACCOUNT.tradesOn }
+  function getTradesOn () { return ACCOUNT.currentTrades }
 
   async function turnBotOn (bool) {
     if (bool) {
