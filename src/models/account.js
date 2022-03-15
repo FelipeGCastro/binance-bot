@@ -1,64 +1,39 @@
 const mongoose = require('../database')
-const { TradeOnSchema } = require('./tradeOn')
 
 const AccountSchema = new mongoose.Schema({
-  type: {
-    type: String,
+  id: {
+    type: Number,
     unique: true,
-    required: true,
-    lowercase: true
+    required: true
   },
-  strategy: {
+  side: {
     type: String,
-    required: true
+    required: false
   },
-  symbols: {
-    type: [String],
-    required: true
-  },
-  botOn: {
+  stepOne: {
     type: Boolean,
-    required: true,
+    required: false,
     default: false
   },
-  leverage: {
-    type: Number,
-    required: true
-  },
-  entryValue: {
-    type: Number,
-    required: true
-  },
-  maxEntryValue: {
-    type: Number,
-    required: true
-  },
-  limitLoss: {
-    type: Number
-  },
-  limitOrdersSameTime: {
-    type: Number,
-    required: true
-  },
-  limitReached: {
+  stepTwo: {
     type: Boolean,
-    required: true,
+    required: false,
     default: false
   },
-  listenKeyIsOn: {
+  stepThree: {
     type: Boolean,
-    required: true,
+    required: false,
     default: false
   },
-  currentTrades: [TradeOnSchema],
-  onlyErrorMessages: {
+  stepFour: {
     type: Boolean,
-    require: true,
+    required: false,
     default: false
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  stepFive: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 })
 
