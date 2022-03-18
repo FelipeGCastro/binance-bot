@@ -1,50 +1,47 @@
 const { validateEma200And50 } = require('../indicators/ema.js')
-const validateDivergence = require('../operations/hiddenDivergence.js')
+const validateHiddenDivergence = require('../operations/hiddenDivergence.js')
+const validateRegularDivergence = require('../operations/regularDivergence.js')
 const { verifyOpenOrders, handleAddCandle, handleTrendingValidation } = require('../operations/index.js')
-const Account = require('../src/models/account')
+// const Account = require('../src/models/account')
 const api = require('../services/api.js')
 const ws = require('../services/ws.js')
+const { hasCrossStoch } = require('../tools/validations.js')
+
+const account = {
+  stepOne: { validated: false, timeframe: '' },
+  stepTwo: { validated: false, timeframe: '' },
+  stepThree: { validated: false, timeframe: '' },
+  stepFour: { validated: false, timeframe: '' },
+  trending: { ema200: false, ema50: false, position: false }
+}
 
 async function executePanda (symbol) {
-  const id = 1
-  let lastEventAt = 0
-  let candlesOne = await api.candles(symbol, '1h')
-  let candlesTwo = await api.candles(symbol, '30m')
-  let candlesThree = await api.candles(symbol, '5m')
+  // const id = 1
+  const candlesHandlerArray = [
+    { timeframe: '1h', closeHandler: handleCloseStepOne },
+    { timeframe: '30m', closeHandler: handleCloseStepOne },
+    { timeframe: '15m', closeHandler: handleCloseStepTwo },
+    { timeframe: '5m', closeHandler: handleCloseStepTwo }
+  ]
 
-  if (!candlesOne) {
-    console.log('Problems with get Candles')
-    return
+  for (const candlesHandler of candlesHandlerArray) {
+    let candles = await api.candles(symbol, candlesHandler.timeframe)
+    if (!candles) {
+      console.log('ERROR FETCHING CANDLES')
+      return
+    }
+    let lastEventAt = 0
+    await ws.onKlineContinuos(symbol, candlesHandler.timeframe, async (data) => {
+      if (data.k.x && data.E > lastEventAt) {
+        lastEventAt = data.E
+        candles = handleAddCandle(data, candles)
+        candlesHandler.closeHandler(data, candles, candlesHandler.timeframe)
+      }
+    })
   }
 
-  await ws.onKlineContinuos(symbol, '1h', async (data) => {
-    if (data.k.x && data.E > lastEventAt) {
-      lastEventAt = data.E
-      candlesOne = handleAddCandle(data, candlesOne)
-      handleCloseCandleOne(data)
-    }
-  })
-
-  await ws.onKlineContinuos(symbol, '30m', async (data) => {
-    if (data.k.x && data.E > lastEventAt) {
-      lastEventAt = data.E
-      candlesTwo = handleAddCandle(data, candlesTwo)
-      handleCloseCandleTwo(data)
-    }
-  })
-
-  await ws.onKlineContinuos(symbol, '5m', async (data) => {
-    if (data.k.x && data.E > lastEventAt) {
-      lastEventAt = data.E
-      candlesThree = handleAddCandle(data, candlesThree)
-      handleCloseCandleThree(data)
-    }
-  })
-
-  async function handleCloseCandleOne (data) {
-    const account = await Account.findOne({ id }).exec()
-
-    if (account.stepOne) {
+  async function handleCloseStepOne (data, candles, timeframe) {
+    if (account.stepOne.validated) {
       console.log('STEP ONE VALIDATED')
       return
     }
@@ -54,56 +51,47 @@ async function executePanda (symbol) {
       return
     }
 
-    const trendingEma = validateEma200And50(candlesOne)
+    const trendingEma = validateEma200And50(candles)
+    account.trending = trendingEma
 
-    const trending = handleTrendingValidation(trendingEma, candlesOne)
-
-    if (!trending) {
-      return
-    }
-
-    const hasDivergence = validateDivergence(candlesOne, trendingEma.position)
-
-    if (hasDivergence) {
-      Account.findByIdAndUpdate(id, { $set: { id, stepOne: true } }, { upsert: true })
-    }
-  }
-
-  async function handleCloseCandleTwo (data) {
-    const account = await Account.findOne({ id }).exec()
-
-    if (account.stepOne) {
-      console.log('STEP ONE VALIDATED')
-      return
-    }
-
-    if (await verifyOpenOrders()) {
-      console.log('Already Has Open Orders')
-      return
-    }
-
-    const trendingEma = validateEma200And50(candlesTwo)
-
-    const trending = handleTrendingValidation(trendingEma, candlesTwo)
+    const trending = handleTrendingValidation(trendingEma, candles)
 
     if (!trending) {
       return
     }
 
-    const hasDivergence = validateDivergence(candlesTwo, trendingEma.position)
+    const hasDivergence = validateHiddenDivergence(candles, trendingEma.position)
 
     if (hasDivergence) {
-      Account.findByIdAndUpdate(id, { $set: { id, stepOne: true } }, { upsert: true })
+      account.stepOne = { validated: true, timeframe }
     }
   }
 
-  async function handleCloseCandleThree (data) {
+  async function handleCloseStepTwo (data, candles, timeframe) {
+    if (!account.stepTwo.validated || !account.trending.position) {
+      console.log('STEP ONE NOT VALIDATED')
+      return
+    }
     if (await verifyOpenOrders()) {
       console.log('Already Has Open Orders')
       return
     }
-    console.log('Already Has Open Orders')
-    // const trendingEma = validateEma200And50(candlesOne)
+
+    const trending = handleTrendingValidation(account.trending, candles)
+
+    if (!trending) {
+      return
+    }
+    const crossStoch = hasCrossStoch()
+    const hasDivergence = validateRegularDivergence(candles, account.trending?.position)
+
+    if (!hasDivergence || !crossStoch || crossStoch !== account.trending?.position) {
+      return
+    } else {
+      account.stepTwo = { validated: true, timeframe }
+    }
+
+    console.log('CREATE ORDER')
   }
 
 // END

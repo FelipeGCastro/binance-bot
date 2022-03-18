@@ -9,7 +9,7 @@ const rsiPeriod = 14// 80 - 20
 const lookBackPeriod = 26
 const lastPivotRange = 6
 
-function validateHiddenDivergence (candles, side) {
+function validateRegularDivergence (candles, side) {
   const rsiArray = rsi.checkingRsi(candles, rsiPeriod)
   const lastsRsi = tools.getLasts(rsiArray, lookBackPeriod)
   const lastsCandles = tools.getLasts(candles, lookBackPeriod)
@@ -87,9 +87,9 @@ function validateHiddenDivergence (candles, side) {
         firstPriceIndex = normalIndex
         firstPivotRsi = firstsRsi[firstPriceIndex]
         firstPivot = candle
-        const candleDivergence = firstPivot[CANDLE.HIGH] > lastPivot[CANDLE.HIGH]
-        const candleCloseDivergence = firstPivot[CANDLE.CLOSE] > lastPivot[CANDLE.CLOSE]
-        const rsiDivergence = firstPivotRsi < lastPivotRsi
+        const candleDivergence = firstPivot[CANDLE.HIGH] < lastPivot[CANDLE.HIGH]
+        const candleCloseDivergence = firstPivot[CANDLE.CLOSE] < lastPivot[CANDLE.CLOSE]
+        const rsiDivergence = firstPivotRsi > lastPivotRsi
         return (!!candleDivergence && !!rsiDivergence && !!candleCloseDivergence)
       }
       return false
@@ -163,9 +163,9 @@ function validateHiddenDivergence (candles, side) {
         firstPivotRsi = firstsRsi[firstPriceIndex]
         firstPivot = candle
         // CONDITIONS TO BE CONSIDERED A DIVERGENCE
-        const candleDivergence = firstPivot[CANDLE.LOW] < lastPivot[CANDLE.LOW]
-        const candleCloseDivergence = firstPivot[CANDLE.CLOSE] < lastPivot[CANDLE.CLOSE]
-        const rsiDivergence = firstPivotRsi > lastPivotRsi
+        const candleDivergence = firstPivot[CANDLE.LOW] > lastPivot[CANDLE.LOW]
+        const candleCloseDivergence = firstPivot[CANDLE.CLOSE] > lastPivot[CANDLE.CLOSE]
+        const rsiDivergence = firstPivotRsi < lastPivotRsi
         return (!!candleDivergence && !!rsiDivergence && !!candleCloseDivergence)
       }
       return false
@@ -177,4 +177,4 @@ function validateHiddenDivergence (candles, side) {
   return false
 }
 
-module.exports = validateHiddenDivergence
+module.exports = validateRegularDivergence
