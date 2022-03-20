@@ -1,30 +1,27 @@
 const api = require('../services/api')
 const telegram = require('../services/telegram')
-const { CURRENT_TRADE, ACCOUNT_PROP } = require('../tools/constants')
+const { CURRENT_TRADE, ACCOUNT_PROP, ORDER_TYPE } = require('../tools/constants')
 const { createTpandSLOrder } = require('./tpsl')
-const getAccountState = require('../states/account')
-const getExecuteState = require('../states/execute')
 
 async function handleUserDataUpdate (data) {
   if (data.e === 'ORDER_TRADE_UPDATE') {
-    if (data.o.X === 'FILLED') {
-      const { getTradesOn, getAccountData } = await getAccountState()
-      const symbols = getAccountData('symbols')
-      if (!symbols.includes(data.o.s)) return
-      const currentTrades = getTradesOn()
-      const trade = currentTrades.find(trade => trade.symbol === data.o.s)
-      if (trade) tpslOrderFilled({ ...data.o, trade })
-      else createTradesOn(data)
+    if (data.o.X === 'FILLED' && data.o.o === ORDER_TYPE.MARKET) {
+      createTpandSLOrder(data.o)
+    } else if (
+      data.o.X === 'FILLED' &&
+      (data.o.o === ORDER_TYPE.STOP_MARKET ||
+        data.o.o === ORDER_TYPE.TAKE_PROFIT_MARKET
+      )) {
+      tpslOrderFilled(data.o)
     }
     console.log('order status: ', data.o.X, 'order symbol: ', data.o.s)
   }
 }
 
+// STOPPING HERE, CONTINUE REMOVING
 async function createTradesOn (data) {
   console.log('createTradesOn')
-  const { getTradesOn, setAccountData, getAccountData } = await getAccountState()
-  const currentTrades = getTradesOn()
-  const accountData = getAccountData()
+
   const result = data.o.getStopAndTargetPrice(data.o.L, data.o.S, data.o.s)
 
   setAccountData(ACCOUNT_PROP.LIMIT_REACHED, (currentTrades.length + 1) >= accountData.limitOrdersSameTime)

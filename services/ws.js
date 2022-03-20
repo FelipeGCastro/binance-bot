@@ -16,7 +16,7 @@ const streams = {
   allTickers: () => '!ticker@arr'
 }
 
-function setupWebSocket (eventHandler, path) {
+function setupWebSocket (eventHandler, path, erroCallback) {
   path = `${wsUrl}${path}`
   const ws = new WebSocket(path)
 
@@ -31,13 +31,16 @@ function setupWebSocket (eventHandler, path) {
   })
 
   ws.on('error', (error) => {
+    if (erroCallback) {
+      erroCallback(error)
+    }
     console.log(error)
     sendMessage('ERRO - websocket deu erro.', true)
   })
 }
 
-function listenKey (key, eventHandler) {
-  return setupWebSocket(eventHandler, key)
+function listenKey (key, eventHandler, erroCallback) {
+  return setupWebSocket(eventHandler, key, erroCallback)
 }
 
 function onDepthLevelUpdate (symbol, level, eventHandler) {

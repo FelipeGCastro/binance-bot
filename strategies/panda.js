@@ -6,6 +6,8 @@ const { verifyOpenOrders, handleAddCandle, handleTrendingValidation } = require(
 const api = require('../services/api.js')
 const ws = require('../services/ws.js')
 const { hasCrossStoch } = require('../tools/validations.js')
+const { handleNewOrder } = require('../operations/newOrder.js')
+const { handleListenKey } = require('../operations/listenKey.js')
 
 const account = {
   stepOne: { validated: false, timeframe: '' },
@@ -23,6 +25,10 @@ async function executePanda (symbol) {
     { timeframe: '15m', closeHandler: handleCloseStepTwo },
     { timeframe: '5m', closeHandler: handleCloseStepTwo }
   ]
+
+  handleListenKey(symbol, (order) => {
+    // CONTINUE!!
+  })
 
   for (const candlesHandler of candlesHandlerArray) {
     let candles = await api.candles(symbol, candlesHandler.timeframe)
@@ -82,16 +88,25 @@ async function executePanda (symbol) {
     if (!trending) {
       return
     }
+    const sidePosition = account.trending?.position
     const crossStoch = hasCrossStoch()
-    const hasDivergence = validateRegularDivergence(candles, account.trending?.position)
+    const divergence = validateRegularDivergence(candles, sidePosition)
 
-    if (!hasDivergence || !crossStoch || crossStoch !== account.trending?.position) {
+    if (!divergence || !crossStoch || crossStoch !== sidePosition) {
       return
     } else {
       account.stepTwo = { validated: true, timeframe }
     }
+    const orderData = {
+      side: sidePosition,
+      closePrice: divergence.lastClosePrice,
+      symbol,
+      sidePosition,
+      entryValue: 50,
+      maxEntryValue: 70
+    }
 
-    console.log('CREATE ORDER')
+    await handleNewOrder(orderData)
   }
 
 // END
