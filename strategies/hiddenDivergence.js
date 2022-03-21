@@ -14,8 +14,6 @@ const rsiPeriod = 14// 80 - 20
 const stochPeriod = 14 // 80 - 20
 const lookBackPeriod = 26
 const lastPivotRange = 6
-const breakevenIsOn = true
-const riseStopIsOn = false
 
 const getInterval = () => periodTime
 
@@ -51,7 +49,13 @@ function validateEntry (candles, symbol) {
 }
 // breakevenTriggerPrice
 // riseStopTriggerPrice
-function getStopAndTargetPrice (candles, entryPrice, positionSideOrSide) {
+function getStopAndTargetPrice ({
+  candles,
+  entryPrice,
+  positionSideOrSide,
+  stopLossPercentage = 2,
+  takeProfitPercentage = 4
+}) {
   const isSell = positionSideOrSide === POSITION.SHORT || positionSideOrSide === SIDE.SELL
   const lastCandles = tools.getLasts(candles, lastPivotRange)
   let stopPrice
@@ -69,24 +73,41 @@ function getStopAndTargetPrice (candles, entryPrice, positionSideOrSide) {
     })[0]
   }
 
-  let targetPrice = ((entryPrice - stopPrice) * 2) + Number(entryPrice)
+  let targetPrice
+  const percentage = tools.getPercentage(entryPrice, stopPrice)
+  const data = {}
   let breakevenTriggerPrice = ((entryPrice - stopPrice) * 1.5) + Number(entryPrice)
   let riseStopTriggerPrice = ((entryPrice - stopPrice) * 1.8) + Number(entryPrice)
-  const percentage = tools.getPercentage(entryPrice, stopPrice)
-  if (percentage > 1) return false
-
-  targetPrice = tools.ParseFloatByFormat(targetPrice, entryPrice)
-  stopPrice = tools.ParseFloatByFormat(stopPrice, stopPrice)
   breakevenTriggerPrice = tools.ParseFloatByFormat(breakevenTriggerPrice, stopPrice)
   riseStopTriggerPrice = tools.ParseFloatByFormat(riseStopTriggerPrice, stopPrice)
+  data.breakevenTriggerPrice = breakevenTriggerPrice
+  data.riseStopTriggerPrice = riseStopTriggerPrice
+  const targetCalc = ((entryPrice * takeProfitPercentage) / 100)
+  const targetCalculate = isSell ? targetCalc - entryPrice : entryPrice + targetCalc
+  targetPrice = tools.ParseFloatByFormat(targetCalculate, entryPrice)
+  data.targetPrice = targetPrice
+  if (percentage > stopLossPercentage) {
+    const stopCalc = ((entryPrice * stopLossPercentage) / 100)
+    const stopCalculate = isSell ? stopCalc + entryPrice : entryPrice - stopCalc
+    stopPrice = tools.ParseFloatByFormat(stopCalculate, entryPrice)
+    data.stopPrice = stopPrice
+    return data
+  }
+
+  targetPrice = tools.ParseFloatByFormat(targetPrice, entryPrice)
+  stopPrice = tools.ParseFloatByFormat(stopPrice, entryPrice)
   if (targetPrice && stopPrice) {
     const data = { targetPrice, stopPrice }
-    if (breakevenIsOn) data.breakevenTriggerPrice = breakevenTriggerPrice
-    if (riseStopIsOn) data.riseStopTriggerPrice = riseStopTriggerPrice
+    data.breakevenTriggerPrice = breakevenTriggerPrice
+    data.riseStopTriggerPrice = riseStopTriggerPrice
 
     return data
   } else {
-    return false
+    const stopCalc = ((entryPrice * stopLossPercentage) / 100)
+    const stopCalculate = isSell ? stopCalc + entryPrice : entryPrice - stopCalc
+    stopPrice = tools.ParseFloatByFormat(stopCalculate, entryPrice)
+    data.stopPrice = stopPrice
+    return data
   }
 }
 

@@ -15,7 +15,7 @@ async function handleNewOrder ({
   const quantity = await getQty({
     entryValue,
     closePrice,
-    maxEntryValue
+    symbol
   })
   const side = sidePosition === POSITION.LONG ? SIDE.BUY : SIDE.SELL
   const type = ORDER_TYPE.MARKET
@@ -31,8 +31,7 @@ async function handleNewOrder ({
 async function getQty ({
   symbol,
   entryValue,
-  closePrice,
-  maxEntryValue
+  closePrice
 }) {
   let qty
   let qtyFormat = '0.001'
@@ -46,13 +45,7 @@ async function getQty ({
   const calQty = entryValue / closePrice
 
   if (calQty < minQty) {
-    if ((minQty * closePrice) < maxEntryValue) {
-      qty = minQty
-      return qty
-    } else {
-      console.log('Minimum qty is bigger then your max entry price')
-      return false
-    }
+    return false
   } else {
     qty = tools.ParseFloatByFormat(calQty, qtyFormat)
     return qty
@@ -60,5 +53,6 @@ async function getQty ({
 }
 
 module.exports = {
-  handleNewOrder
+  handleNewOrder,
+  getQty
 }

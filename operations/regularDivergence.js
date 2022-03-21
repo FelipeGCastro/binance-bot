@@ -1,5 +1,6 @@
 const rsi = require('../indicators/rsi.js')
 const tools = require('../tools/index')
+
 const CANDLE = require('../tools/constants').CANDLE
 const Highest = require('technicalindicators').Highest
 const Lowest = require('technicalindicators').Lowest
@@ -24,6 +25,7 @@ function validateRegularDivergence (candles, side) {
 
   let lastPriceIndex, firstPriceIndex
   let lastTopOrBottomPrice
+
   if (side === POSITION.SHORT) {
     lastSixCandles.forEach((candle, i) => {
       // CHECKING IF CANDLE BEFORE EXIST AND IF MEET REQUIREMENTS

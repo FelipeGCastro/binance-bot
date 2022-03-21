@@ -1,20 +1,22 @@
 const { validateEma200And50 } = require('../indicators/ema.js')
 const validateHiddenDivergence = require('../operations/hiddenDivergence.js')
 const validateRegularDivergence = require('../operations/regularDivergence.js')
-const { verifyOpenOrders, handleAddCandle, handleTrendingValidation } = require('../operations/index.js')
+const { verifyOpenOrders, handleAddCandle, handleTrendingValidation, getStopAndTargetPrice } = require('../operations/index.js')
 // const Account = require('../src/models/account')
 const api = require('../services/api.js')
 const ws = require('../services/ws.js')
 const { hasCrossStoch } = require('../tools/validations.js')
 const { handleNewOrder } = require('../operations/newOrder.js')
 const { handleListenKey } = require('../operations/listenKey.js')
+const { createTpandSLOrder } = require('../operations/tpsl.js')
 
 const account = {
   stepOne: { validated: false, timeframe: '' },
   stepTwo: { validated: false, timeframe: '' },
   stepThree: { validated: false, timeframe: '' },
   stepFour: { validated: false, timeframe: '' },
-  trending: { ema200: false, ema50: false, position: false }
+  trending: { ema200: false, ema50: false, position: false },
+  tradeCandles: null
 }
 
 async function executePanda (symbol) {
@@ -25,9 +27,22 @@ async function executePanda (symbol) {
     { timeframe: '15m', closeHandler: handleCloseStepTwo },
     { timeframe: '5m', closeHandler: handleCloseStepTwo }
   ]
+  await api.changeLeverage(1, symbol)
 
   handleListenKey(symbol, (order) => {
-    // CONTINUE!!
+    const { stopPrice, targetPrice } = getStopAndTargetPrice({
+      candles: account.tradeCandles,
+      entryPrice: order.ap,
+      positionSideOrSide: account.trending.position
+    })
+
+    createTpandSLOrder({
+      orderSide: order.S,
+      stopPrice,
+      targetPrice,
+      symbol,
+      quantity: order.q
+    })
   })
 
   for (const candlesHandler of candlesHandlerArray) {
