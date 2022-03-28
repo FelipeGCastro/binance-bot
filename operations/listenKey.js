@@ -1,6 +1,6 @@
 const api = require('../services/api.js')
 const ws = require('../services/ws.js')
-const telegram = require('./services/telegram')
+const telegram = require('../services/telegram')
 
 async function handleListenKey (symbol, updateHandler) {
   async function getListenKey () {

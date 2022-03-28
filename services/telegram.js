@@ -1,9 +1,9 @@
 const { Telegraf } = require('telegraf')
 const api = require('../services/api')
-const getAccountState = require('../states/account')
+
 const telegramUserId = Number(process.env.TELEGRAM_USER_ID)
 const priceFormat = new Intl.NumberFormat('en-us', { style: 'currency', currency: 'USD' })
-const telegramToken = process.env.DEV_ENV === 'DEV' ? process.env.TELEGRAM_LOCAL_TOKEN : process.env.TELEGRAM_TOKEN
+const telegramToken = process.env.TELEGRAM_TOKEN
 
 const bot = new Telegraf(telegramToken)
 
@@ -16,13 +16,7 @@ bot.hears('Saldo primary', async ctx => {
 })
 
 async function sendMessage (message, isError, id = telegramUserId) {
-  const { getAccountData } = await getAccountState()
-  const onlyErrorMessages = getAccountData('onlyErrorMessages')
-  if (onlyErrorMessages) {
-    if (isError) bot.telegram.sendMessage(id, message)
-  } else {
-    bot.telegram.sendMessage(id, message)
-  }
+  bot.telegram.sendMessage(id, message)
 }
 
 bot.launch()

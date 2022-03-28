@@ -30,6 +30,7 @@ function handleAddCandle (newCandle, allCandles) {
     newCandle.k.V,
     newCandle.k.Q
   ]
+  candles.shift()
   candles.push(newCandleMapped)
   return candles
 }
@@ -48,6 +49,10 @@ function handleTrendingValidation (trendingEma, candles) {
   } else {
     return true
   }
+}
+
+function getTimeFrame (value) {
+  return value
 }
 
 function getStopAndTargetPrice ({
@@ -116,5 +121,6 @@ module.exports = {
   verifyOpenOrders,
   handleAddCandle,
   handleTrendingValidation,
-  getStopAndTargetPrice
+  getStopAndTargetPrice,
+  getTimeFrame
 }

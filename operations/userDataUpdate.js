@@ -27,5 +27,6 @@ async function tpslOrderFilled (order) {
 }
 
 module.exports = {
-  handleUserDataUpdate
+  handleUserDataUpdate,
+  tpslOrderFilled
 }
