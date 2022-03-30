@@ -3,6 +3,7 @@ const POSITION = require('../tools/constants').POSITION_SIDE
 const SIDE = require('../tools/constants').SIDE
 const help = require('../helpers')
 const tools = require('../tools')
+const { sendMessage } = require('../services/telegram')
 const ORDER_TYPE = require('../tools/constants').ORDER_TYPE
 
 async function handleNewOrder ({
@@ -21,7 +22,11 @@ async function handleNewOrder ({
   const type = ORDER_TYPE.MARKET
 
   if (symbol && quantity && type) {
-    return await api.newOrder(symbol, quantity, side, type)
+    const created = await api.newOrder(symbol, quantity, side, type)
+    if (created) {
+      sendMessage('Ordem Criada!' + JSON.stringify(created, null, 2))
+    }
+    return true
   } else {
     console.log('Some problem with create new order')
     return false

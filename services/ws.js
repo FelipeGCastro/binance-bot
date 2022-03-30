@@ -37,6 +37,7 @@ function setupWebSocket (eventHandler, path, erroCallback) {
     console.log(error)
     sendMessage('ERRO - websocket deu erro.', true)
   })
+  return ws
 }
 
 function listenKey (key, eventHandler, erroCallback) {

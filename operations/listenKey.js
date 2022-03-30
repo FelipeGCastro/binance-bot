@@ -17,7 +17,7 @@ async function handleListenKey (symbol, updateHandler) {
   async function setWsListen (listenKey) {
     const wsListenKey = ws.listenKey(listenKey, async (data) => {
       if (data.e === 'listenKeyExpired') {
-        wsListenKey.close()
+        wsListenKey?.close()
         await getListenKey()
       } else if (data.e === 'ORDER_TRADE_UPDATE' && data.o.s === symbol) {
         if (data.o) {
